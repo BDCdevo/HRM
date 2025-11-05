@@ -1,0 +1,143 @@
+# ============================================
+# Figma Design Links Map for HRM App
+# ============================================
+# This file maps each screen in the app to its corresponding Figma design
+# Last Updated: 2025-11-02 (Updated with actual Node IDs)
+
+# Figma Project Info
+project:
+  name: "Cutframe.in Wireframe Kit"
+  file_id: "mO0XvE4zIjUFO7xv6Tioxo"
+  base_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-"
+  community_link: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-5989&p=f&t=1cpzGuxQnM6DuWTC-4"
+
+# ============================================
+# Authentication Screens
+# ============================================
+login_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-5989&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-5989"
+  version: "v1.0"
+  status: "approved"
+  description: "شاشة تسجيل الدخول - Login Screen"
+  flutter_path: "lib/features/auth/ui/screens/login_screen.dart"
+
+register_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-6162&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-6162"
+  version: "v1.0"
+  status: "approved"
+  description: "شاشة التسجيل الجديد - Register Screen"
+  flutter_path: "lib/features/auth/ui/screens/register_screen.dart"
+
+forgot_password_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-6273&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-6273"
+  version: "v1.0"
+  status: "approved"
+  description: "شاشة نسيت كلمة المرور - Forgot Password Screen"
+  flutter_path: "lib/features/auth/ui/screens/forgot_password_screen.dart"
+
+# ============================================
+# Dashboard
+# ============================================
+dashboard_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-6682&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-6682"
+  version: "v1.0"
+  status: "approved"
+  description: "لوحة التحكم الرئيسية - Main Dashboard"
+  flutter_path: "lib/features/dashboard/ui/screens/dashboard_screen.dart"
+
+# ============================================
+# Attendance Screens
+# ============================================
+check_in_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-7193&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-7193"
+  version: "v1.0"
+  status: "approved"
+  description: "شاشة تسجيل الحضور/الانصراف - Check In/Out Screen"
+  flutter_path: "lib/features/attendance/ui/screens/check_in_screen.dart"
+
+attendance_history_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=442-6323&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "442-6323"
+  version: "v1.0"
+  status: "approved"
+  description: "سجل الحضور - Attendance History"
+  flutter_path: "lib/features/attendance/ui/screens/attendance_history_screen.dart"
+
+# ============================================
+# Profile Screens
+# ============================================
+profile_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=442-7079&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "442-7079"
+  version: "v1.0"
+  status: "approved"
+  description: "الملف الشخصي للموظف - Employee Profile"
+  flutter_path: "lib/features/profile/ui/screens/profile_screen.dart"
+
+edit_profile_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=442-7079&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "442-7079"
+  version: "v1.0"
+  status: "approved"
+  description: "تعديل الملف الشخصي - Edit Profile"
+  flutter_path: "lib/features/profile/ui/screens/edit_profile_screen.dart"
+
+change_password_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-6273&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-6273"
+  version: "v1.0"
+  status: "approved"
+  description: "تغيير كلمة المرور - Change Password"
+  flutter_path: "lib/features/profile/ui/screens/change_password_screen.dart"
+
+# ============================================
+# Requests Screens
+# ============================================
+requests_list_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=442-6323&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "442-6323"
+  version: "v1.0"
+  status: "approved"
+  description: "قائمة الطلبات - Requests List"
+  flutter_path: "lib/features/requests/ui/screens/requests_list_screen.dart"
+
+create_request_screen:
+  figma_url: "https://www.figma.com/design/mO0XvE4zIjUFO7xv6Tioxo/Cutframe.in---wireframe-kit---Community-?node-id=439-7193&t=1cpzGuxQnM6DuWTC-4"
+  node_id: "439-7193"
+  version: "v1.0"
+  status: "approved"
+  description: "إنشاء طلب جديد - Create Request"
+  flutter_path: "lib/features/requests/ui/screens/create_request_screen.dart"
+
+# ============================================
+# Real Figma Links Used
+# ============================================
+# The following actual Figma node IDs are used in this project:
+# - 439-5989: Login Screen
+# - 439-6162: Register Screen
+# - 439-6273: Forgot Password / Change Password
+# - 439-6682: Dashboard
+# - 439-7193: Check In/Out / Create Request
+# - 442-6323: Attendance History / Requests List
+# - 442-7079: Profile / Edit Profile
+
+# ============================================
+# How to Use This File
+# ============================================
+# 1. Find the screen you want to implement in the list above
+# 2. Copy the figma_url and open it in your browser
+# 3. Review the design carefully
+# 4. Implement the screen in the corresponding flutter_path
+# 5. Update the status when done: approved → in_progress → completed
+#
+# How to get node_id for new screens:
+# - Open Figma design
+# - Select the frame/screen you want
+# - Right-click → Copy link
+# - Extract the node-id parameter from the URL
+# - Example: ?node-id=439-5989 → node_id is "439-5989"

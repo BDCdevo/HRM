@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Users/B-SMART/.config/herd/bin/php.bat\" check_table.php)",
+      "Bash(\"/c/Users/B-SMART/.config/herd/bin/php.bat\" check_sessions.php)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
