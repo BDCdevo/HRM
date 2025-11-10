@@ -1,4 +1,14 @@
 import 'package:equatable/equatable.dart';
+import '../../../branches/data/models/branch_model.dart';
+
+/// Helper function to convert late_minutes from various types to int
+int? _lateMinutesFromJson(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
 
 /// Attendance Model
 ///
@@ -10,6 +20,8 @@ class AttendanceModel extends Equatable {
   final double? workingHours;
   final String date;
   final String? message;
+  final String? lateReason; // NEW: Late reason field
+  final int? lateMinutes; // NEW: Late duration in minutes
 
   const AttendanceModel({
     this.id,
@@ -18,6 +30,8 @@ class AttendanceModel extends Equatable {
     this.workingHours,
     required this.date,
     this.message,
+    this.lateReason,
+    this.lateMinutes,
   });
 
   factory AttendanceModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +52,8 @@ class AttendanceModel extends Equatable {
           : null,
       date: json['date'] as String,
       message: json['message'] as String?,
+      lateReason: json['late_reason'] as String?,
+      lateMinutes: _lateMinutesFromJson(json['late_minutes']),
     );
   }
 
@@ -49,6 +65,8 @@ class AttendanceModel extends Equatable {
       'working_hours': workingHours,
       'date': date,
       'message': message,
+      if (lateReason != null) 'late_reason': lateReason,
+      if (lateMinutes != null) 'late_minutes': lateMinutes,
     };
   }
 
@@ -60,6 +78,8 @@ class AttendanceModel extends Equatable {
         workingHours,
         date,
         message,
+        lateReason,
+        lateMinutes,
       ];
 }
 
@@ -71,12 +91,14 @@ class WorkPlanModel extends Equatable {
   final String? startTime;
   final String? endTime;
   final String schedule;
+  final int permissionMinutes;
 
   const WorkPlanModel({
     required this.name,
     this.startTime,
     this.endTime,
     required this.schedule,
+    this.permissionMinutes = 0,
   });
 
   factory WorkPlanModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +107,7 @@ class WorkPlanModel extends Equatable {
       startTime: json['start_time'] as String?,
       endTime: json['end_time'] as String?,
       schedule: json['schedule'] as String,
+      permissionMinutes: json['permission_minutes'] as int? ?? 0,
     );
   }
 
@@ -94,11 +117,12 @@ class WorkPlanModel extends Equatable {
       if (startTime != null) 'start_time': startTime,
       if (endTime != null) 'end_time': endTime,
       'schedule': schedule,
+      'permission_minutes': permissionMinutes,
     };
   }
 
   @override
-  List<Object?> get props => [name, startTime, endTime, schedule];
+  List<Object?> get props => [name, startTime, endTime, schedule, permissionMinutes];
 }
 
 /// Attendance Status Model
@@ -108,6 +132,7 @@ class AttendanceStatusModel extends Equatable {
   final bool hasCheckedIn;
   final bool? hasCheckedOut;
   final bool? hasActiveSession;
+  final bool hasLateReason; // Whether employee HAS PROVIDED late reason (true = provided, false = not provided yet)
   final String? checkInTime;
   final String? checkOutTime;
   final double workingHours;
@@ -117,16 +142,20 @@ class AttendanceStatusModel extends Equatable {
   final String date;
   final String duration;
   final WorkPlanModel? workPlan;
-  
+
   // New fields for multiple sessions
   final CurrentSessionModel? currentSession;
   final SessionsSummaryResponseModel? sessionsSummary;
   final DailySummaryModel? dailySummary;
 
+  // Branch information for geofencing
+  final BranchModel? branch;
+
   const AttendanceStatusModel({
     required this.hasCheckedIn,
     this.hasCheckedOut,
     this.hasActiveSession,
+    this.hasLateReason = false, // Default: false (hasn't provided yet)
     this.checkInTime,
     this.checkOutTime,
     required this.workingHours,
@@ -139,6 +168,7 @@ class AttendanceStatusModel extends Equatable {
     this.currentSession,
     this.sessionsSummary,
     this.dailySummary,
+    this.branch,
   });
 
   factory AttendanceStatusModel.fromJson(Map<String, dynamic> json) {
@@ -146,6 +176,7 @@ class AttendanceStatusModel extends Equatable {
       hasCheckedIn: json['has_checked_in'] as bool,
       hasCheckedOut: json['has_checked_out'] as bool?,
       hasActiveSession: json['has_active_session'] as bool?,
+      hasLateReason: json['has_late_reason'] as bool? ?? false,
       checkInTime: json['check_in_time'] as String?,
       checkOutTime: json['check_out_time'] as String?,
       workingHours: json['working_hours'] != null
@@ -156,7 +187,7 @@ class AttendanceStatusModel extends Equatable {
                   : json['working_hours'] as double))
           : 0.0,
       workingHoursLabel: json['working_hours_label'] as String?,
-      lateMinutes: json['late_minutes'] as int? ?? 0,
+      lateMinutes: _lateMinutesFromJson(json['late_minutes']) ?? 0,
       lateLabel: json['late_label'] as String?,
       date: json['date'] as String,
       duration: json['duration'] as String? ?? '00:00:00',
@@ -172,6 +203,9 @@ class AttendanceStatusModel extends Equatable {
       dailySummary: json['daily_summary'] != null
           ? DailySummaryModel.fromJson(json['daily_summary'] as Map<String, dynamic>)
           : null,
+      branch: json['branch'] != null
+          ? BranchModel.fromJson(json['branch'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -180,6 +214,7 @@ class AttendanceStatusModel extends Equatable {
       'has_checked_in': hasCheckedIn,
       if (hasCheckedOut != null) 'has_checked_out': hasCheckedOut,
       if (hasActiveSession != null) 'has_active_session': hasActiveSession,
+      'has_late_reason': hasLateReason,
       'check_in_time': checkInTime,
       'check_out_time': checkOutTime,
       'working_hours': workingHours,
@@ -192,6 +227,7 @@ class AttendanceStatusModel extends Equatable {
       'current_session': currentSession?.toJson(),
       'sessions_summary': sessionsSummary?.toJson(),
       'daily_summary': dailySummary?.toJson(),
+      'branch': branch?.toJson(),
     };
   }
 
@@ -225,6 +261,7 @@ class AttendanceStatusModel extends Equatable {
         hasCheckedIn,
         hasCheckedOut,
         hasActiveSession,
+        hasLateReason,
         checkInTime,
         checkOutTime,
         workingHours,
@@ -237,6 +274,7 @@ class AttendanceStatusModel extends Equatable {
         currentSession,
         sessionsSummary,
         dailySummary,
+        branch,
       ];
 }
 
@@ -288,9 +326,9 @@ class SessionsSummaryResponseModel extends Equatable {
 
   factory SessionsSummaryResponseModel.fromJson(Map<String, dynamic> json) {
     return SessionsSummaryResponseModel(
-      totalSessions: json['total_sessions'] as int,
-      completedSessions: json['completed_sessions'] as int,
-      totalDuration: json['total_duration'] as String,
+      totalSessions: json['total_sessions'] as int? ?? 0,
+      completedSessions: json['completed_sessions'] as int? ?? 0,
+      totalDuration: json['total_duration'] as String? ?? '0h 0m',
       totalHours: json['total_hours'] != null
           ? (json['total_hours'] is String
               ? double.tryParse(json['total_hours'] as String) ?? 0.0
@@ -346,7 +384,7 @@ class DailySummaryModel extends Equatable {
                   : json['working_hours'] as double))
           : 0.0,
       workingHoursLabel: json['working_hours_label'] as String,
-      lateMinutes: json['late_minutes'] as int,
+      lateMinutes: _lateMinutesFromJson(json['late_minutes']) ?? 0,
       lateLabel: json['late_label'] as String,
     );
   }
@@ -465,7 +503,7 @@ class AttendanceRecordModel extends Equatable {
               ? double.tryParse(json['missing_hours'] as String) ?? 0.0
               : (json['missing_hours'] as num).toDouble())
           : 0.0,
-      lateMinutes: json['late_minutes'] as int? ?? 0,
+      lateMinutes: _lateMinutesFromJson(json['late_minutes']) ?? 0,
       notes: json['notes'] as String?,
       isManual: json['is_manual'] as bool? ?? false,
       createdAt: json['created_at'] as String?,

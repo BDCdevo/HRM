@@ -17,10 +17,10 @@ flutter pub get
 # 2. Generate model code
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# 3. Configure API endpoint (edit lib/core/config/api_config.dart line 22)
-# Choose: baseUrlEmulator (Android), baseUrlSimulator (iOS/Web), or baseUrlRealDevice
+# 3. Configure API endpoint (edit lib/core/config/api_config.dart line 26)
+# Choose: baseUrlEmulator (Android), baseUrlSimulator (iOS/Web), baseUrlRealDevice, or baseUrlProduction
 
-# 4. Start backend (in separate terminal)
+# 4. Start backend (if using local development)
 cd D:\php_project\filament-hrm && php artisan serve
 
 # 5. Run app
@@ -28,6 +28,43 @@ flutter run
 ```
 
 For detailed setup, see `README.md` or `GETTING_STARTED_5MIN.md`.
+
+## Environment Configuration
+
+### Current Environment
+The app is **currently configured for PRODUCTION** (`baseUrlProduction`). Check `lib/core/config/api_config.dart:26` to verify.
+
+### Available Environments
+
+```dart
+// lib/core/config/api_config.dart line 26
+static const String baseUrl = baseUrlProduction;    // Production: https://erp1.bdcbiz.com/api/v1
+// static const String baseUrl = baseUrlEmulator;   // Android Emulator: http://10.0.2.2:8000/api/v1
+// static const String baseUrl = baseUrlSimulator;  // iOS/Web: http://localhost:8000/api/v1
+// static const String baseUrl = baseUrlRealDevice; // Real Device: http://192.168.1.X:8000/api/v1
+```
+
+### Production Server Details
+- **URL**: `https://erp1.bdcbiz.com`
+- **API Base**: `https://erp1.bdcbiz.com/api/v1`
+- **Server IP**: `31.97.46.103`
+- **Laravel**: 12.37.0
+- **Database**: MySQL (erp1)
+- **SSL**: Valid (Let's Encrypt)
+
+### Switching Environments
+
+**To switch to local development**:
+1. Open `lib/core/config/api_config.dart`
+2. Change line 26 to: `static const String baseUrl = baseUrlEmulator;`
+3. Start local backend: `cd D:\php_project\filament-hrm && php artisan serve`
+4. Hot restart Flutter app
+
+**To switch back to production**:
+1. Change line 26 to: `static const String baseUrl = baseUrlProduction;`
+2. Hot restart Flutter app
+
+See `PRODUCTION_SWITCH_README.md` for detailed switching guide.
 
 ## Architecture
 
@@ -66,14 +103,14 @@ lib/core/
 ### Existing Features
 
 - `auth` - Login, registration, admin login, token management
-- `dashboard` - Dashboard statistics
+- `dashboard` - Dashboard statistics with service cards
 - `attendance` - Check-in/out with location tracking, history, calendar, multiple sessions
 - `leave` / `leaves` - Leave requests, balance, history (note: separate features for logic vs UI)
 - `profile` - User profile, edit, change password
 - `notifications` - Notification list and management
 - `work_schedule` - Work schedule display
 - `reports` - Monthly reports
-- `branches` - Branch management
+- `branches` - Branch management with geofencing
 - `home`, `settings`, `about`, `more` - Additional screens
 
 ## Development Commands
@@ -91,22 +128,29 @@ flutter pub run build_runner build --delete-conflicting-outputs
 flutter pub run build_runner watch
 
 # Run on specific devices
+flutter run                    # Android emulator (default)
 flutter run -d windows
 flutter run -d chrome
-flutter run                    # Android emulator
 
 # Code quality
 flutter analyze
 dart format .
 flutter test
 
+# Clean build (if issues occur)
+flutter clean
+flutter pub get
+
 # Build release
+flutter build apk --release
 flutter build apk --obfuscate --split-debug-info=build/debug_info
 flutter build appbundle
 flutter build windows
 ```
 
-### Backend (Laravel at `D:\php_project\filament-hrm`)
+### Backend (Laravel)
+
+#### Local Backend (`D:\php_project\filament-hrm`)
 
 ```bash
 # Start server
@@ -117,23 +161,54 @@ php artisan migrate
 php artisan migrate:fresh --seed  # Reset and seed
 php artisan db:seed
 
-# Clear caches
+# Clear caches (always do this after backend code changes)
 php artisan cache:clear
 php artisan config:clear
 php artisan route:clear
 
-# Check specific routes
+# Check routes
 php artisan route:list --path=api/v1
+```
+
+#### Production Backend (SSH Access)
+
+**Server**: `root@31.97.46.103`
+**Laravel Path**: `/var/www/erp1` (confirmed via SSH)
+
+```bash
+# Connect to server
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@31.97.46.103
+
+# Common commands (run on server)
+cd /var/www/erp1
+php artisan cache:clear
+php artisan config:clear
+php artisan migrate
+php artisan route:list --path=api/v1
+
+# View logs
+tail -f /var/www/erp1/storage/logs/laravel.log
+```
+
+**Important**: Test backend changes locally (`D:\php_project\filament-hrm`) before deploying to production.
+
+#### Testing Scripts (`C:\xampp\htdocs\flowERP`)
+
+Additional PHP test utilities for backend testing:
+```bash
+cd C:\xampp\htdocs\flowERP
+php test_multiple_sessions.php  # Test attendance sessions
 ```
 
 ## API Integration
 
 ### Base URL Configuration
 
-Edit `lib/core/config/api_config.dart` line 22:
+Edit `lib/core/config/api_config.dart` line 26:
 
 ```dart
 // Choose based on environment
+static const String baseUrl = baseUrlProduction;   // Production: https://erp1.bdcbiz.com/api/v1
 static const String baseUrl = baseUrlEmulator;     // Android Emulator: http://10.0.2.2:8000/api/v1
 static const String baseUrl = baseUrlSimulator;    // iOS/Web: http://localhost:8000/api/v1
 static const String baseUrl = baseUrlRealDevice;   // Real Device: http://192.168.1.X:8000/api/v1
@@ -157,6 +232,28 @@ Future<Model> fetchData() async {
   throw Exception(response.data['message']);
 }
 ```
+
+### API Response Structure
+
+Standard API responses follow this format:
+
+```json
+// Success (200)
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { /* payload */ }
+}
+
+// Error (4xx, 5xx)
+{
+  "success": false,
+  "message": "Error description",
+  "errors": { /* validation errors */ }
+}
+```
+
+Always check `response.statusCode` and parse `response.data['data']` for success responses.
 
 ### Authentication Flow
 
@@ -236,7 +333,7 @@ Full theme guide: `lib/core/styles/THEME_GUIDE.md`
 
 ## Code Generation
 
-Models use `json_serializable`:
+Models use `json_serializable` for automatic JSON serialization:
 
 ```dart
 import 'package:json_annotation/json_annotation.dart';
@@ -255,7 +352,27 @@ class UserModel {
 }
 ```
 
-After adding/modifying models, run: `flutter pub run build_runner build --delete-conflicting-outputs`
+### When to Run Build Runner
+
+Run code generation after:
+- Creating a new model with `@JsonSerializable()`
+- Adding/removing fields from existing models
+- Changing `@JsonKey` annotations
+- Getting build errors about missing `.g.dart` files
+
+```bash
+# One-time generation
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# Watch mode (auto-generates on file save)
+flutter pub run build_runner watch --delete-conflicting-outputs
+
+# Clean before building (if conflicts occur)
+flutter pub run build_runner clean
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+**Important**: Always commit `.g.dart` files to version control.
 
 ## State Management
 
@@ -301,6 +418,29 @@ class FeatureCubit extends Cubit<FeatureState> {
 ```
 
 **Important**: Always implement `copyWith` method for state classes to enable immutable updates.
+
+### Using BlocListener for Side Effects
+
+Use `BlocListener` for actions like navigation, snackbars, or triggering other operations:
+
+```dart
+BlocListener<FeatureCubit, FeatureState>(
+  listener: (context, state) {
+    if (state.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(state.error!)),
+      );
+    }
+    if (state.data != null) {
+      // Navigate, refresh, or trigger other cubits
+      context.read<OtherCubit>().fetchData();
+    }
+  },
+  child: YourWidget(),
+)
+```
+
+Use `BlocConsumer` when you need both listening and building from the same cubit.
 
 ## Key Dependencies
 
@@ -413,8 +553,10 @@ Full navigation guide: `lib/core/routing/README.md`
 - **Navigation Guide**: `lib/core/routing/README.md` - Routing system details
 - **Quick Reference**: `QUICK_REFERENCE.md` - Quick reference guide (Arabic)
 - **Changelog**: `CHANGELOG.md` - Detailed change history
+- **Production Testing**: `PRODUCTION_TESTING_GUIDE.md` - Production testing checklist
+- **Production Switch**: `PRODUCTION_SWITCH_README.md` - Environment switching guide
 - **Figma Designs**: https://www.figma.com/design/gNAzHVWnkINNfxNmDZX7Nt
-- **Backend Location**: `D:\php_project\filament-hrm`
+- **Backend Location**: `D:\php_project\filament-hrm` (local), `/var/www/erp1` (production server)
 
 ## Location Services
 
@@ -434,9 +576,10 @@ Required permissions configured in:
 ## Common Issues
 
 ### API Connection
-- Android Emulator: Use `10.0.2.2` instead of `localhost`
-- Real device: Ensure same WiFi network, use computer's IP address
-- Check backend is running: `php artisan serve`
+- **Android Emulator**: Use `10.0.2.2` instead of `localhost`
+- **Real device**: Ensure same WiFi network, use computer's IP address
+- **Production**: Ensure internet connectivity, verify `baseUrl = baseUrlProduction`
+- **Check backend**: For local dev, verify `php artisan serve` is running
 
 ### Build Runner Issues
 ```bash
@@ -449,8 +592,229 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - Token stored in `flutter_secure_storage` with key `auth_token`
 - ApiInterceptor handles 401 responses
 - Check token in login response: `response.data['data']['access_token']`
+- If persistent issues: logout and login again
 
 ### Location Permission Issues
 - Ensure location services are enabled on device
 - Check manifest/plist files for proper permission declarations
 - Test permission flow: denied → request → granted
+
+### Environment Mismatch
+- **Symptom**: "Connection refused" or "Cannot connect to server"
+- **Solution**: Verify `baseUrl` in `lib/core/config/api_config.dart:26` matches your target environment
+- **Hot restart** Flutter app after changing `baseUrl`
+
+## Attendance Feature: Multiple Sessions
+
+### Overview
+The attendance system supports **unlimited check-in/check-out sessions per day**. Employees can:
+- Check-in → Check-out → Check-in → Check-out (unlimited cycles)
+- Track multiple work sessions with GPS location
+- View all sessions with real-time status updates
+
+### Key Implementation Details
+
+#### State Management Pattern
+Always use `hasActiveSession` from API (NOT `hasCheckedIn` && `!hasCheckedOut`):
+
+```dart
+// ✅ Correct approach
+final hasActiveSession = status?.hasActiveSession ?? false;
+
+if (hasActiveSession) {
+  // Show "Check Out" button
+} else {
+  // Show "Check In" button
+}
+
+// ❌ Wrong (old single-session approach)
+if (hasCheckedIn && !hasCheckedOut) {
+  // This breaks with multiple sessions
+}
+```
+
+#### State Persistence
+Use state persistence to maintain status during loading states:
+
+```dart
+class _AttendanceWidgetState extends State<AttendanceWidget> {
+  AttendanceStatusModel? _lastStatus;  // Store last status
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AttendanceCubit, AttendanceState>(
+      builder: (context, state) {
+        // Save status when loaded
+        if (state is AttendanceStatusLoaded) {
+          _lastStatus = state.status;
+        }
+
+        // Use persisted status (survives SessionsLoading, etc.)
+        final status = _lastStatus ?? extractFromState(state);
+        final hasActiveSession = status?.hasActiveSession ?? false;
+      },
+    );
+  }
+}
+```
+
+#### Auto-refresh Pattern
+Always refresh status after successful operations:
+
+```dart
+listener: (context, state) {
+  if (state is CheckInSuccess || state is CheckOutSuccess) {
+    // Refresh to get updated hasActiveSession
+    context.read<AttendanceCubit>().fetchTodayStatus();
+    context.read<AttendanceCubit>().fetchTodaySessions();
+  }
+}
+```
+
+#### Custom Type Converter
+Handle mixed String/num types from API:
+
+```dart
+class DurationHoursConverter implements JsonConverter<double?, dynamic> {
+  const DurationHoursConverter();
+
+  @override
+  double? fromJson(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  @override
+  dynamic toJson(double? value) => value;
+}
+
+// Usage in model
+@JsonKey(name: 'duration_hours')
+@DurationHoursConverter()
+final double? durationHours;
+```
+
+### API Response Structure
+
+```json
+{
+  "has_checked_in": true,
+  "has_checked_out": false,
+  "has_active_session": true,  // ⭐ Use this for button state
+  "current_session": {
+    "session_id": 15,
+    "check_in_time": "09:00:00"
+  },
+  "sessions_summary": {
+    "total_sessions": 3,
+    "active_sessions": 1,
+    "completed_sessions": 2
+  }
+}
+```
+
+### Testing Multiple Sessions
+
+Backend test script available at `C:\xampp\htdocs\flowERP\test_multiple_sessions.php`:
+
+```bash
+cd C:\xampp\htdocs\flowERP
+php test_multiple_sessions.php
+```
+
+This tests:
+- Multiple sequential check-in/check-out cycles
+- Status updates after each operation
+- Session list accuracy
+
+### Documentation
+See `ATTENDANCE_FEATURE_DOCUMENTATION.md` for:
+- Complete technical implementation details
+- API endpoints with examples
+- Troubleshooting guide
+- Testing checklist
+- Future improvements
+
+## Backend Development
+
+### Backend Locations
+
+**Local Development**: `D:\php_project\filament-hrm`
+- Use for testing backend changes before production
+- Run `php artisan serve` to start local server
+
+**Production Server**: `/var/www/erp1` (via SSH to `root@31.97.46.103`)
+- Live production environment
+- Access via SSH: `ssh -i ~/.ssh/id_ed25519 root@31.97.46.103`
+
+**Testing Scripts**: `C:\xampp\htdocs\flowERP`
+- PHP utilities for testing backend functionality
+
+### Testing Backend Changes
+
+**Always test locally first**, then deploy to production:
+
+1. **Make changes** in `D:\php_project\filament-hrm`
+2. **Clear caches**: `php artisan cache:clear && php artisan config:clear`
+3. **Restart server**: `php artisan serve`
+4. **Test in Flutter**: Set `baseUrl = baseUrlEmulator` and test thoroughly
+5. **Deploy to production**: Copy changes to production server
+6. **Clear production caches**: SSH to server and run `php artisan cache:clear`
+7. **Test production**: Set `baseUrl = baseUrlProduction` and verify
+
+### Database Seeding
+
+Important seed data for testing:
+- **Departments**: Required for employee registration
+- **Vacation Types**: Required for leave requests
+- **Work Schedules**: Required for attendance tracking
+
+```bash
+# Seed specific tables (local)
+php artisan db:seed --class=DepartmentSeeder
+php artisan db:seed --class=VacationTypeSeeder
+
+# Reset and seed everything (local)
+php artisan migrate:fresh --seed
+```
+
+**Warning**: Never run `migrate:fresh` on production - it deletes all data!
+
+## Multi-Tenancy
+
+The system supports multi-tenancy with `CurrentCompanyScope`:
+
+### Important Patterns
+- All models with `CompanyOwned` trait automatically scope by company
+- API requests must set session company_id explicitly
+- Employee sees only their company's data
+
+### Common Issue: CurrentCompanyScope Error
+**Symptom**: `ModelNotFoundException: CurrentCompanyScope: No company_id set in the session or on the user`
+
+**Solution**: Add session company_id before querying:
+```php
+session(['current_company_id' => $employee->company_id]);
+```
+
+See `CURRENTCOMPANYSCOPE_FIX_COMPLETE.md` for detailed fix documentation.
+
+## Test Credentials
+
+### Production Server
+```
+Email: Ahmed@bdcbiz.com
+Password: password
+Company ID: 6 (BDC)
+Department: التطوير
+```
+
+### Local Development
+```
+Email: employee@example.com
+Password: password
+```
+
+Or create test employees via Admin Panel at `http://localhost:8000/admin`

@@ -8,18 +8,16 @@ import '../../../auth/logic/cubit/auth_state.dart';
 import '../../../auth/ui/screens/login_screen.dart';
 import '../../../attendance/logic/cubit/attendance_cubit.dart';
 import '../../../attendance/logic/cubit/attendance_state.dart';
-import '../../../attendance/ui/screens/attendance_history_screen.dart';
 import '../../../notifications/ui/screens/notifications_screen.dart';
+import '../../../notifications/logic/cubit/notifications_cubit.dart';
+import '../../../notifications/logic/cubit/notifications_state.dart';
 import '../../../profile/ui/screens/profile_screen.dart';
-import '../../../leave/ui/screens/apply_leave_screen.dart';
-import '../../../leave/ui/screens/leave_history_screen.dart';
-import '../../../leave/ui/screens/leave_balance_screen.dart';
-import '../../../work_schedule/ui/screens/work_schedule_screen.dart';
-import '../../../reports/ui/screens/monthly_report_screen.dart';
-import '../../../settings/ui/screens/settings_screen.dart';
-import '../../../about/ui/screens/about_screen.dart';
 import '../../logic/cubit/dashboard_cubit.dart';
 import '../../logic/cubit/dashboard_state.dart';
+import '../widgets/check_in_card.dart';
+import '../widgets/check_in_counter_card.dart';
+import '../widgets/today_attendance_stats_card.dart';
+import '../widgets/services_grid_widget.dart';
 
 /// Dashboard Screen
 ///
@@ -36,17 +34,20 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late final DashboardCubit _dashboardCubit;
   late final AttendanceCubit _attendanceCubit;
+  late final NotificationsCubit _notificationsCubit;
 
   @override
   void initState() {
     super.initState();
     _dashboardCubit = DashboardCubit();
     _attendanceCubit = AttendanceCubit();
+    _notificationsCubit = NotificationsCubit();
     // Fetch dashboard stats and attendance status when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _dashboardCubit.fetchDashboardStats();
         _attendanceCubit.fetchTodayStatus();
+        _notificationsCubit.fetchNotifications();
       }
     });
   }
@@ -55,6 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _dashboardCubit.close();
     _attendanceCubit.close();
+    _notificationsCubit.close();
     super.dispose();
   }
 
@@ -64,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       providers: [
         BlocProvider.value(value: _dashboardCubit),
         BlocProvider.value(value: _attendanceCubit),
+        BlocProvider.value(value: _notificationsCubit),
       ],
       child: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -95,6 +98,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     backgroundColor: AppColors.success,
                   ),
                 );
+                // Refresh status after successful check-in
+                _attendanceCubit.fetchTodayStatus();
               } else if (attendanceState is CheckOutSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -102,6 +107,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     backgroundColor: AppColors.success,
                   ),
                 );
+                // Refresh status after successful check-out
+                _attendanceCubit.fetchTodayStatus();
               } else if (attendanceState is AttendanceError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -166,48 +173,232 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ? dashboardState.stats
                   : null;
 
-              return RefreshIndicator(
-                onRefresh: () async {
-                  await context.read<DashboardCubit>().refresh();
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Overview Stats - Responsive Grid
-                          _buildOverviewSection(stats, constraints),
+              return Scaffold(
+                appBar: AppBar(
+                  backgroundColor: const Color(0xFF2f3d4a),
+                  elevation: 0,
+                  leading: Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.menu, color: AppColors.white),
+                      onPressed: () {
+                        // TODO: Open drawer
+                        Scaffold.of(context).openDrawer();
+                      },
+                    ),
+                  ),
 
-                          const SizedBox(height: 24),
+                  actions: [
+                    // Notification Bell with Dynamic Badge
+                    BlocBuilder<NotificationsCubit, NotificationsState>(
+                      builder: (context, notifState) {
+                        final unreadCount = notifState is NotificationsLoaded
+                            ? notifState.unreadCount
+                            : 0;
 
-                          // Attendance Status Card
-                          BlocBuilder<AttendanceCubit, AttendanceState>(
-                            builder: (context, attendanceState) {
-                              final status = attendanceState is AttendanceStatusLoaded
-                                  ? attendanceState.status
-                                  : null;
-                              return _buildAttendanceStatusCard(context, status);
-                            },
+                        return IconButton(
+                          icon: Stack(
+                            children: [
+                              const Icon(Icons.notifications, color: AppColors.white, size: 28),
+                              // Badge for unread notifications (dynamic)
+                              if (unreadCount > 0)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.error,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-
-                          const SizedBox(height: 24),
-
-                          // Performance Metrics
-                          _buildPerformanceSection(stats),
-
-                          const SizedBox(height: 24),
-
-                          // Recent Activity
-                          _buildRecentActivitySection(stats),
-
-                          const SizedBox(height: 24),
-                        ],
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsScreen(),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    // User Profile Photo
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12, left: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.white,
+                          radius: 18,
+                          child: user.image != null && user.image!.url.isNotEmpty
+                              ? ClipOval(
+                                  child: Image.network(
+                                    user.image!.url,
+                                    width: 36,
+                                    height: 36,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildDefaultAvatar(user);
+                                    },
+                                  ),
+                                )
+                              : _buildDefaultAvatar(user),
+                        ),
                       ),
-                    );
+                    ),
+                  ],
+                ),
+                body: RefreshIndicator(
+                  onRefresh: () async {
+                    await context.read<DashboardCubit>().refresh();
+                    _attendanceCubit.fetchTodayStatus();
                   },
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Dark Header Section
+                            Container(
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF2f3d4a),
+                              ),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Greeting and Name
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _getGreeting(user.firstName),
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        user.firstName,
+                                        style: AppTextStyles.headlineMedium.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 22,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Refresh and WhatsApp Icons
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.refresh, color: Colors.white, size: 24),
+                                        onPressed: () {
+                                          context.read<DashboardCubit>().refresh();
+                                          _attendanceCubit.fetchTodayStatus();
+                                        },
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF25D366), // WhatsApp green
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        padding: const EdgeInsets.all(8),
+                                        child: const Icon(
+                                          Icons.chat,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Content with overlapping card
+                            Transform.translate(
+                              offset: const Offset(0, -80),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Today's Attendance Card (overlapping)
+                                    BlocBuilder<AttendanceCubit, AttendanceState>(
+                                      builder: (context, attendanceState) {
+                                        final status = attendanceState is AttendanceStatusLoaded
+                                            ? attendanceState.status
+                                            : null;
+                                        return _buildTodayAttendanceCard(context, status);
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                // Today's Attendance Stats Card
+                                BlocBuilder<DashboardCubit, DashboardState>(
+                                  builder: (context, dashboardState) {
+                                    final stats = dashboardState is DashboardLoaded
+                                        ? dashboardState.stats
+                                        : null;
+
+                                    // Use stats from API or default values
+                                    final presentCount = stats?.todayPresent ?? 0;
+                                    final absentCount = stats?.todayAbsent ?? 0;
+                                    final checkedOutCount = stats?.todayCheckedOut ?? 0;
+
+                                    return TodayAttendanceStatsCard(
+                                      presentCount: presentCount,
+                                      absentCount: absentCount,
+                                      checkedOutCount: checkedOutCount,
+                                    );
+                                  },
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Services Grid
+                                const ServicesGridWidget(),
+
+                                const SizedBox(height: 24),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               );
             },
@@ -218,515 +409,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Overview Section
-  Widget _buildOverviewSection(stats, BoxConstraints constraints) {
-    final isWide = constraints.maxWidth > 600;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Overview',
-          style: AppTextStyles.titleLarge.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Responsive grid
-        isWide
-            ? Row(
-                children: [
-                  Expanded(child: _buildStatCard(Icons.calendar_today, 'Attendance', stats?.attendance.percentageFormatted ?? '-', AppColors.success, '📊')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard(Icons.beach_access, 'Leave Balance', stats?.leaveBalance.daysFormatted ?? '-', AppColors.info, '🏖️')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard(Icons.access_time, 'Hours', stats?.hoursThisMonth.hoursFormatted ?? '-', AppColors.warning, '⏱️')),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard(Icons.task_alt, 'Tasks', stats?.pendingTasks.countFormatted ?? '-', AppColors.error, '✅')),
-                ],
-              )
-            : Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: _buildStatCard(Icons.calendar_today, 'Attendance', stats?.attendance.percentageFormatted ?? '-', AppColors.success, '📊')),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildStatCard(Icons.beach_access, 'Leave Balance', stats?.leaveBalance.daysFormatted ?? '-', AppColors.info, '🏖️')),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildStatCard(Icons.access_time, 'Hours', stats?.hoursThisMonth.hoursFormatted ?? '-', AppColors.warning, '⏱️')),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildStatCard(Icons.task_alt, 'Tasks', stats?.pendingTasks.countFormatted ?? '-', AppColors.error, '✅')),
-                    ],
-                  ),
-                ],
-              ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(IconData icon, String title, String value, Color color, String emoji) {
+  /// Build Default Avatar
+  Widget _buildDefaultAvatar(user) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.15), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withOpacity(0.15),
-                      color.withOpacity(0.08),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.15),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(emoji, style: const TextStyle(fontSize: 18)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text(
-                value,
-                style: AppTextStyles.headlineMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  height: 1,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Attendance Status Card
-  Widget _buildAttendanceStatusCard(BuildContext context, status) {
-    final hasCheckedIn = status?.hasCheckedIn ?? false;
-    final hasCheckedOut = status?.hasCheckedOut ?? false;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: hasCheckedIn
-              ? [AppColors.success, AppColors.success.withOpacity(0.8)]
-              : [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (hasCheckedIn ? AppColors.success : AppColors.primary).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today\'s Attendance',
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      hasCheckedIn
-                          ? (hasCheckedOut ? 'Checked Out' : 'Checked In')
-                          : 'Not Checked In',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                hasCheckedIn
-                    ? (hasCheckedOut ? Icons.check_circle : Icons.access_time)
-                    : Icons.radio_button_unchecked,
-                color: AppColors.white,
-                size: 48,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: hasCheckedIn
-                      ? null
-                      : () => context.read<AttendanceCubit>().checkIn(),
-                  icon: Icon(
-                    Icons.login,
-                    size: 20,
-                    color: hasCheckedIn
-                        ? AppColors.textDisabled
-                        : AppColors.success,
-                  ),
-                  label: Text(
-                    'Check In',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: hasCheckedIn
-                          ? AppColors.textDisabled
-                          : AppColors.success,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: hasCheckedIn
-                        ? AppColors.border.withOpacity(0.3)
-                        : AppColors.white,
-                    foregroundColor: hasCheckedIn
-                        ? AppColors.textDisabled
-                        : AppColors.success,
-                    disabledBackgroundColor: AppColors.border.withOpacity(0.3),
-                    disabledForegroundColor: AppColors.textDisabled,
-                    elevation: hasCheckedIn ? 0 : 2,
-                    shadowColor: AppColors.success.withOpacity(0.3),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: hasCheckedIn
-                            ? AppColors.border
-                            : AppColors.success.withOpacity(0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: (hasCheckedIn && !hasCheckedOut)
-                      ? () => context.read<AttendanceCubit>().checkOut()
-                      : null,
-                  icon: Icon(
-                    Icons.logout,
-                    size: 20,
-                    color: (hasCheckedIn && !hasCheckedOut)
-                        ? AppColors.error
-                        : AppColors.textSecondary,
-                  ),
-                  label: Text(
-                    'Check Out',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: (hasCheckedIn && !hasCheckedOut)
-                          ? AppColors.error
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: (hasCheckedIn && !hasCheckedOut)
-                        ? AppColors.white
-                        : AppColors.backgroundAlt,
-                    foregroundColor: (hasCheckedIn && !hasCheckedOut)
-                        ? AppColors.error
-                        : AppColors.textSecondary,
-                    disabledBackgroundColor: AppColors.backgroundAlt,
-                    disabledForegroundColor: AppColors.textSecondary,
-                    elevation: (hasCheckedIn && !hasCheckedOut) ? 2 : 0,
-                    shadowColor: AppColors.error.withOpacity(0.3),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: (hasCheckedIn && !hasCheckedOut)
-                            ? AppColors.error.withOpacity(0.3)
-                            : AppColors.border,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Performance Section
-  Widget _buildPerformanceSection(stats) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Performance Metrics',
-            style: AppTextStyles.titleMedium.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildProgressBar(
-            'Attendance Rate',
-            stats?.attendance.percentageFormatted ?? '0%',
-            AppColors.success,
-            (stats?.attendance.percentage ?? 0) / 100,
-          ),
-          const SizedBox(height: 16),
-          _buildProgressBar(
-            'Task Completion',
-            '${stats?.performance.taskCompletion.percentage ?? 0}%',
-            AppColors.info,
-            stats?.performance.taskCompletion.value ?? 0.0,
-          ),
-          const SizedBox(height: 16),
-          _buildProgressBar(
-            'Monthly Goals',
-            '${stats?.performance.monthlyGoals.percentage ?? 0}%',
-            AppColors.warning,
-            stats?.performance.monthlyGoals.value ?? 0.0,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressBar(String label, String value, Color color, double progress) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              value,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.7),
           ],
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor: color.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : 'U',
+          style: AppTextStyles.titleMedium.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      ],
-    );
-  }
-
-  // Recent Activity Section
-  Widget _buildRecentActivitySection(stats) {
-    final recentActivities = stats?.charts.attendanceTrend.take(5).toList() ?? [];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recent Activity',
-            style: AppTextStyles.titleMedium.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (recentActivities.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'No recent activity',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            )
-          else
-            ...recentActivities.asMap().entries.map((entry) {
-              final index = entry.key;
-              final activity = entry.value;
-
-              // Map status to icon and color
-              IconData icon;
-              Color color;
-              String statusText;
-
-              switch (activity.status.toLowerCase()) {
-                case 'present':
-                  icon = Icons.check_circle;
-                  color = AppColors.success;
-                  statusText = 'Present - ${activity.hours.toStringAsFixed(1)}h';
-                  break;
-                case 'absent':
-                  icon = Icons.cancel;
-                  color = AppColors.error;
-                  statusText = 'Absent';
-                  break;
-                case 'late':
-                  icon = Icons.schedule;
-                  color = AppColors.warning;
-                  statusText = 'Late - ${activity.hours.toStringAsFixed(1)}h';
-                  break;
-                case 'half_day':
-                  icon = Icons.access_time;
-                  color = AppColors.info;
-                  statusText = 'Half Day - ${activity.hours.toStringAsFixed(1)}h';
-                  break;
-                default:
-                  icon = Icons.circle;
-                  color = AppColors.textSecondary;
-                  statusText = activity.status;
-              }
-
-              return Column(
-                children: [
-                  if (index > 0) const SizedBox(height: 12),
-                  _buildActivityItem(
-                    icon,
-                    statusText,
-                    '${activity.day} - ${activity.date}',
-                    color,
-                  ),
-                ],
-              );
-            }).toList(),
-        ],
       ),
     );
   }
 
-  Widget _buildActivityItem(IconData icon, String title, String time, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                time,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  /// Get Greeting based on time of day
+  String _getGreeting(String name) {
+    final hour = DateTime.now().hour;
+    String greeting = 'Good Morning';
+    if (hour >= 12 && hour < 17) {
+      greeting = 'Good Afternoon';
+    } else if (hour >= 17) {
+      greeting = 'Good Evening';
+    }
+    return '$greeting ($name)';
   }
 
   String _getFormattedDate() {
@@ -780,4 +500,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
+
+  /// Build Today's Attendance Card
+  Widget _buildTodayAttendanceCard(BuildContext context, status) {
+    final hasActiveSession = status?.hasActiveSession ?? false;
+
+    // If has active session, show counter card
+    if (hasActiveSession) {
+      return CheckInCounterCard(status: status);
+    }
+
+    // Otherwise, show check-in card with status
+    return CheckInCard(status: status);
+  }
+
 }

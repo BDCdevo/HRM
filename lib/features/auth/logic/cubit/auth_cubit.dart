@@ -16,9 +16,9 @@ class AuthCubit extends Cubit<AuthState> {
       : _authRepo = authRepo ?? AuthRepo(),
         super(const AuthInitial());
 
-  /// Login
+  /// Login (Employee)
   ///
-  /// Authenticates user with email and password
+  /// Authenticates employee with email and password
   Future<void> login({
     required String email,
     required String password,
@@ -26,7 +26,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       emit(const AuthLoading());
 
-      print('🔐 Attempting login for: $email');
+      print('🔐 Attempting employee login for: $email');
 
       final loginResponse = await _authRepo.login(
         email: email,
@@ -34,6 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       print('✅ Login successful for: ${loginResponse.data.email}');
+      print('🎭 Roles: ${loginResponse.data.roles}');
       emit(AuthAuthenticated(loginResponse.data));
     } on DioException catch (e) {
       print('❌ Login DioException: ${e.message}');

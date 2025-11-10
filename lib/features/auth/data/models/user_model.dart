@@ -1,19 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-/// User Type Enum
+/// User Type Enum (Simplified - All users are employees)
 enum UserType {
-  employee,
-  admin;
+  employee;
 
   static UserType fromString(String? type) {
-    if (type == null) return UserType.employee;
-    switch (type.toLowerCase()) {
-      case 'admin':
-        return UserType.admin;
-      case 'employee':
-      default:
-        return UserType.employee;
-    }
+    return UserType.employee; // Always employee
   }
 }
 
@@ -59,11 +51,54 @@ class UserModel extends Equatable {
   /// Has token getter
   bool get hasToken => accessToken != null && accessToken!.isNotEmpty;
 
-  /// Is Admin getter
-  bool get isAdmin => userType == UserType.admin;
+  // ============================================
+  // ROLES & PERMISSIONS (FOR FUTURE USE)
+  // Currently not implemented - all employees have full access
+  // TODO: Implement role-based access control in future versions
+  // ============================================
 
-  /// Is Employee getter
-  bool get isEmployee => userType == UserType.employee;
+  /// Is Admin getter (based on roles instead of user type)
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get isAdmin => hasRole('admin') || hasRole('super admin');
+
+  /// Is Employee getter (everyone is employee)
+  bool get isEmployee => true;
+
+  /// Check if user has specific role
+  /// NOTE: Not currently used in UI - for future implementation
+  bool hasRole(String role) {
+    return roles?.contains(role.toLowerCase()) ?? false;
+  }
+
+  /// Check if user has specific permission
+  /// NOTE: Not currently used in UI - for future implementation
+  bool hasPermission(String permission) {
+    return permissions?.contains(permission.toLowerCase()) ?? false;
+  }
+
+  /// Check if user is HR
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get isHR => hasRole('hr') || hasRole('human resources');
+
+  /// Check if user is Manager
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get isManager => hasRole('manager') || hasRole('supervisor');
+
+  /// Check if user can manage employees (Admin, HR, Manager)
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get canManageEmployees => isAdmin || isHR || isManager;
+
+  /// Check if user can approve leaves (Admin, HR, Manager)
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get canApproveLeaves => isAdmin || isHR || isManager;
+
+  /// Check if user can view all attendance (Admin, HR)
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get canViewAllAttendance => isAdmin || isHR;
+
+  /// Check if user can view reports (Admin, HR, Manager)
+  /// NOTE: Not currently used in UI - for future implementation
+  bool get canViewReports => isAdmin || isHR || isManager;
 
   /// From JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -96,13 +131,19 @@ class UserModel extends Equatable {
       image: json['image'] != null && json['image'] is Map
           ? MediaModel.fromJson(json['image'] as Map<String, dynamic>)
           : null,
-      userType: UserType.fromString(json['user_type'] as String?),
-      roles: json['roles'] != null
-          ? (json['roles'] as List).map((e) => e.toString()).toList()
-          : null,
-      permissions: json['permissions'] != null
-          ? (json['permissions'] as List).map((e) => e.toString()).toList()
-          : null,
+      userType: UserType.employee, // All users are employees
+      roles: json['roles'] != null && json['roles'] is List
+          ? (json['roles'] as List)
+              .where((e) => e != null)
+              .map((e) => e.toString().toLowerCase())
+              .toList()
+          : [], // Default to empty list instead of null
+      permissions: json['permissions'] != null && json['permissions'] is List
+          ? (json['permissions'] as List)
+              .where((e) => e != null)
+              .map((e) => e.toString().toLowerCase())
+              .toList()
+          : [], // Default to empty list instead of null
     );
   }
 
@@ -116,7 +157,7 @@ class UserModel extends Equatable {
       'phone': phone,
       'access_token': accessToken,
       'image': image?.toJson(),
-      'user_type': userType == UserType.admin ? 'admin' : 'employee',
+      'user_type': 'employee', // All users are employees now
       'roles': roles,
       'permissions': permissions,
     };

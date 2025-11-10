@@ -27,6 +27,10 @@ class SessionsListWidget extends StatelessWidget {
           );
         }
 
+        if (state is AttendanceError) {
+          return _buildErrorState(state.displayMessage, context);
+        }
+
         if (state is SessionsLoaded) {
           final sessions = state.sessionsData.sessions;
 
@@ -49,6 +53,58 @@ class SessionsListWidget extends StatelessWidget {
 
         return const SizedBox.shrink();
       },
+    );
+  }
+
+  /// Build Error State
+  Widget _buildErrorState(String errorMessage, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.error.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48,
+            color: AppColors.error,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Error Loading Sessions',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.error,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessage,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              context.read<AttendanceCubit>().fetchTodaySessions();
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

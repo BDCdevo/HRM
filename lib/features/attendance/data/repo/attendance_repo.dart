@@ -17,17 +17,20 @@ class AttendanceRepo {
   ///
   /// Records employee check-in time for today
   /// Optionally includes GPS location (latitude, longitude) for branch validation
+  /// Optionally includes late reason if employee is checking in late
   /// Throws [DioException] on network errors
   Future<AttendanceModel> checkIn({
     double? latitude,
     double? longitude,
     String? notes,
+    String? lateReason,
   }) async {
     try {
       print('🔵 AttendanceRepo.checkIn called');
       print('📍 Latitude: $latitude');
       print('📍 Longitude: $longitude');
       print('📝 Notes: $notes');
+      print('⏰ Late Reason: $lateReason');
 
       final Map<String, dynamic> data = {};
 
@@ -41,6 +44,10 @@ class AttendanceRepo {
 
       if (notes != null && notes.isNotEmpty) {
         data['notes'] = notes;
+      }
+
+      if (lateReason != null && lateReason.isNotEmpty) {
+        data['late_reason'] = lateReason;
       }
 
       print('📦 Request data: $data');
@@ -112,6 +119,18 @@ class AttendanceRepo {
       );
 
       print('📊 Today Status Response: ${response.data}');
+
+      // Log work plan details
+      if (response.data['data'] != null && response.data['data']['work_plan'] != null) {
+        print('📊 Work Plan Data: ${response.data['data']['work_plan']}');
+      } else {
+        print('⚠️ No work plan in response');
+      }
+
+      // Log has_late_reason
+      if (response.data['data'] != null) {
+        print('📊 has_late_reason: ${response.data['data']['has_late_reason']}');
+      }
 
       final statusResponse = AttendanceStatusResponseModel.fromJson(response.data);
 

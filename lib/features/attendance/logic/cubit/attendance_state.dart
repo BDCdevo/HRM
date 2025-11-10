@@ -84,6 +84,16 @@ class AttendanceError extends AttendanceState {
 
   /// Get user-friendly error message
   String get displayMessage {
+    // If message is already in Arabic or contains distance info, return as-is
+    if (message.contains('أنت بعيد') ||
+        message.contains('المسافة') ||
+        message.contains('انتهت مهلة') ||
+        message.contains('خطأ في الشبكة') ||
+        RegExp(r'[\u0600-\u06FF]').hasMatch(message)) {
+      return message;
+    }
+
+    // Otherwise, provide user-friendly translations
     if (message.contains('401') || message.contains('Unauthenticated')) {
       return 'Session expired. Please login again.';
     } else if (message.contains('already checked in')) {

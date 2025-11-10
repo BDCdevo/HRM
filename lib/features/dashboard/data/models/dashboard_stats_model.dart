@@ -13,6 +13,11 @@ class DashboardStatsModel extends Equatable {
   final UserInfo userInfo;
   final ChartsData charts;
 
+  // Today's attendance counts
+  final int todayPresent;
+  final int todayAbsent;
+  final int todayCheckedOut;
+
   const DashboardStatsModel({
     required this.attendance,
     required this.leaveBalance,
@@ -21,6 +26,9 @@ class DashboardStatsModel extends Equatable {
     required this.performance,
     required this.userInfo,
     required this.charts,
+    this.todayPresent = 0,
+    this.todayAbsent = 0,
+    this.todayCheckedOut = 0,
   });
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +40,9 @@ class DashboardStatsModel extends Equatable {
       performance: PerformanceMetrics.fromJson(json['performance'] as Map<String, dynamic>),
       userInfo: UserInfo.fromJson(json['user_info'] as Map<String, dynamic>),
       charts: ChartsData.fromJson(json['charts'] as Map<String, dynamic>),
+      todayPresent: json['today_present'] as int? ?? 0,
+      todayAbsent: json['today_absent'] as int? ?? 0,
+      todayCheckedOut: json['today_checked_out'] as int? ?? 0,
     );
   }
 
@@ -44,6 +55,9 @@ class DashboardStatsModel extends Equatable {
       'performance': performance.toJson(),
       'user_info': userInfo.toJson(),
       'charts': charts.toJson(),
+      'today_present': todayPresent,
+      'today_absent': todayAbsent,
+      'today_checked_out': todayCheckedOut,
     };
   }
 
@@ -56,6 +70,9 @@ class DashboardStatsModel extends Equatable {
         performance,
         userInfo,
         charts,
+        todayPresent,
+        todayAbsent,
+        todayCheckedOut,
       ];
 }
 

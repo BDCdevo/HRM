@@ -5,7 +5,7 @@ import 'features/auth/logic/cubit/auth_cubit.dart';
 import 'features/auth/logic/cubit/auth_state.dart';
 import 'core/routing/app_router.dart';
 import 'core/navigation/main_navigation_screen.dart';
-import 'features/auth/ui/screens/user_type_selection_screen.dart';
+import 'features/auth/ui/screens/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
             // Initial Route based on Authentication Status
             initialRoute: state is AuthAuthenticated
                 ? AppRouter.mainNavigation
-                : AppRouter.userTypeSelection,
+                : AppRouter.login,
 
             // Route Generator
             onGenerateRoute: AppRouter.onGenerateRoute,
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
             // Home Screen (fallback)
             home: state is AuthAuthenticated
                 ? const MainNavigationScreen()
-                : const UserTypeSelectionScreen(),
+                : const LoginScreen(),
           );
         },
       ),

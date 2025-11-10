@@ -2,25 +2,44 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'attendance_session_model.g.dart';
 
+/// Custom converter for duration_hours that handles both String and num
+class DurationHoursConverter implements JsonConverter<double?, dynamic> {
+  const DurationHoursConverter();
+
+  @override
+  double? fromJson(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  @override
+  dynamic toJson(double? value) => value;
+}
+
 /// Attendance Session Model
 ///
 /// Represents a single check-in/check-out session within a day
 @JsonSerializable()
 class AttendanceSessionModel {
+  @JsonKey(defaultValue: 0)
   final int id;
 
   @JsonKey(name: 'attendance_id')
   final int? attendanceId;
 
+  @JsonKey(defaultValue: '')
   final String date;
 
-  @JsonKey(name: 'check_in_time')
+  @JsonKey(name: 'check_in_time', defaultValue: '')
   final String checkInTime;
 
   @JsonKey(name: 'check_out_time')
   final String? checkOutTime;
 
   @JsonKey(name: 'duration_hours')
+  @DurationHoursConverter()
   final double? durationHours;
 
   @JsonKey(name: 'duration_label')
@@ -35,10 +54,10 @@ class AttendanceSessionModel {
   final bool? isActive;
 
   AttendanceSessionModel({
-    required this.id,
+    this.id = 0,
     this.attendanceId,
-    required this.date,
-    required this.checkInTime,
+    this.date = '',
+    this.checkInTime = '',
     this.checkOutTime,
     this.durationHours,
     this.durationLabel,
@@ -76,27 +95,28 @@ class AttendanceSessionModel {
 /// Sessions Summary Model
 @JsonSerializable()
 class SessionsSummaryModel {
-  @JsonKey(name: 'total_sessions')
+  @JsonKey(name: 'total_sessions', defaultValue: 0)
   final int totalSessions;
 
-  @JsonKey(name: 'active_sessions')
+  @JsonKey(name: 'active_sessions', defaultValue: 0)
   final int activeSessions;
 
-  @JsonKey(name: 'completed_sessions')
+  @JsonKey(name: 'completed_sessions', defaultValue: 0)
   final int completedSessions;
 
-  @JsonKey(name: 'total_duration')
+  @JsonKey(name: 'total_duration', defaultValue: '0h 0m')
   final String totalDuration;
 
   @JsonKey(name: 'total_hours')
-  final double totalHours;
+  @DurationHoursConverter()
+  final double? totalHours;  // Made nullable to handle null from API
 
   SessionsSummaryModel({
-    required this.totalSessions,
-    required this.activeSessions,
-    required this.completedSessions,
-    required this.totalDuration,
-    required this.totalHours,
+    this.totalSessions = 0,
+    this.activeSessions = 0,
+    this.completedSessions = 0,
+    this.totalDuration = '0h 0m',
+    this.totalHours,
   });
 
   factory SessionsSummaryModel.fromJson(Map<String, dynamic> json) =>
@@ -105,7 +125,7 @@ class SessionsSummaryModel {
   Map<String, dynamic> toJson() => _$SessionsSummaryModelToJson(this);
 
   /// Get formatted total hours
-  String get formattedHours => '${totalHours.toStringAsFixed(1)}h';
+  String get formattedHours => '${(totalHours ?? 0.0).toStringAsFixed(1)}h';
 }
 
 /// Today Sessions Data Model
@@ -146,12 +166,13 @@ class TodaySessionsDataModel {
 class TodaySessionsResponseModel {
   final TodaySessionsDataModel data;
   final String? message;
+  @JsonKey(defaultValue: 200)
   final int status;
 
   TodaySessionsResponseModel({
     required this.data,
     this.message,
-    required this.status,
+    this.status = 200,
   });
 
   factory TodaySessionsResponseModel.fromJson(Map<String, dynamic> json) =>

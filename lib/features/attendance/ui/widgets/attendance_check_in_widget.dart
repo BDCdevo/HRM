@@ -10,6 +10,7 @@ import '../../logic/cubit/attendance_cubit.dart';
 import '../../logic/cubit/attendance_state.dart';
 import '../../data/models/attendance_model.dart';
 import 'sessions_list_widget.dart';
+import 'late_reason_bottom_sheet.dart';
 
 /// Attendance Check-in Widget
 ///
@@ -84,6 +85,16 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
         if (state is AttendanceStatusLoaded) {
           _lastStatus = state.status;
           print('✅ Status loaded: hasActiveSession=${state.status.hasActiveSession}');
+          print('✅ Has Late Reason: ${state.status.hasLateReason}');
+          print('✅ Work Plan in status: ${state.status.workPlan != null ? "YES" : "NO"}');
+          if (state.status.workPlan != null) {
+            print('✅ Work Plan Details:');
+            print('   - Name: ${state.status.workPlan!.name}');
+            print('   - Start Time: ${state.status.workPlan!.startTime}');
+            print('   - End Time: ${state.status.workPlan!.endTime}');
+            print('   - Schedule: ${state.status.workPlan!.schedule}');
+            print('   - Permission Minutes: ${state.status.workPlan!.permissionMinutes}');
+          }
         }
 
         // Use last status if available, otherwise try to extract from current state
@@ -95,11 +106,20 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
         final bool isCheckedOut = status?.hasCheckedOut ?? false;
         final String? checkInTime = status?.dailySummary?.checkInTime ?? status?.checkInTime;
         final String? checkOutTime = status?.dailySummary?.checkOutTime ?? status?.checkOutTime;
-        final double workingHours = status?.dailySummary?.workingHours ?? status?.workingHours ?? 0.0;
+        // FIXED: Use totalHours which sums all sessions, not just current session
+        final double workingHours = status?.totalHours ?? 0.0;
         final int lateMinutes = status?.dailySummary?.lateMinutes ?? status?.lateMinutes ?? 0;
         final bool isLoading = state is AttendanceLoading;
 
-        print('🎨 UI Building - State: ${state.runtimeType}, hasActiveSession: $hasActiveSession, isCheckedIn: $isCheckedIn');
+        print('🎨 UI Building:');
+        print('   State Type: ${state.runtimeType}');
+        print('   _lastStatus exists: ${_lastStatus != null}');
+        if (_lastStatus != null) {
+          print('   _lastStatus.hasActiveSession: ${_lastStatus!.hasActiveSession}');
+        }
+        print('   Computed hasActiveSession: $hasActiveSession');
+        print('   Computed isCheckedIn: $isCheckedIn');
+        print('   Button will show: ${hasActiveSession ? "Check Out" : "Check In"}');
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -194,7 +214,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                     : hasActiveSession
                         ? 'Check Out'
                         : 'Check In',
-                onPressed: isLoading
+                onPressed: isLoading || _lastStatus == null // ✅ Disable if status not loaded
                     ? null
                     : () async {
                         print('🔴 BUTTON PRESSED!');
@@ -359,9 +379,35 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
     );
   }
 
-  /// Handle Check In with GPS Location
+  /// Handle Check In with GPS Location and Late Reason
   Future<void> _handleCheckIn(BuildContext context) async {
     print('🟣🟣🟣 _handleCheckIn METHOD STARTED 🟣🟣🟣');
+
+    // ✅ CRITICAL: Check if status is loaded before proceeding
+    if (_lastStatus == null) {
+      print('❌ _lastStatus is NULL - cannot proceed with check-in');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⏳ Please wait for status to load...'),
+          backgroundColor: AppColors.warning,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Trigger status fetch
+      context.read<AttendanceCubit>().fetchTodayStatus();
+      return;
+    }
+
+    // IMPORTANT: Save current status BEFORE any dialogs or async operations
+    // Now guaranteed to be non-null
+    final AttendanceStatusModel savedStatus = _lastStatus!;
+    print('💾 Saved status at start: YES');
+    print('💾 Saved status - hasLateReason: ${savedStatus.hasLateReason}');
+    print('💾 Saved status - workPlan: ${savedStatus.workPlan != null ? savedStatus.workPlan!.name : "NULL"}');
+
     try {
       // Show loading dialog
       showDialog(
@@ -393,19 +439,74 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
       print('📍 Accuracy: ${position.accuracy} meters');
 
       // Close loading dialog
-      if (!context.mounted) {
-        print('⚠️ Context not mounted after getting location');
+      if (!mounted) {
+        print('⚠️ Widget not mounted after getting location');
         return;
       }
 
       Navigator.of(context).pop();
 
-      print('🚀 Calling checkIn with location...');
+      // IMPORTANT: Use savedStatus (saved before any dialogs) instead of _lastStatus
+      // This prevents issues with widget rebuilds
+      print('🔍 ========== DEBUG: Checking if late ==========');
+      print('🔍 savedStatus is null? ${savedStatus == null}');
+      if (savedStatus != null) {
+        print('🔍 Work Plan exists? ${savedStatus.workPlan != null}');
+        if (savedStatus.workPlan != null) {
+          print('🔍 Work Plan Name: ${savedStatus.workPlan!.name}');
+          print('🔍 Work Plan Start Time: ${savedStatus.workPlan!.startTime}');
+          print('🔍 Work Plan End Time: ${savedStatus.workPlan!.endTime}');
+          print('🔍 Work Plan Permission Minutes: ${savedStatus.workPlan!.permissionMinutes}');
+        }
+        print('🔍 savedStatus.hasLateReason: ${savedStatus.hasLateReason}');
+      }
+      print('🔍 ==========================================');
 
-      // Perform check-in with location
+      String? lateReason;
+
+      // ✅ Check if this is the first session today
+      final int totalSessions = savedStatus.sessionsSummary?.totalSessions ?? 0;
+      final bool isFirstSession = totalSessions == 0;
+
+      // ✅ Check if employee is late (client-side calculation)
+      final bool isLate = _checkIfLate(savedStatus);
+
+      print('📊 Total sessions today: $totalSessions');
+      print('🎯 Is first session? $isFirstSession');
+      print('⏰ Is late? $isLate');
+      print('⏰⏰⏰ Will show bottom sheet? ${isFirstSession && isLate} ⏰⏰⏰');
+
+      // Show bottom sheet only if:
+      // 1. This is the FIRST SESSION of the day
+      // 2. AND employee is LATE
+      if (isFirstSession && isLate) {
+        print('⏰ First session + Late → Showing late reason bottom sheet...');
+        lateReason = await showLateReasonBottomSheet(context);
+        print('⏰ Late reason from bottom sheet: $lateReason');
+
+        // If user cancelled the bottom sheet, don't proceed with check-in
+        if (lateReason == null) {
+          print('⚠️ User cancelled late reason input');
+          return;
+        }
+      } else if (!isFirstSession) {
+        print('⏰ Not first session (already checked in today) - proceeding without bottom sheet');
+      } else if (!isLate) {
+        print('⏰ Employee is NOT late - proceeding without bottom sheet');
+      }
+
+      if (!mounted) {
+        print('⚠️ Widget not mounted after late reason input');
+        return;
+      }
+
+      print('🚀 Calling checkIn with location and late reason...');
+
+      // Perform check-in with location and late reason
       await context.read<AttendanceCubit>().checkIn(
         latitude: position.latitude,
         longitude: position.longitude,
+        lateReason: lateReason,
       );
 
       print('✅ CheckIn method called');
@@ -414,7 +515,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
       print('❌ Error type: ${e.runtimeType}');
 
       // Close loading dialog if open
-      if (context.mounted) {
+      if (mounted) {
         // Try to pop the dialog, but catch any errors
         try {
           Navigator.of(context).pop();
@@ -424,7 +525,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
       }
 
       // Show error
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('📍 ${e.toString()}'),
@@ -447,6 +548,107 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
         );
       }
     }
+  }
+
+  /// Check if employee is late
+  ///
+  /// FIXED: Calculate late status based on CURRENT TIME vs work plan start time
+  /// This runs BEFORE check-in, so we can't rely on backend's late_minutes
+  /// (which is only calculated AFTER check-in)
+  ///
+  /// Returns true if employee is checking in after work start time + grace period
+  bool _checkIfLate(AttendanceStatusModel? status) {
+    print('🕐 ========== CHECKING IF LATE (CLIENT-SIDE CALCULATION) ==========');
+
+    if (status == null) {
+      print('⏰ ❌ Status is null - cannot determine if late');
+      print('🕐 =========================================================');
+      return false;
+    }
+
+    if (status.workPlan == null) {
+      print('⏰ ❌ Work plan is null - cannot determine if late');
+      print('🕐 =========================================================');
+      return false;
+    }
+
+    final workPlan = status.workPlan!;
+    print('⏰ ✅ Work Plan Found:');
+    print('   - Name: ${workPlan.name}');
+    print('   - Start Time: ${workPlan.startTime}');
+    print('   - End Time: ${workPlan.endTime}');
+    print('   - Permission Minutes (Grace Period): ${workPlan.permissionMinutes}');
+
+    // Check if work plan has start time
+    if (workPlan.startTime == null || workPlan.startTime!.isEmpty) {
+      print('⏰ ❌ Start time is empty - cannot determine if late');
+      print('🕐 =========================================================');
+      return false;
+    }
+
+    try {
+      // ✅ Calculate based on CURRENT TIME (before check-in happens)
+      final now = DateTime.now();
+      final currentTime = TimeOfDay(hour: now.hour, minute: now.minute);
+
+      // Parse work start time (format: "HH:MM:SS" or "HH:MM")
+      final startTimeParts = workPlan.startTime!.split(':');
+      if (startTimeParts.length < 2) {
+        print('⏰ ❌ Invalid start time format: ${workPlan.startTime}');
+        print('🕐 =========================================================');
+        return false;
+      }
+
+      final startHour = int.parse(startTimeParts[0]);
+      final startMinute = int.parse(startTimeParts[1]);
+      final workStartTime = TimeOfDay(hour: startHour, minute: startMinute);
+
+      // Convert to minutes since midnight for comparison
+      final currentMinutes = currentTime.hour * 60 + currentTime.minute;
+      final startMinutes = workStartTime.hour * 60 + workStartTime.minute;
+      final gracePeriod = workPlan.permissionMinutes;
+      final allowedStartMinutes = startMinutes + gracePeriod;
+
+      print('⏰ Time Calculation:');
+      print('   - Current Time: ${currentTime.hour}:${currentTime.minute.toString().padLeft(2, '0')} (${currentMinutes} minutes since midnight)');
+      print('   - Work Start Time: ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')} (${startMinutes} minutes since midnight)');
+      print('   - Grace Period: $gracePeriod minutes');
+      print('   - Allowed Start Time: ${_minutesToTimeString(allowedStartMinutes)} (${allowedStartMinutes} minutes since midnight)');
+
+      // Employee is late if current time > start time + grace period
+      final bool isLate = currentMinutes > allowedStartMinutes;
+      final int minutesLate = isLate ? (currentMinutes - allowedStartMinutes) : 0;
+
+      print('⏰ Comparison Result:');
+      print('   - Current: $currentMinutes > Allowed: $allowedStartMinutes?');
+      print('   - Is Late? $isLate');
+
+      if (isLate) {
+        print('   - Minutes Late (after grace period): $minutesLate minutes');
+        print('   - Hours Late: ${(minutesLate / 60).toStringAsFixed(1)} hours');
+      } else if (currentMinutes > startMinutes) {
+        final minutesWithinGrace = currentMinutes - startMinutes;
+        print('   - Within Grace Period ✓ (late by $minutesWithinGrace min but < $gracePeriod grace)');
+      } else {
+        print('   - On Time ✓ (arrived before ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')})');
+      }
+
+      print('🕐 =========================================================');
+
+      return isLate;
+    } catch (e, stackTrace) {
+      print('❌ Error in _checkIfLate: $e');
+      print('❌ Stack trace: $stackTrace');
+      print('🕐 =========================================================');
+      return false;
+    }
+  }
+
+  /// Convert minutes since midnight to time string (HH:MM)
+  String _minutesToTimeString(int minutes) {
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    return '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}';
   }
 
   /// Format time string (HH:MM:SS) to (HH:MM AM/PM)

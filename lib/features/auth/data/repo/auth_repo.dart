@@ -67,7 +67,59 @@ class AuthRepo {
     }
   }
 
-  /// Admin Login
+  /// Unified Login (Auto-detects Admin or Employee)
+  ///
+  /// Authenticates user with email and password
+  /// Backend automatically determines if user is Admin or Employee
+  /// Returns LoginResponseModel on success with roles/permissions
+  /// Throws DioException on failure
+  Future<LoginResponseModel> unifiedLogin({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        ApiConfig.unifiedLogin,
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      print('✅ Unified Login Response Status: ${response.statusCode}');
+      print('📦 Unified Login Response Data: ${response.data}');
+
+      // Parse response
+      final loginResponse = LoginResponseModel.fromJson(response.data);
+
+      // Save token to secure storage
+      if (loginResponse.data.hasToken) {
+        await _storage.write(
+          key: 'auth_token',
+          value: loginResponse.data.accessToken,
+        );
+        print('🔐 Token saved successfully');
+        print('👤 User Type: ${loginResponse.data.userType}');
+        print('🎭 Roles: ${loginResponse.data.roles}');
+        print('🔐 Permissions: ${loginResponse.data.permissions}');
+      }
+
+      return loginResponse;
+    } on DioException catch (e) {
+      print('❌ Unified Login Error: ${e.message}');
+
+      // Parse error response
+      if (e.response?.data != null) {
+        final errorResponse = ErrorResponseModel.fromJson(e.response!.data);
+        print('⚠️ Error Message: ${errorResponse.message}');
+        print('⚠️ First Error: ${errorResponse.firstError}');
+      }
+
+      rethrow;
+    }
+  }
+
+  /// Admin Login (Legacy - kept for compatibility)
   ///
   /// Authenticates admin with email and password
   /// Returns LoginResponseModel on success

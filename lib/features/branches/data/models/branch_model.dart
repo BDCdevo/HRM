@@ -8,7 +8,9 @@ class BranchModel {
   final String name;
   final String? code;
   final String? address;
+  @JsonKey(fromJson: _latitudeFromJson)
   final double? latitude;
+  @JsonKey(fromJson: _longitudeFromJson)
   final double? longitude;
   final int radius;
   final String? phone;
@@ -28,6 +30,22 @@ class BranchModel {
     this.email,
     this.employeesCount,
   });
+
+  /// Custom JSON converter for latitude (handles String or num)
+  static double? _latitudeFromJson(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  /// Custom JSON converter for longitude (handles String or num)
+  static double? _longitudeFromJson(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
 
   factory BranchModel.fromJson(Map<String, dynamic> json) =>
       _$BranchModelFromJson(json);

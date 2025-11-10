@@ -9,12 +9,14 @@ part of 'attendance_session_model.dart';
 AttendanceSessionModel _$AttendanceSessionModelFromJson(
   Map<String, dynamic> json,
 ) => AttendanceSessionModel(
-  id: (json['id'] as num).toInt(),
+  id: (json['id'] as num?)?.toInt() ?? 0,
   attendanceId: (json['attendance_id'] as num?)?.toInt(),
-  date: json['date'] as String,
-  checkInTime: json['check_in_time'] as String,
+  date: json['date'] as String? ?? '',
+  checkInTime: json['check_in_time'] as String? ?? '',
   checkOutTime: json['check_out_time'] as String?,
-  durationHours: (json['duration_hours'] as num?)?.toDouble(),
+  durationHours: const DurationHoursConverter().fromJson(
+    json['duration_hours'],
+  ),
   durationLabel: json['duration_label'] as String?,
   sessionType: json['session_type'] as String?,
   notes: json['notes'] as String?,
@@ -29,7 +31,9 @@ Map<String, dynamic> _$AttendanceSessionModelToJson(
   'date': instance.date,
   'check_in_time': instance.checkInTime,
   'check_out_time': instance.checkOutTime,
-  'duration_hours': instance.durationHours,
+  'duration_hours': const DurationHoursConverter().toJson(
+    instance.durationHours,
+  ),
   'duration_label': instance.durationLabel,
   'session_type': instance.sessionType,
   'notes': instance.notes,
@@ -39,11 +43,11 @@ Map<String, dynamic> _$AttendanceSessionModelToJson(
 SessionsSummaryModel _$SessionsSummaryModelFromJson(
   Map<String, dynamic> json,
 ) => SessionsSummaryModel(
-  totalSessions: (json['total_sessions'] as num).toInt(),
-  activeSessions: (json['active_sessions'] as num).toInt(),
-  completedSessions: (json['completed_sessions'] as num).toInt(),
-  totalDuration: json['total_duration'] as String,
-  totalHours: (json['total_hours'] as num).toDouble(),
+  totalSessions: (json['total_sessions'] as num?)?.toInt() ?? 0,
+  activeSessions: (json['active_sessions'] as num?)?.toInt() ?? 0,
+  completedSessions: (json['completed_sessions'] as num?)?.toInt() ?? 0,
+  totalDuration: json['total_duration'] as String? ?? '0h 0m',
+  totalHours: const DurationHoursConverter().fromJson(json['total_hours']),
 );
 
 Map<String, dynamic> _$SessionsSummaryModelToJson(
@@ -53,7 +57,7 @@ Map<String, dynamic> _$SessionsSummaryModelToJson(
   'active_sessions': instance.activeSessions,
   'completed_sessions': instance.completedSessions,
   'total_duration': instance.totalDuration,
-  'total_hours': instance.totalHours,
+  'total_hours': const DurationHoursConverter().toJson(instance.totalHours),
 };
 
 TodaySessionsDataModel _$TodaySessionsDataModelFromJson(
@@ -62,7 +66,9 @@ TodaySessionsDataModel _$TodaySessionsDataModelFromJson(
   sessions: (json['sessions'] as List<dynamic>)
       .map((e) => AttendanceSessionModel.fromJson(e as Map<String, dynamic>))
       .toList(),
-  summary: SessionsSummaryModel.fromJson(json['summary'] as Map<String, dynamic>),
+  summary: SessionsSummaryModel.fromJson(
+    json['summary'] as Map<String, dynamic>,
+  ),
 );
 
 Map<String, dynamic> _$TodaySessionsDataModelToJson(
@@ -77,7 +83,7 @@ TodaySessionsResponseModel _$TodaySessionsResponseModelFromJson(
 ) => TodaySessionsResponseModel(
   data: TodaySessionsDataModel.fromJson(json['data'] as Map<String, dynamic>),
   message: json['message'] as String?,
-  status: (json['status'] as num).toInt(),
+  status: (json['status'] as num?)?.toInt() ?? 200,
 );
 
 Map<String, dynamic> _$TodaySessionsResponseModelToJson(

@@ -48,54 +48,43 @@ class AttendanceCubit extends Cubit<AttendanceState> {
   /// Check In
   ///
   /// Records check-in time for today
-  /// Automatically gets GPS location for branch validation
+  /// Requires GPS location (latitude, longitude) for branch validation
+  /// Optionally includes late reason if employee is checking in late
   /// Emits:
   /// - [AttendanceLoading] while processing
   /// - [CheckInSuccess] on success
   /// - [AttendanceError] on failure
   Future<void> checkIn({
-    double? latitude,
-    double? longitude,
+    required double latitude,  // ✅ Now required
+    required double longitude, // ✅ Now required
     String? notes,
+    String? lateReason,
   }) async {
     try {
       print('🟢 AttendanceCubit.checkIn called');
       print('📍 Cubit - Received Latitude: $latitude');
       print('📍 Cubit - Received Longitude: $longitude');
       print('📝 Cubit - Notes: $notes');
+      print('⏰ Cubit - Late Reason: $lateReason');
 
       emit(const AttendanceLoading());
 
-      // If location not provided, get it automatically
-      if (latitude == null || longitude == null) {
-        print('📍 No location provided, getting GPS location...');
-        try {
-          final Position position = await LocationService.getCurrentPosition();
-          latitude = position.latitude;
-          longitude = position.longitude;
-          print('✅ Got GPS location: $latitude, $longitude');
-        } catch (locationError) {
-          print('❌ Location error: $locationError');
-          emit(AttendanceError(
-            message: locationError.toString().replaceAll('Exception: ', ''),
-          ));
-          return;
-        }
-      }
+      // ✅ REMOVED: Duplicate GPS logic
+      // Widget is now responsible for getting GPS location
+      // This simplifies the Cubit and avoids duplicate GPS calls
 
       final attendance = await _attendanceRepo.checkIn(
         latitude: latitude,
         longitude: longitude,
         notes: notes,
+        lateReason: lateReason,
       );
 
       print('✅ Cubit - Check-in successful');
 
       emit(CheckInSuccess(attendance: attendance));
 
-      // Fetch updated status and sessions
-      await fetchTodayStatus();
-      await fetchTodaySessions();
+      // Note: Status and sessions will be refreshed by the widget listener
     } on DioException catch (e) {
       print('❌ Cubit - DioException: ${e.message}');
       _handleDioException(e);
@@ -122,9 +111,7 @@ class AttendanceCubit extends Cubit<AttendanceState> {
 
       emit(CheckOutSuccess(attendance: attendance));
 
-      // Fetch updated status and sessions
-      await fetchTodayStatus();
-      await fetchTodaySessions();
+      // Note: Status and sessions will be refreshed by the widget listener
     } on DioException catch (e) {
       _handleDioException(e);
     } catch (e) {
@@ -163,27 +150,43 @@ class AttendanceCubit extends Cubit<AttendanceState> {
     if (e.response != null) {
       // Server responded with error
       final statusCode = e.response?.statusCode;
-      final errorMessage = e.response?.data?['message'] ?? 'Operation failed';
+      final data = e.response?.data;
+      String errorMessage = data?['message'] ?? 'Operation failed';
+
+      // Special handling for geofencing errors (distance info)
+      if (statusCode == 400 && data?['errors'] != null) {
+        final errors = data['errors'];
+        final distanceMeters = errors['distance_meters'];
+        final allowedRadius = errors['allowed_radius'];
+
+        if (distanceMeters != null && allowedRadius != null) {
+          // Enhanced error message with distance info
+          errorMessage = 'أنت بعيد عن موقع الفرع\n'
+              'المسافة الحالية: ${distanceMeters}م\n'
+              'المسافة المسموحة: ${allowedRadius}م\n'
+              'يرجى الاقتراب من الفرع للتسجيل';
+        }
+      }
 
       emit(AttendanceError(
         message: '[$statusCode] $errorMessage',
-        errorDetails: e.response?.data?.toString(),
+        errorDetails: data?.toString(),
       ));
     } else if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
       // Timeout error
       emit(const AttendanceError(
-        message: 'Request timeout. Please try again.',
+        message: 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
       ));
     } else if (e.type == DioExceptionType.unknown) {
       // Network error (no internet connection)
       emit(const AttendanceError(
-        message: 'Network error. Please check your internet connection.',
+        message: 'خطأ في الشبكة. يرجى التحقق من اتصال الإنترنت.',
       ));
     } else {
       // Other Dio errors
       emit(AttendanceError(
-        message: e.message ?? 'An unexpected error occurred',
+        message: e.message ?? 'حدث خطأ غير متوقع',
       ));
     }
   }

@@ -1,0 +1,1019 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/styles/app_colors.dart';
+import '../../data/models/employee_attendance_model.dart';
+import '../../logic/cubit/attendance_summary_cubit.dart';
+import '../../logic/cubit/attendance_summary_state.dart';
+import '../widgets/employee_details_bottom_sheet.dart';
+
+/// Attendance Summary Screen
+///
+/// Shows all employees' attendance for today with detailed information
+/// Fetches real data from API
+class AttendanceSummaryScreen extends StatefulWidget {
+  const AttendanceSummaryScreen({super.key});
+
+  @override
+  State<AttendanceSummaryScreen> createState() => _AttendanceSummaryScreenState();
+}
+
+class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
+  late final AttendanceSummaryCubit _cubit;
+  String selectedFilter = 'Today';
+  DateTime selectedDate = DateTime.now();
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = AttendanceSummaryCubit();
+    // Fetch today's summary on init
+    _cubit.fetchTodaySummary();
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateFormat('E, MMM dd, yyyy').format(DateTime.now());
+
+    return BlocProvider.value(
+      value: _cubit,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF2f3d4a),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF2f3d4a),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Attendance Summary',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: _showSearchDialog,
+            ),
+          ],
+        ),
+        body: BlocBuilder<AttendanceSummaryCubit, AttendanceSummaryState>(
+          builder: (context, state) {
+            if (state is AttendanceSummaryLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            }
+
+            if (state is AttendanceSummaryError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.white, size: 64),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading data',
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => _cubit.fetchTodaySummary(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final summary = state is AttendanceSummaryLoaded ? state.summary : null;
+            final allEmployees = summary?.employees ?? [];
+
+            // Filter employees based on search query
+            final employees = searchQuery.isEmpty
+                ? allEmployees
+                : allEmployees.where((employee) {
+                    final nameLower = employee.employeeName.toLowerCase();
+                    final roleLower = (employee.role ?? '').toLowerCase();
+                    final deptLower = (employee.department ?? '').toLowerCase();
+                    final query = searchQuery.toLowerCase();
+
+                    return nameLower.contains(query) ||
+                           roleLower.contains(query) ||
+                           deptLower.contains(query);
+                  }).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                _cubit.fetchTodaySummary();
+                await Future.delayed(const Duration(seconds: 1));
+              },
+              color: AppColors.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section with Gradient
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2D3142),
+                          Color(0xFF3d4758),
+                          Color(0xFF2D3142),
+                        ],
+                      ),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Attendance",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Track Your Team",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.accent.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    color: AppColors.accent,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    selectedFilter,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Content Section - Overlapping Card Design
+                Expanded(
+                  child: Stack(
+                    clipBehavior: Clip.none, // Allow overflow
+                    children: [
+                      // Background (Light Color)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Summary Card - Positioned to overlap
+                      Positioned(
+                        top: -80,
+                        left: 20,
+                        right: 20,
+                        child: _buildSummaryCard(today, summary),
+                      ),
+
+                      // Employee List - Below the card
+                      Positioned(
+                        top: 140, // Adjust based on card height
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: employees.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        searchQuery.isEmpty
+                                            ? Icons.people_outline_rounded
+                                            : Icons.search_off_rounded,
+                                        size: 64,
+                                        color: AppColors.primary.withOpacity(0.5),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      searchQuery.isEmpty
+                                          ? 'No Employees Yet'
+                                          : 'No Results Found',
+                                      style: const TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      searchQuery.isEmpty
+                                          ? 'There are no employees in the system'
+                                          : 'Try searching with different keywords',
+                                      style: const TextStyle(
+                                        color: Colors.black54,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                itemCount: employees.length,
+                                itemBuilder: (context, index) {
+                                  final employee = employees[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _buildEmployeeCard(employee),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Build Summary Card - Half in dark background
+  Widget _buildSummaryCard(String date, AttendanceSummaryModel? summary) {
+    final totalEmployees = summary?.totalEmployees ?? 0;
+    final checkedIn = summary?.checkedIn ?? 0;
+    final absent = summary?.absent ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Summary',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Filter Dropdown
+              GestureDetector(
+                onTap: _showFilterOptions,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        selectedFilter,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_drop_down,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Stats Row with Enhanced Design
+          Row(
+            children: [
+              // Employee Count
+              Expanded(
+                child: _buildEnhancedStatCard(
+                  icon: Icons.people_rounded,
+                  label: 'Total',
+                  value: totalEmployees.toString(),
+                  color: AppColors.primary,
+                  bgColor: AppColors.primary.withOpacity(0.1),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Checked In Count
+              Expanded(
+                child: _buildEnhancedStatCard(
+                  icon: Icons.check_circle_rounded,
+                  label: 'Present',
+                  value: checkedIn.toString(),
+                  color: AppColors.success,
+                  bgColor: AppColors.success.withOpacity(0.1),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Absent Count
+              Expanded(
+                child: _buildEnhancedStatCard(
+                  icon: Icons.cancel_rounded,
+                  label: 'Absent',
+                  value: absent.toString(),
+                  color: AppColors.error,
+                  bgColor: AppColors.error.withOpacity(0.1),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Enhanced Stat Card
+  Widget _buildEnhancedStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withOpacity(0.8),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Stat Column (Legacy - keeping for compatibility)
+  Widget _buildStatColumn({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build Employee Card with Enhanced Status Display
+  Widget _buildEmployeeCard(EmployeeAttendanceModel employee) {
+    // Determine avatar color based on name
+    final colors = [
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFF9C27B0), // Purple
+    ];
+    final colorIndex = employee.employeeName.hashCode % colors.length;
+    final avatarColor = colors[colorIndex.abs()];
+
+    // Determine status color and text
+    Color statusColor;
+    String statusText;
+    Color statusBgColor;
+    IconData statusIcon;
+
+    switch (employee.status.toLowerCase()) {
+      case 'present':
+        statusColor = AppColors.success;
+        statusText = 'PRESENT';
+        statusBgColor = const Color(0xFFD4EDDA);
+        statusIcon = Icons.check_circle;
+        break;
+      case 'late':
+        statusColor = const Color(0xFFFF9800);
+        statusText = 'LATE';
+        statusBgColor = const Color(0xFFFFE5D0);
+        statusIcon = Icons.access_time;
+        break;
+      case 'absent':
+        statusColor = AppColors.error;
+        statusText = 'ABSENT';
+        statusBgColor = const Color(0xFFF8D7DA);
+        statusIcon = Icons.cancel;
+        break;
+      case 'checked_out':
+        statusColor = AppColors.info;
+        statusText = 'CHECKED OUT';
+        statusBgColor = const Color(0xFFD1ECF1);
+        statusIcon = Icons.exit_to_app;
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusText = 'UNKNOWN';
+        statusBgColor = const Color(0xFFE0E0E0);
+        statusIcon = Icons.help_outline;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        // Show employee details bottom sheet
+        showEmployeeDetailsBottomSheet(context, employee);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: statusColor.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: statusColor.withOpacity(0.15),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      child: Column(
+        children: [
+          // Top Row: Avatar, Info, Status Badge
+          Row(
+            children: [
+              // Location Icon
+              if (employee.hasLocation)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.location_on,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+
+              SizedBox(width: employee.hasLocation ? 12 : 0),
+
+              // Avatar with Online Status
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: avatarColor,
+                    child: Text(
+                      employee.avatarInitial ?? employee.employeeName[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (employee.isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(width: 12),
+
+              // Employee Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      employee.employeeName,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      employee.role ?? 'No Role',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      employee.department ?? 'No Department',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Enhanced Status Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [statusBgColor, statusBgColor.withOpacity(0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      statusIcon,
+                      color: statusColor,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Divider
+          if (employee.checkInTime != null || employee.checkOutTime != null) ...[
+            const SizedBox(height: 12),
+            Divider(color: Colors.grey.shade200, height: 1),
+            const SizedBox(height: 12),
+          ],
+
+          // Bottom Row: Time Info
+          if (employee.checkInTime != null || employee.checkOutTime != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                // Check In Time
+                if (employee.checkInTime != null)
+                  Expanded(
+                    child: _buildTimeInfo(
+                      icon: Icons.login,
+                      label: 'Check In',
+                      time: employee.checkInTime!,
+                      color: AppColors.success,
+                    ),
+                  ),
+
+                // Duration
+                if (employee.duration != null)
+                  Expanded(
+                    child: _buildTimeInfo(
+                      icon: Icons.timer_outlined,
+                      label: 'Duration',
+                      time: employee.duration!,
+                      color: AppColors.info,
+                    ),
+                  ),
+
+                // Check Out Time
+                if (employee.checkOutTime != null)
+                  Expanded(
+                    child: _buildTimeInfo(
+                      icon: Icons.logout,
+                      label: 'Check Out',
+                      time: employee.checkOutTime!,
+                      color: AppColors.error,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+      ),
+    );
+  }
+
+  /// Build Time Info Widget
+  Widget _buildTimeInfo({
+    required IconData icon,
+    required String label,
+    required String time,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          time,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Show Filter Options Bottom Sheet
+  void _showFilterOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Title
+            const Text(
+              'Filter Attendance',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Filter options
+            _buildFilterOption('Today', Icons.today),
+            _buildFilterOption('This Week', Icons.date_range),
+            _buildFilterOption('This Month', Icons.calendar_month),
+            _buildFilterOption('Custom Date', Icons.calendar_today),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build Filter Option
+  Widget _buildFilterOption(String label, IconData icon) {
+    final isSelected = selectedFilter == label;
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        _applyFilter(label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          border: Border(
+            left: BorderSide(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : Colors.black54,
+              size: 24,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? AppColors.primary : Colors.black87,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Apply Filter
+  void _applyFilter(String filter) async {
+    setState(() {
+      selectedFilter = filter;
+    });
+
+    DateTime targetDate;
+
+    switch (filter) {
+      case 'Today':
+        targetDate = DateTime.now();
+        _cubit.fetchTodaySummary();
+        break;
+
+      case 'This Week':
+        // Get the first day of this week (Monday)
+        final now = DateTime.now();
+        final firstDayOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        targetDate = firstDayOfWeek;
+        _cubit.fetchSummaryByDate(targetDate);
+        break;
+
+      case 'This Month':
+        // Get the first day of this month
+        final now = DateTime.now();
+        targetDate = DateTime(now.year, now.month, 1);
+        _cubit.fetchSummaryByDate(targetDate);
+        break;
+
+      case 'Custom Date':
+        // Show date picker
+        final pickedDate = await showDatePicker(
+          context: context,
+          initialDate: selectedDate,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: AppColors.primary,
+                  onPrimary: Colors.white,
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (pickedDate != null) {
+          setState(() {
+            selectedDate = pickedDate;
+          });
+          _cubit.fetchSummaryByDate(pickedDate);
+        }
+        break;
+
+      default:
+        _cubit.fetchTodaySummary();
+    }
+  }
+
+  /// Show Search Dialog
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search Employees'),
+        content: TextField(
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter name, role, or department...',
+            prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(),
+          ),
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+            });
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                searchQuery = '';
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Search', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}

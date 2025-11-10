@@ -17,22 +17,28 @@ class ApiConfig {
   /// For Real Device (Replace with your computer's IP)
   static const String baseUrlRealDevice = 'http://192.168.1.X:8000/api/v1';
 
+  /// Production Server
+  static const String baseUrlProduction = 'https://erp1.bdcbiz.com/api/v1';
+
   /// Current Environment Base URL
   /// Change this based on your testing environment
-  static const String baseUrl = baseUrlEmulator;
+  /// Options: baseUrlEmulator, baseUrlSimulator, baseUrlRealDevice, baseUrlProduction
+  static const String baseUrl = baseUrlProduction;
 
   // API Endpoints
   // =====================================================
 
   /// Authentication Endpoints
-  static const String login = '/auth/login';
+  static const String unifiedLogin = '/auth/unified-login'; // Auto-detect Admin/Employee
+  static const String unifiedLogout = '/auth/unified-logout';
+  static const String login = '/auth/login'; // Legacy employee login
   static const String register = '/auth/register';
   static const String logout = '/auth/logout';
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
   static const String checkUser = '/auth/check-user';
 
-  /// Admin Authentication Endpoints
+  /// Admin Authentication Endpoints (Legacy)
   static const String adminLogin = '/admin/auth/login';
   static const String adminLogout = '/admin/auth/logout';
   static const String adminProfile = '/admin/auth/profile';
@@ -61,6 +67,8 @@ class ApiConfig {
   static const String todaySession = '/employee/attendance/sessions';
   static const String attendanceDuration = '/employee/attendance/duration';
   static const String attendanceHistory = '/employee/attendance/history';
+  static const String attendanceSummary = '/attendance/summary';
+  static const String attendanceSummaryToday = '/attendance/summary/today';
 
   /// Notifications Endpoints
   static const String notifications = '/notifications';
@@ -115,4 +123,15 @@ class ApiConfig {
 
   /// Check if using real device
   static bool get isRealDevice => baseUrl == baseUrlRealDevice;
+
+  /// Check if using production
+  static bool get isProduction => baseUrl == baseUrlProduction;
+
+  /// Get current environment name
+  static String get environmentName {
+    if (isProduction) return 'Production';
+    if (isEmulator) return 'Emulator';
+    if (isRealDevice) return 'Real Device';
+    return 'Simulator';
+  }
 }

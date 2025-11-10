@@ -1,9 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"/c/Users/B-SMART/.config/herd/bin/php.bat\" check_table.php)",
-      "Bash(\"/c/Users/B-SMART/.config/herd/bin/php.bat\" check_sessions.php)",
-      "Bash(git init:*)",
+      "Bash(TIMER_FIX_DOCUMENTATION.md)",
+      "Bash(EMPLOYEE_DETAILS_VIEW_MAP_UPDATE.md)",
       "Bash(git add:*)"
     ],
     "deny": [],
