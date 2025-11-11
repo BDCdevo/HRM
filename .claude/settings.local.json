@@ -3,7 +3,12 @@
     "allow": [
       "Bash(TIMER_FIX_DOCUMENTATION.md)",
       "Bash(EMPLOYEE_DETAILS_VIEW_MAP_UPDATE.md)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(git branch:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []

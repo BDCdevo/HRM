@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.1.2] - 2025-11-11
+
+### 🐛 Critical Bug Fixes
+
+#### Late Reason Detection Fix
+- **Fixed** Late Reason bottom sheet not appearing when employee checks in late
+- **Root Cause**: Employee had multiple active work plans assigned, causing API to return wrong start_time
+- **Problem Details**:
+  - Employee: Ahmed@bdcbiz.com (ID: 32)
+  - Had 2 active work plans: "Default Work Plan" (09:00) and "Flexible Hours" (07:40)
+  - Query `->active()->first()` returned first plan (Default - 09:00) instead of correct one (Flexible - 07:40)
+  - API returned wrong start_time, causing Flutter to think employee was on time when actually late
+- **Solution**:
+  - Removed incorrect work plan assignment (Default Work Plan)
+  - Employee now has single active work plan: "Flexible Hours (48h/week)" - Start: 07:40
+  - Cleared Laravel cache: `php artisan cache:clear && php artisan config:clear`
+- **Database Changes**:
+  - Table: `employee_work_plan`
+  - Action: Detached work_plan_id=1 from employee_id=32
+- **Test Results**:
+  - ✅ API returns correct start_time: "07:40"
+  - ✅ Late detection works: 11:23 > 07:50 → LATE
+  - ✅ Late Reason bottom sheet will appear
+- **Documentation**: `LATE_REASON_BACKEND_FIX.md` - Complete fix documentation
+- **Recommendation**: Add database constraint or business logic to prevent multiple active work plans per employee
+
+### 📍 Location Features
+
+#### View on Map Button
+- **Added** "View on Map" button in employee attendance details bottom sheet
+- **Feature**: Opens Google Maps with employee's check-in location coordinates
+- **Implementation**:
+  - Added `url_launcher: ^6.2.2` package to pubspec.yaml
+  - Created `_openMapLocation()` method using Google Maps URL scheme
+  - Added queries section to AndroidManifest.xml for Android 11+ compatibility
+- **Files Modified**:
+  - `employee_attendance_details_bottom_sheet.dart` - Added map button and location section
+  - `employee_details_bottom_sheet.dart` - Added map button (actual file used by Attendance Summary)
+  - `android/app/src/main/AndroidManifest.xml` - Added queries for http/https/geo intents
+- **Features**:
+  - ✅ Copy coordinates to clipboard
+  - ✅ Open location in Google Maps (external app)
+  - ✅ SnackBar confirmation messages
+- **Documentation**: `EMPLOYEE_DETAILS_VIEW_MAP_UPDATE.md`
+
+### ⏱️ Timer Enhancement
+
+#### Cumulative Duration Timer
+- **Enhanced** Dashboard timer to show total duration across all check-in/check-out sessions
+- **Previous Behavior**: Timer only showed current active session duration
+- **New Behavior**: Timer shows cumulative time across ALL sessions (completed + active)
+- **Implementation**:
+  - Modified `_calculateInitialElapsed()` in `check_in_counter_card.dart`
+  - Parse `total_duration` from `sessionsSummary` API response
+  - Calculate active session real-time duration from `check_in_time`
+  - Add real-time active session to completed sessions for accurate total
+- **Files Modified**:
+  - `lib/features/dashboard/ui/widgets/check_in_counter_card.dart` (Lines 51-137)
+- **Result**: Timer now accurately displays cumulative work hours across multiple sessions
+- **Documentation**: `TIMER_FIX_DOCUMENTATION.md`
+
+**Last Updated**: 2025-11-11
+
+---
+
 ## [2.1.1] - 2025-11-10
 
 ### 🐛 Critical Bug Fixes

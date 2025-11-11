@@ -73,7 +73,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Location (if exists)
-            if (employee.hasLocation) _buildLocationSection(),
+            if (employee.hasLocation) _buildLocationSection(context),
 
             const SizedBox(height: 20),
 
@@ -456,7 +456,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Location Section
-  Widget _buildLocationSection() {
+  Widget _buildLocationSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -575,7 +575,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
               onPressed: () {
                 if (employee.checkInLatitude != null &&
                     employee.checkInLongitude != null) {
-                  _openMapLocation(employee.checkInLatitude!, employee.checkInLongitude!);
+                  _openMapLocation(context, employee.checkInLatitude!, employee.checkInLongitude!);
                 }
               },
               icon: const Icon(Icons.map_rounded, size: 18),
@@ -600,7 +600,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Open location in map
-  Future<void> _openMapLocation(double latitude, double longitude) async {
+  Future<void> _openMapLocation(BuildContext context, double latitude, double longitude) async {
     try {
       // Open Google Maps with the location
       final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
