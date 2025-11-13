@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_colors_extension.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../logic/cubit/attendance_cubit.dart';
 import '../../logic/cubit/attendance_state.dart';
 import '../../data/models/attendance_session_model.dart';
@@ -16,6 +18,12 @@ class SessionsListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return BlocBuilder<AttendanceCubit, AttendanceState>(
       builder: (context, state) {
         if (state is SessionsLoading) {
@@ -28,25 +36,25 @@ class SessionsListWidget extends StatelessWidget {
         }
 
         if (state is AttendanceError) {
-          return _buildErrorState(state.displayMessage, context);
+          return _buildErrorState(state.displayMessage, context, isDark, cardColor, textColor, secondaryTextColor);
         }
 
         if (state is SessionsLoaded) {
           final sessions = state.sessionsData.sessions;
 
           if (sessions.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(context, isDark, cardColor, textColor, secondaryTextColor);
           }
 
           return Column(
             children: [
               // Summary Card
-              _buildSummaryCard(state.sessionsData),
+              _buildSummaryCard(context, state.sessionsData, isDark, cardColor, textColor, secondaryTextColor),
 
               const SizedBox(height: 16),
 
               // Sessions List
-              ...sessions.map((session) => _buildSessionCard(session)).toList(),
+              ...sessions.map((session) => _buildSessionCard(context, session, isDark, cardColor, textColor, secondaryTextColor)).toList(),
             ],
           );
         }
@@ -57,14 +65,14 @@ class SessionsListWidget extends StatelessWidget {
   }
 
   /// Build Error State
-  Widget _buildErrorState(String errorMessage, BuildContext context) {
+  Widget _buildErrorState(String errorMessage, BuildContext context, bool isDark, Color cardColor, Color textColor, Color secondaryTextColor) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withOpacity(isDark ? 0.15 : 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.error.withOpacity(0.3),
+          color: AppColors.error.withOpacity(isDark ? 0.4 : 0.3),
           width: 1,
         ),
       ),
@@ -87,7 +95,7 @@ class SessionsListWidget extends StatelessWidget {
           Text(
             errorMessage,
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+              color: secondaryTextColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -109,14 +117,14 @@ class SessionsListWidget extends StatelessWidget {
   }
 
   /// Build Empty State
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context, bool isDark, Color cardColor, Color textColor, Color secondaryTextColor) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.backgroundAlt,
+        color: isDark ? AppColors.darkCard : AppColors.backgroundAlt,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: isDark ? AppColors.darkBorder : AppColors.border,
           width: 1,
         ),
       ),
@@ -125,20 +133,20 @@ class SessionsListWidget extends StatelessWidget {
           Icon(
             Icons.access_time,
             size: 48,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: secondaryTextColor.withOpacity(0.5),
           ),
           const SizedBox(height: 12),
           Text(
             'No Sessions Today',
             style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: secondaryTextColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Start your first session by checking in',
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary.withOpacity(0.7),
+              color: secondaryTextColor.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -148,7 +156,7 @@ class SessionsListWidget extends StatelessWidget {
   }
 
   /// Build Summary Card
-  Widget _buildSummaryCard(TodaySessionsDataModel sessionsData) {
+  Widget _buildSummaryCard(BuildContext context, TodaySessionsDataModel sessionsData, bool isDark, Color cardColor, Color textColor, Color secondaryTextColor) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -156,13 +164,13 @@ class SessionsListWidget extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.success.withOpacity(0.1),
-            AppColors.info.withOpacity(0.1),
+            AppColors.success.withOpacity(isDark ? 0.15 : 0.1),
+            AppColors.info.withOpacity(isDark ? 0.15 : 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.success.withOpacity(0.3),
+          color: AppColors.success.withOpacity(isDark ? 0.4 : 0.3),
           width: 1.5,
         ),
       ),
@@ -171,26 +179,30 @@ class SessionsListWidget extends StatelessWidget {
           // Work Duration
           Expanded(
             child: _buildSummaryItem(
+              context: context,
               icon: Icons.work_outline,
               label: 'Total Work',
               value: sessionsData.summary.totalDuration,
               color: AppColors.success,
+              secondaryTextColor: secondaryTextColor,
             ),
           ),
 
           Container(
             width: 1,
             height: 40,
-            color: AppColors.border,
+            color: isDark ? AppColors.darkDivider : AppColors.border,
           ),
 
           // Total Hours
           Expanded(
             child: _buildSummaryItem(
+              context: context,
               icon: Icons.access_time,
               label: 'Total Hours',
               value: sessionsData.summary.formattedHours,
               color: AppColors.warning,
+              secondaryTextColor: secondaryTextColor,
             ),
           ),
         ],
@@ -200,10 +212,12 @@ class SessionsListWidget extends StatelessWidget {
 
   /// Build Summary Item
   Widget _buildSummaryItem({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
     required Color color,
+    required Color secondaryTextColor,
   }) {
     return Column(
       children: [
@@ -212,7 +226,7 @@ class SessionsListWidget extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: secondaryTextColor,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -229,21 +243,21 @@ class SessionsListWidget extends StatelessWidget {
   }
 
   /// Build Session Card
-  Widget _buildSessionCard(AttendanceSessionModel session) {
+  Widget _buildSessionCard(BuildContext context, AttendanceSessionModel session, bool isDark, Color cardColor, Color textColor, Color secondaryTextColor) {
     final isActive = session.active;
-    final color = _getSessionColor(session.sessionType ?? 'regular', isActive);
+    final color = _getSessionColor(context, session.sessionType ?? 'regular', isActive);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isActive ? color : AppColors.border,
+          color: isActive ? color : (isDark ? AppColors.darkBorder : AppColors.border),
           width: isActive ? 2 : 1,
         ),
-        boxShadow: [
+        boxShadow: isDark ? [] : [
           BoxShadow(
             color: isActive
                 ? color.withOpacity(0.15)
@@ -282,7 +296,7 @@ class SessionsListWidget extends StatelessWidget {
                       session.sessionTypeDisplay,
                       style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: textColor,
                       ),
                     ),
                     if (isActive) ...[
@@ -315,7 +329,7 @@ class SessionsListWidget extends StatelessWidget {
                           ? ' - ${_formatTime(session.checkOutTime!)}'
                           : ' - Active'),
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: secondaryTextColor,
                   ),
                 ),
               ],
@@ -351,7 +365,7 @@ class SessionsListWidget extends StatelessWidget {
   }
 
   /// Get Session Color
-  Color _getSessionColor(String sessionType, bool isActive) {
+  Color _getSessionColor(BuildContext context, String sessionType, bool isActive) {
     if (isActive) {
       return AppColors.success;
     }
@@ -364,7 +378,7 @@ class SessionsListWidget extends StatelessWidget {
       case 'permission':
         return AppColors.info;
       default:
-        return AppColors.textSecondary;
+        return AppColors.primary;
     }
   }
 

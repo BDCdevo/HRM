@@ -18,13 +18,13 @@ class PendingLeavesCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.warning.withOpacity(0.1),
+            AppColors.accent.withOpacity(0.1),
             AppColors.info.withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.accent.withOpacity(0.3),
           width: 1.5,
         ),
       ),
@@ -40,12 +40,12 @@ class PendingLeavesCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.15),
+                      color: AppColors.accent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.pending_actions,
-                      color: AppColors.warning,
+                      color: AppColors.accent,
                       size: 24,
                     ),
                   ),
@@ -118,8 +118,8 @@ class PendingLeavesCard extends StatelessWidget {
                 );
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.warning,
-                side: BorderSide(color: AppColors.warning.withOpacity(0.5)),
+                foregroundColor: AppColors.accent,
+                side: BorderSide(color: AppColors.accent.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -203,7 +203,7 @@ class _LeaveItem extends StatelessWidget {
           Text(
             date,
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.warning,
+              color: AppColors.accent,
               fontWeight: FontWeight.w600,
               fontSize: 11,
             ),

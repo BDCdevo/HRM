@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_colors_extension.dart';  // ✅ النظام الموحد الجديد
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/theme/cubit/theme_state.dart';
+import '../../../../core/widgets/theme_toggle.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/ui/screens/login_screen.dart';
 
@@ -20,26 +24,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotifications = true;
   bool _biometricEnabled = false;
   String _selectedLanguage = 'English';
-  String _selectedTheme = 'Light';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          color: AppColors.white,
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Settings',
-          style: AppTextStyles.titleLarge.copyWith(
-            color: AppColors.white,
-          ),
-        ),
+        title: const Text('Settings'),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -129,16 +125,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _showLanguageDialog();
                 },
               ),
-              _buildSettingsTile(
-                icon: Icons.palette_outlined,
-                title: 'Theme',
-                subtitle: _selectedTheme,
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  _showThemeDialog();
+            ]),
+
+            const SizedBox(height: 16),
+
+            // Theme Section
+            _buildSectionHeader('Appearance'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: BlocBuilder<ThemeCubit, ThemeState>(
+                builder: (context, state) {
+                  return ThemeModeSelector();
                 },
               ),
-            ]),
+            ),
 
             const SizedBox(height: 16),
 
@@ -209,7 +209,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title,
         style: AppTextStyles.titleSmall.copyWith(
-          color: AppColors.primary,
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -220,9 +220,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+        ),
       ),
       child: Column(
         children: children,
@@ -338,40 +340,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onChanged: (value) {
         setState(() {
           _selectedLanguage = value!;
-        });
-        Navigator.pop(context);
-      },
-      activeColor: AppColors.primary,
-    );
-  }
-
-  void _showThemeDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Select Theme'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildThemeOption('Light'),
-              _buildThemeOption('Dark'),
-              _buildThemeOption('System'),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThemeOption(String theme) {
-    return RadioListTile<String>(
-      title: Text(theme),
-      value: theme,
-      groupValue: _selectedTheme,
-      onChanged: (value) {
-        setState(() {
-          _selectedTheme = value!;
         });
         Navigator.pop(context);
       },

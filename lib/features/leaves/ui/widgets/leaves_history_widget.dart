@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../../../leave/logic/cubit/leave_state.dart';
 import '../../../leave/data/models/leave_request_model.dart';
@@ -71,12 +73,19 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return BlocBuilder<LeaveCubit, LeaveState>(
       builder: (context, state) {
-        // Show loading for initial state and loading state
+        // Show loading skeleton for initial state and loading state
         if (state is LeaveHistoryLoading || state is LeaveInitial) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (context, index) => const ListItemSkeleton(),
           );
         }
 
@@ -100,13 +109,13 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                   Icon(
                     Icons.event_busy,
                     size: 80,
-                    color: AppColors.textSecondary.withOpacity(0.5),
+                    color: secondaryTextColor.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No leave requests found',
                     style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
+                      color: secondaryTextColor,
                     ),
                   ),
                 ],
@@ -116,7 +125,7 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
 
           return RefreshIndicator(
             onRefresh: () => context.read<LeaveCubit>().refreshLeaveHistory(),
-            color: AppColors.warning,
+            color: AppColors.primary,
             child: Column(
               children: [
                 // Filter chips
@@ -129,6 +138,8 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                       _FilterChip(
                         label: 'All',
                         isSelected: _statusFilter == null,
+                        isDark: isDark,
+                        cardColor: cardColor,
                         onTap: () {
                           setState(() => _statusFilter = null);
                           context.read<LeaveCubit>().fetchLeaveHistory();
@@ -138,6 +149,8 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                       _FilterChip(
                         label: 'Pending',
                         isSelected: _statusFilter == 'pending',
+                        isDark: isDark,
+                        cardColor: cardColor,
                         onTap: () {
                           setState(() => _statusFilter = 'pending');
                           context.read<LeaveCubit>().fetchLeaveHistory(status: 'pending');
@@ -147,6 +160,8 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                       _FilterChip(
                         label: 'Approved',
                         isSelected: _statusFilter == 'approved',
+                        isDark: isDark,
+                        cardColor: cardColor,
                         onTap: () {
                           setState(() => _statusFilter = 'approved');
                           context.read<LeaveCubit>().fetchLeaveHistory(status: 'approved');
@@ -156,6 +171,8 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                       _FilterChip(
                         label: 'Rejected',
                         isSelected: _statusFilter == 'rejected',
+                        isDark: isDark,
+                        cardColor: cardColor,
                         onTap: () {
                           setState(() => _statusFilter = 'rejected');
                           context.read<LeaveCubit>().fetchLeaveHistory(status: 'rejected');
@@ -185,7 +202,13 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
                       }
 
                       final leave = leaves[index];
-                      return _LeaveHistoryItem(leave: leave);
+                      return _LeaveHistoryItem(
+                        leave: leave,
+                        isDark: isDark,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
+                      );
                     },
                   ),
                 ),
@@ -233,11 +256,15 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isDark;
+  final Color cardColor;
 
   const _FilterChip({
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.isDark = false,
+    this.cardColor = AppColors.white,
   });
 
   @override
@@ -248,16 +275,20 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.warning : AppColors.white,
+          color: isSelected ? AppColors.primary : cardColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.warning : AppColors.border.withOpacity(0.3),
+            color: isSelected
+              ? AppColors.primary
+              : (isDark ? AppColors.darkBorder : AppColors.border.withOpacity(0.3)),
           ),
         ),
         child: Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: isSelected ? AppColors.white : AppColors.textPrimary,
+            color: isSelected
+              ? AppColors.white
+              : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -269,8 +300,18 @@ class _FilterChip extends StatelessWidget {
 /// Leave History Item
 class _LeaveHistoryItem extends StatelessWidget {
   final LeaveRequestModel leave;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
+  final Color secondaryTextColor;
 
-  const _LeaveHistoryItem({required this.leave});
+  const _LeaveHistoryItem({
+    required this.leave,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
+    required this.secondaryTextColor,
+  });
 
   IconData _getTypeIcon() {
     final name = leave.vacationTypeName?.toLowerCase() ?? '';
@@ -290,7 +331,7 @@ class _LeaveHistoryItem extends StatelessWidget {
       case 'error':
         return AppColors.error;
       default:
-        return AppColors.textSecondary;
+        return AppColors.info;
     }
   }
 
@@ -316,12 +357,12 @@ class _LeaveHistoryItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: statusColor.withOpacity(0.3),
+          color: isDark ? AppColors.darkBorder : statusColor.withOpacity(0.3),
         ),
-        boxShadow: [
+        boxShadow: isDark ? [] : [
           BoxShadow(
             color: AppColors.shadowLight,
             blurRadius: 10,
@@ -347,12 +388,12 @@ class _LeaveHistoryItem extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       _getTypeIcon(),
-                      color: AppColors.warning,
+                      color: AppColors.primary,
                       size: 24,
                     ),
                   ),
@@ -367,13 +408,14 @@ class _LeaveHistoryItem extends StatelessWidget {
                           leave.vacationTypeName ?? 'Leave',
                           style: AppTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           leave.durationFormatted,
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                            color: secondaryTextColor,
                           ),
                         ),
                       ],
@@ -387,7 +429,7 @@ class _LeaveHistoryItem extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withOpacity(isDark ? 0.2 : 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -417,7 +459,7 @@ class _LeaveHistoryItem extends StatelessWidget {
               // Divider
               Divider(
                 height: 1,
-                color: AppColors.border.withOpacity(0.3),
+                color: isDark ? AppColors.darkDivider : AppColors.border.withOpacity(0.3),
               ),
 
               const SizedBox(height: 12),
@@ -428,13 +470,13 @@ class _LeaveHistoryItem extends StatelessWidget {
                   Icon(
                     Icons.calendar_today,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: secondaryTextColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     leave.dateRangeFormatted,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: secondaryTextColor,
                     ),
                   ),
                 ],
@@ -450,14 +492,14 @@ class _LeaveHistoryItem extends StatelessWidget {
                     Icon(
                       Icons.description,
                       size: 16,
-                      color: AppColors.textSecondary,
+                      color: secondaryTextColor,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         leave.reason!,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: secondaryTextColor,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -476,7 +518,11 @@ class _LeaveHistoryItem extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(leave.vacationTypeName ?? 'Leave Details'),
+        backgroundColor: cardColor,
+        title: Text(
+          leave.vacationTypeName ?? 'Leave Details',
+          style: TextStyle(color: textColor),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,7 +540,7 @@ class _LeaveHistoryItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text('Close', style: TextStyle(color: AppColors.primary)),
           ),
           if (leave.isPending)
             TextButton(
@@ -516,11 +562,22 @@ class _LeaveHistoryItem extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
+  final Color? labelColor;
+  final Color? valueColor;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.labelColor,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
@@ -529,7 +586,7 @@ class _DetailRow extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: labelColor ?? secondaryTextColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -537,6 +594,7 @@ class _DetailRow extends StatelessWidget {
             value,
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
+              color: valueColor ?? textColor,
             ),
           ),
         ],

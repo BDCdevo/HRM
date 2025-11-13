@@ -1,11 +1,17 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
-/// Custom Bottom Navigation Bar
+/// Custom Bottom Navigation Bar - Modern Design (inspired by Odoo)
 ///
-/// Modern, animated bottom navigation bar with icons and labels
-/// Refactored for better performance and no overflow issues
+/// Features:
+/// - Gradient background
+/// - Glassmorphism effect with blur
+/// - Smooth animations
+/// - Badge support
+/// - Dark mode support
+/// - Clean and minimal design
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -20,34 +26,62 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.darkAppBar : AppColors.white;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            surfaceColor.withOpacity(0.95),
+            surfaceColor,
+          ],
+        ),
+        border: isDark
+            ? null
+            : Border(
+                top: BorderSide(
+                  color: Colors.grey.shade300,
+                  width: 1,
+                ),
+              ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: AppColors.primary.withOpacity(isDark ? 0.2 : 0.08),
+            blurRadius: isDark ? 30 : 20,
+            offset: const Offset(0, -8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+            blurRadius: isDark ? 15 : 10,
+            offset: const Offset(0, -3),
           ),
         ],
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
       ),
-      child: SafeArea(
-        top: false,
-        child: Container(
-          height: 65,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(
-              items.length,
-              (index) => _NavBarButton(
-                item: items[index],
-                isSelected: currentIndex == index,
-                onTap: () => onTap(index),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isSelected = currentIndex == index;
+
+                  return Expanded(
+                    child: _NavBarButton(
+                      item: item,
+                      isSelected: isSelected,
+                      onTap: () => onTap(index),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           ),
@@ -63,17 +97,18 @@ class NavBarItem {
   final IconData? activeIcon;
   final String label;
   final Color? color;
+  final int? badgeCount;
 
   const NavBarItem({
     required this.icon,
     this.activeIcon,
     required this.label,
     this.color,
+    this.badgeCount,
   });
 }
 
 /// Navigation Bar Button
-/// Refactored to prevent overflow and improve responsiveness
 class _NavBarButton extends StatelessWidget {
   final NavBarItem item;
   final bool isSelected;
@@ -87,71 +122,97 @@ class _NavBarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = item.color ?? AppColors.primary;
 
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          splashColor: color.withOpacity(0.1),
-          highlightColor: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with Badge
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                // Icon with animation
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  padding: EdgeInsets.all(isSelected ? 6 : 4),
+                  padding: EdgeInsets.all(isSelected ? 6.0 : 4.0),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? color.withOpacity(0.15)
+                        ? color.withOpacity(isDark ? 0.3 : 0.22)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                    size: isSelected ? 24 : 22,
-                    color: isSelected ? color : AppColors.textSecondary,
+                    size: isSelected ? 26 : 22,
+                    color: isSelected
+                        ? color
+                        : (isDark
+                            ? AppColors.darkTextSecondary
+                            : Colors.grey.shade600),
                   ),
                 ),
-
-                const SizedBox(height: 2),
-
-                // Label with flexible sizing
-                Flexible(
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    style: isSelected
-                        ? AppTextStyles.labelSmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: color,
-                            fontSize: 11,
-                            height: 1.2,
-                          )
-                        : AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 10,
-                            height: 1.2,
-                          ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    child: Text(
-                      item.label,
-                      textAlign: TextAlign.center,
+                // Badge
+                if (item.badgeCount != null && item.badgeCount! > 0)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkAppBar
+                              : AppColors.white,
+                          width: 1.5,
+                        ),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        item.badgeCount! > 99
+                            ? '99+'
+                            : item.badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
-          ),
+            const SizedBox(height: 2),
+            // Label
+            Text(
+              item.label,
+              style: TextStyle(
+                fontSize: isSelected ? 11 : 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? color
+                    : (isDark
+                        ? AppColors.darkTextSecondary
+                        : Colors.grey.shade600),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

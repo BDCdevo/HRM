@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/logic/cubit/auth_state.dart';
 import '../../../auth/ui/screens/login_screen.dart';
@@ -120,15 +122,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
             child: BlocBuilder<DashboardCubit, DashboardState>(
               builder: (context, dashboardState) {
-              // Show loading state
+              // Show loading state with skeleton
               if (dashboardState is DashboardLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(),
+                return Scaffold(
+                  appBar: PreferredSize(
+                    preferredSize: const Size.fromHeight(56),
+                    child: AppBar(
+                      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                      elevation: 0,
+                    ),
+                  ),
+                  body: const DashboardSkeleton(),
                 );
               }
 
               // Show error state
               if (dashboardState is DashboardError) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -144,14 +155,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Text(
                           'Error Loading Dashboard',
                           style: AppTextStyles.titleLarge.copyWith(
-                            color: AppColors.textPrimary,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           dashboardState.displayMessage,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -175,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               return Scaffold(
                 appBar: AppBar(
-                  backgroundColor: const Color(0xFF2f3d4a),
+                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                   elevation: 0,
                   leading: Builder(
                     builder: (context) => IconButton(
@@ -188,6 +199,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
 
                   actions: [
+                    // Dark Mode Toggle
+                    IconButton(
+                      icon: Icon(
+                        context.watch<ThemeCubit>().isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        color: AppColors.white,
+                        size: 24,
+                      ),
+                      onPressed: () {
+                        context.read<ThemeCubit>().toggleTheme();
+                      },
+                    ),
                     // Notification Bell with Dynamic Badge
                     BlocBuilder<NotificationsCubit, NotificationsState>(
                       builder: (context, notifState) {
@@ -284,8 +308,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             // Dark Header Section
                             Container(
                               width: double.infinity,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF2f3d4a),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).appBarTheme.backgroundColor,
                               ),
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                               child: Row(
@@ -298,7 +322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       Text(
                                         _getGreeting(user.firstName),
                                         style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white70,
+                                          color: AppColors.white.withOpacity(0.7),
                                           fontSize: 12,
                                         ),
                                       ),
@@ -306,7 +330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       Text(
                                         user.firstName,
                                         style: AppTextStyles.headlineMedium.copyWith(
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 22,
                                         ),
@@ -319,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.refresh, color: Colors.white, size: 24),
+                                        icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
                                         onPressed: () {
                                           context.read<DashboardCubit>().refresh();
                                           _attendanceCubit.fetchTodayStatus();
@@ -328,13 +352,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       const SizedBox(width: 4),
                                       Container(
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF25D366), // WhatsApp green
+                                          color: AppColors.whatsappGreen, // WhatsApp green
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         padding: const EdgeInsets.all(8),
                                         child: const Icon(
                                           Icons.chat,
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                           size: 20,
                                         ),
                                       ),

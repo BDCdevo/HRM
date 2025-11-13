@@ -1,10 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_colors_extension.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/success_animation.dart';
 import '../../../../core/services/location_service.dart';
 import '../../logic/cubit/attendance_cubit.dart';
 import '../../logic/cubit/attendance_state.dart';
@@ -22,24 +28,84 @@ class AttendanceCheckInWidget extends StatefulWidget {
   State<AttendanceCheckInWidget> createState() => _AttendanceCheckInWidgetState();
 }
 
-class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
+class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with WidgetsBindingObserver {
   // Keep track of the last status loaded
   AttendanceStatusModel? _lastStatus;
+
+  // Auto-refresh timer
+  Timer? _refreshTimer;
+
+  // PageView controller for swipeable status card
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  // Timer for live counter in timer view
+  Timer? _timerUpdateTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initialize PageController
+    _pageController = PageController(initialPage: 0);
+
     // Fetch today's status and sessions when widget loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<AttendanceCubit>().fetchTodayStatus();
-        context.read<AttendanceCubit>().fetchTodaySessions();
+        _refreshData();
+      }
+    });
+
+    // Setup auto-refresh every 30 seconds for real-time updates
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        print('🔄 Auto-refreshing attendance data...');
+        _refreshData();
+      }
+    });
+
+    // Setup timer for live counter (updates every second when on timer page)
+    _timerUpdateTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _currentPage == 1) {
+        // Force rebuild to update live timer
+        setState(() {});
       }
     });
   }
 
   @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _timerUpdateTimer?.cancel();
+    _pageController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh when app comes to foreground
+    if (state == AppLifecycleState.resumed && mounted) {
+      print('🔄 App resumed - refreshing attendance data...');
+      _refreshData();
+    }
+  }
+
+  void _refreshData() {
+    context.read<AttendanceCubit>().fetchTodayStatus();
+    context.read<AttendanceCubit>().fetchTodaySessions();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Theme colors
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     // Get current date and time
     final now = DateTime.now();
     final String currentTime = DateFormat('hh:mm a').format(now);
@@ -49,27 +115,29 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
       listener: (context, state) {
         // Show success/error messages
         if (state is CheckInSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✅ Checked in successfully at ${state.attendance.checkInTime ?? currentTime}'),
-              backgroundColor: AppColors.success,
-              duration: const Duration(seconds: 3),
-            ),
+          // Show success animation dialog
+          showSuccessDialog(
+            context,
+            title: 'Check-In Successful!',
+            message: 'Checked in at ${state.attendance.checkInTime ?? currentTime}',
+            onComplete: () {
+              // Refresh status and sessions after dialog closes
+              context.read<AttendanceCubit>().fetchTodayStatus();
+              context.read<AttendanceCubit>().fetchTodaySessions();
+            },
           );
-          // Refresh status and sessions after successful check-in
-          context.read<AttendanceCubit>().fetchTodayStatus();
-          context.read<AttendanceCubit>().fetchTodaySessions();
         } else if (state is CheckOutSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✅ Checked out successfully at ${state.attendance.checkOutTime ?? currentTime}'),
-              backgroundColor: AppColors.success,
-              duration: const Duration(seconds: 3),
-            ),
+          // Show success animation dialog
+          showSuccessDialog(
+            context,
+            title: 'Check-Out Successful!',
+            message: 'Checked out at ${state.attendance.checkOutTime ?? currentTime}',
+            onComplete: () {
+              // Refresh status and sessions after dialog closes
+              context.read<AttendanceCubit>().fetchTodayStatus();
+              context.read<AttendanceCubit>().fetchTodaySessions();
+            },
           );
-          // Refresh status and sessions after successful check-out
-          context.read<AttendanceCubit>().fetchTodayStatus();
-          context.read<AttendanceCubit>().fetchTodaySessions();
         } else if (state is AttendanceError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -126,83 +194,118 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      hasActiveSession ? AppColors.success : AppColors.primary,
-                      (hasActiveSession ? AppColors.success : AppColors.primary)
-                          .withOpacity(0.8),
-                    ],
+              // Swipeable Status Card
+              Column(
+                children: [
+                  SizedBox(
+                    height: 280,
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      },
+                      children: [
+                        // Page 1: Animation View (Dashboard-style with work_now.json)
+                        _buildAnimationCard(
+                          hasActiveSession: hasActiveSession,
+                          isDark: isDark,
+                          cardColor: cardColor,
+                        ),
+
+                        // Page 2: Simple Timer Card (without buttons)
+                        hasActiveSession
+                            ? _buildSimpleTimerCard(status: status, isDark: isDark, cardColor: cardColor)
+                            : Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: cardColor,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: isDark ? Border.all(
+                                    color: AppColors.darkBorder,
+                                    width: 1,
+                                  ) : null,
+                                  boxShadow: isDark ? [] : [
+                                    BoxShadow(
+                                      color: AppColors.black.withOpacity(0.1),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 8),
+                                      spreadRadius: -4,
+                                    ),
+                                    BoxShadow(
+                                      color: AppColors.black.withOpacity(0.06),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                      spreadRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.timer_off_outlined,
+                                      size: 64,
+                                      color: isDark ? AppColors.darkTextTertiary : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No Active Timer',
+                                      style: AppTextStyles.titleLarge.copyWith(
+                                        color: textColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Check in to start tracking your time',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: secondaryTextColor,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (hasActiveSession ? AppColors.success : AppColors.primary)
-                          .withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+
+                  const SizedBox(height: 12),
+
+                  // Page Indicators
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(2, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: _currentPage == index ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _currentPage == index
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkBorder : AppColors.border),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Swipe hint
+                  Text(
+                    _currentPage == 0
+                        ? 'Swipe for timer →'
+                        : '← Swipe back',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: secondaryTextColor,
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Icon
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        hasActiveSession ? Icons.check_circle : Icons.access_time,
-                        color: AppColors.white,
-                        size: 48,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Status
-                    Text(
-                      hasActiveSession
-                          ? 'Active Session'
-                          : isCheckedOut
-                              ? 'Checked Out'
-                              : 'No Active Session',
-                      style: AppTextStyles.headlineMedium.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Time
-                    Text(
-                      currentTime,
-                      style: AppTextStyles.displaySmall.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Date
-                    Text(
-                      currentDate,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
@@ -257,6 +360,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                 'Today\'s Summary',
                 style: AppTextStyles.titleLarge.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: textColor,
                 ),
               ),
 
@@ -273,6 +377,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                           ? _formatTime(checkInTime)
                           : '--:--',
                       color: AppColors.success,
+                      isDark: isDark,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      secondaryTextColor: secondaryTextColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -284,6 +392,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                           ? _formatTime(checkOutTime)
                           : '--:--',
                       color: AppColors.error,
+                      isDark: isDark,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      secondaryTextColor: secondaryTextColor,
                     ),
                   ),
                 ],
@@ -299,6 +411,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                       label: 'Working Hours',
                       value: '${workingHours.toStringAsFixed(1)} hrs',
                       color: AppColors.primary,
+                      isDark: isDark,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      secondaryTextColor: secondaryTextColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -308,6 +424,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                       label: 'Late Minutes',
                       value: '$lateMinutes min',
                       color: lateMinutes > 0 ? AppColors.warning : AppColors.success,
+                      isDark: isDark,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      secondaryTextColor: secondaryTextColor,
                     ),
                   ),
                 ],
@@ -319,10 +439,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
+                  color: AppColors.info.withOpacity(isDark ? 0.15 : 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.info.withOpacity(0.3),
+                    color: AppColors.info.withOpacity(isDark ? 0.4 : 0.3),
                   ),
                 ),
                 child: Row(
@@ -337,7 +457,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                       child: Text(
                         'Make sure you are at your work location to check in/out.',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: secondaryTextColor,
                         ),
                       ),
                     ),
@@ -347,6 +467,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
 
               const SizedBox(height: 32),
 
+              // Check-in Counter Card (Timer) - Removed
+              // Timer now available in PageView Page 2 (swipeable)
+
               // Today's Sessions
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -355,12 +478,13 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
                     'Today\'s Sessions',
                     style: AppTextStyles.titleLarge.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   // Refresh button
                   IconButton(
                     icon: const Icon(Icons.refresh),
-                    color: AppColors.primary,
+                    color: isDark ? AppColors.white : AppColors.primary,
                     onPressed: () {
                       context.read<AttendanceCubit>().fetchTodaySessions();
                     },
@@ -379,6 +503,429 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
     );
   }
 
+
+
+  /// Build Animation Card (Slide 2 - Dashboard style with work_now.json)
+  Widget _buildAnimationCard({
+    required bool hasActiveSession,
+    required bool isDark,
+    required Color cardColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: isDark ? Border.all(
+          color: AppColors.darkBorder,
+          width: 1,
+        ) : null,
+        boxShadow: isDark ? [] : [
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.1),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Animation/Icon Container
+          SizedBox(
+            width: double.infinity,
+            height: 160,
+            child: hasActiveSession
+                ? _buildAnimationOrIcon(
+                    assetPath: 'assets/svgs/work_now.json',
+                    fallbackIcon: Icons.work_outline,
+                    iconColor: AppColors.success,
+                  )
+                : _buildAnimationOrIcon(
+                    assetPath: 'assets/svgs/Welcome.json',
+                    fallbackIcon: Icons.waving_hand,
+                    iconColor: AppColors.primary,
+                  ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Message
+          Text(
+            hasActiveSession
+                ? '🚀 You\'re working now!'
+                : '👋 Ready to begin?',
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Simple Timer Card (without buttons) - for Attendance screen
+  Widget _buildSimpleTimerCard({
+    required dynamic status,
+    required bool isDark,
+    required Color cardColor,
+  }) {
+    return _SimpleTimerCard(status: status, isDark: isDark, cardColor: cardColor);
+  }
+
+  /// Build Animation or Icon (with error handling)
+  Widget _buildAnimationOrIcon({
+    required String assetPath,
+    required IconData fallbackIcon,
+    required Color iconColor,
+  }) {
+    return FutureBuilder(
+      future: Future(() async {
+        try {
+          // Try to load the asset
+          await rootBundle.loadString(assetPath);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: iconColor,
+            ),
+          );
+        }
+
+        // If asset exists and loaded successfully, show Lottie
+        if (snapshot.hasData && snapshot.data == true) {
+          return Lottie.asset(
+            assetPath,
+            width: double.infinity,
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+            errorBuilder: (context, error, stackTrace) {
+              // If Lottie fails to parse, show icon
+              return Center(
+                child: Icon(
+                  fallbackIcon,
+                  size: 80,
+                  color: iconColor,
+                ),
+              );
+            },
+          );
+        }
+
+        // If asset doesn't exist or failed to load, show icon
+        return Center(
+          child: Icon(
+            fallbackIcon,
+            size: 80,
+            color: iconColor,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Simple Timer Card Widget (Stateful for real-time updates)
+class _SimpleTimerCard extends StatefulWidget {
+  final dynamic status;
+  final bool isDark;
+  final Color cardColor;
+
+  const _SimpleTimerCard({
+    required this.status,
+    required this.isDark,
+    required this.cardColor,
+  });
+
+  @override
+  State<_SimpleTimerCard> createState() => _SimpleTimerCardState();
+}
+
+class _SimpleTimerCardState extends State<_SimpleTimerCard> {
+  Timer? _timer;
+  Duration _elapsed = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateInitialElapsed();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(_SimpleTimerCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.status != widget.status) {
+      _calculateInitialElapsed();
+
+      // Restart timer based on new status
+      final hasActiveSession = widget.status?.hasActiveSession ?? false;
+      final hadActiveSession = oldWidget.status?.hasActiveSession ?? false;
+
+      if (hasActiveSession != hadActiveSession) {
+        print('⏰ [TIMER] Active session status changed: $hadActiveSession -> $hasActiveSession');
+        _startTimer(); // Will start or stop based on hasActiveSession
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _calculateInitialElapsed() {
+    try {
+      Duration totalElapsed = Duration.zero;
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      print('⏰ [TIMER] Calculating elapsed time for TODAY: ${today.toString().split(' ')[0]}');
+
+      // CRITICAL: Check if there's an active session first
+      final hasActiveSession = widget.status?.hasActiveSession ?? false;
+      print('⏰ [TIMER] Has active session: $hasActiveSession');
+
+      // If NO active session, reset timer to zero
+      if (!hasActiveSession) {
+        print('⏰ [TIMER] No active session - Timer reset to 00:00:00');
+        _elapsed = Duration.zero;
+        return;
+      }
+
+      // SIMPLIFIED: Just use the API's totalDuration directly
+      // The API already calculates everything correctly including active sessions
+      if (widget.status?.sessionsSummary != null) {
+        final totalDurationStr = widget.status!.sessionsSummary!.totalDuration;
+        print('⏰ [TIMER] Total duration from API: $totalDurationStr');
+
+        if (totalDurationStr.contains(':')) {
+          final parts = totalDurationStr.split(':');
+          final hours = int.parse(parts[0]);
+          final minutes = int.parse(parts[1]);
+          final seconds = parts.length > 2 ? int.parse(parts[2].split('.')[0]) : 0;
+          totalElapsed = Duration(hours: hours, minutes: minutes, seconds: seconds);
+          print('⏰ [TIMER] Using API duration directly: $totalElapsed');
+        }
+      }
+
+      _elapsed = totalElapsed;
+      if (_elapsed.isNegative) {
+        print('⚠️ [TIMER] Elapsed is negative! Resetting to zero.');
+        _elapsed = Duration.zero;
+      }
+
+      print('✅ [TIMER] Final elapsed set to: $_elapsed');
+    } catch (e) {
+      print('❌ [TIMER] Error calculating elapsed: $e');
+      _elapsed = Duration.zero;
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel(); // Cancel any existing timer first
+
+    // Only start timer if there's an active session
+    final hasActiveSession = widget.status?.hasActiveSession ?? false;
+
+    if (!hasActiveSession) {
+      print('⏰ [TIMER] No active session - Timer NOT started');
+      // Make sure timer shows 00:00:00 when no active session
+      if (mounted) {
+        setState(() {
+          _elapsed = Duration.zero;
+        });
+      }
+      return;
+    }
+
+    print('⏰ [TIMER] Starting timer with initial elapsed: $_elapsed');
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _elapsed = Duration(seconds: _elapsed.inSeconds + 1);
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = _elapsed.inHours.toString().padLeft(2, '0');
+    final minutes = (_elapsed.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_elapsed.inSeconds % 60).toString().padLeft(2, '0');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: widget.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: widget.isDark ? Border.all(
+          color: AppColors.darkBorder,
+          width: 1,
+        ) : null,
+        boxShadow: widget.isDark ? [] : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Title
+          Text(
+            'Work Duration',
+            style: AppTextStyles.titleLarge.copyWith(
+              color: widget.isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Subtitle
+          Text(
+            'Total time tracked today',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: widget.isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Counter Display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: widget.isDark
+                ? AppColors.darkInput.withOpacity(0.5)
+                : AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(widget.isDark ? 0.3 : 0.15),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTimeBox(hours),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    ':',
+                    style: AppTextStyles.headlineLarge.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                _buildTimeBox(minutes),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    ':',
+                    style: AppTextStyles.headlineLarge.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                _buildTimeBox(seconds),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Time Box for Counter
+  Widget _buildTimeBox(String value) {
+    return Container(
+      width: 56,
+      height: 64,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: widget.isDark
+            ? [
+                AppColors.darkCard,
+                AppColors.darkInput,
+              ]
+            : [
+                Colors.white,
+                AppColors.backgroundLight,
+              ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: widget.isDark
+            ? AppColors.darkBorder
+            : AppColors.primary.withOpacity(0.2),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(widget.isDark ? 0.1 : 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          value,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
+            fontFeatures: const [FontFeature.tabularFigures()],
+            letterSpacing: -1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Extension on AttendanceCheckInWidget State for handling check-in/check-out actions
+extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
   /// Handle Check In with GPS Location and Late Reason
   Future<void> _handleCheckIn(BuildContext context) async {
     print('🟣🟣🟣 _handleCheckIn METHOD STARTED 🟣🟣🟣');
@@ -577,7 +1124,18 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
     print('   - Name: ${workPlan.name}');
     print('   - Start Time: ${workPlan.startTime}');
     print('   - End Time: ${workPlan.endTime}');
-    print('   - Permission Minutes (Grace Period): ${workPlan.permissionMinutes}');
+    print('   - Late Detection Enabled: ${workPlan.lateDetectionEnabled}');
+
+    // Calculate actual grace period used (24h when late detection is OFF)
+    final actualGracePeriod = workPlan.lateDetectionEnabled ? workPlan.permissionMinutes : 1440;
+    print('   - Permission Minutes (Grace Period): $actualGracePeriod minutes (${(actualGracePeriod / 60).toStringAsFixed(1)}h)');
+
+    // Check if late detection is disabled
+    if (!workPlan.lateDetectionEnabled) {
+      print('⏰ ℹ️  Late detection is DISABLED - employee is always on time');
+      print('🕐 =========================================================');
+      return false; // Always on time when disabled
+    }
 
     // Check if work plan has start time
     if (workPlan.startTime == null || workPlan.startTime!.isEmpty) {
@@ -606,13 +1164,17 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> {
       // Convert to minutes since midnight for comparison
       final currentMinutes = currentTime.hour * 60 + currentTime.minute;
       final startMinutes = workStartTime.hour * 60 + workStartTime.minute;
-      final gracePeriod = workPlan.permissionMinutes;
+
+      // Use 24 hours (1440 minutes) as grace period when late detection is disabled
+      final gracePeriod = workPlan.lateDetectionEnabled
+          ? workPlan.permissionMinutes
+          : 1440; // 24 hours
       final allowedStartMinutes = startMinutes + gracePeriod;
 
       print('⏰ Time Calculation:');
       print('   - Current Time: ${currentTime.hour}:${currentTime.minute.toString().padLeft(2, '0')} (${currentMinutes} minutes since midnight)');
       print('   - Work Start Time: ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')} (${startMinutes} minutes since midnight)');
-      print('   - Grace Period: $gracePeriod minutes');
+      print('   - Grace Period: $gracePeriod minutes (${(gracePeriod / 60).toStringAsFixed(1)}h) ${!workPlan.lateDetectionEnabled ? '← 24h because Late Detection is OFF' : ''}');
       print('   - Allowed Start Time: ${_minutesToTimeString(allowedStartMinutes)} (${allowedStartMinutes} minutes since midnight)');
 
       // Employee is late if current time > start time + grace period
@@ -684,12 +1246,20 @@ class _SummaryCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
+  final Color secondaryTextColor;
 
   const _SummaryCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
+    required this.secondaryTextColor,
   });
 
   @override
@@ -697,9 +1267,9 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: isDark ? [] : [
           BoxShadow(
             color: AppColors.shadowLight,
             blurRadius: 10,
@@ -719,7 +1289,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+              color: secondaryTextColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -727,6 +1297,7 @@ class _SummaryCard extends StatelessWidget {
             value,
             style: AppTextStyles.titleMedium.copyWith(
               fontWeight: FontWeight.bold,
+              color: textColor,
             ),
           ),
         ],

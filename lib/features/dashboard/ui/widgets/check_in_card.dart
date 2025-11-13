@@ -8,6 +8,7 @@ import '../../../attendance/logic/cubit/attendance_cubit.dart';
 import '../../../attendance/data/models/attendance_model.dart';
 import '../../../attendance/ui/widgets/late_reason_bottom_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 /// Check In Card Widget
 ///
@@ -29,55 +30,74 @@ class CheckInCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: AppColors.black.withOpacity(0.1),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
       child: Column(
         children: [
-          // Icon
-          Icon(
-            hasActiveSession ? Icons.logout : Icons.fingerprint,
-            size: 48,
-            color: hasActiveSession ? AppColors.error : AppColors.success,
+          // Lottie Animation Container
+          Container(
+            width: double.infinity,
+            height: 180,
+            decoration: BoxDecoration(
+              color: hasActiveSession
+                  ? AppColors.accent.withOpacity(0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: hasActiveSession
+                ? Icon(
+                    Icons.logout_rounded,
+                    size: 64,
+                    color: AppColors.accent,
+                  )
+                : Lottie.asset(
+                    'assets/svgs/Welcome.json',
+                    width: double.infinity,
+                    // height: 160,
+                    fit: BoxFit.contain,
+                    repeat: true,
+                    animate: true,
+                  ),
           ),
-          const SizedBox(height: 12),
+          // const SizedBox(height: 24),
 
           // Check In/Out Button
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: ElevatedButton(
               onPressed: hasActiveSession
                   ? () => _handleCheckOut(context)
                   : () => _handleCheckIn(context),
-              icon: Icon(
-                hasActiveSession ? Icons.logout : Icons.fingerprint,
-                size: 20,
-              ),
-              label: Text(hasActiveSession ? 'Check Out' : 'Check In'),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    hasActiveSession ? AppColors.error : AppColors.success,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                elevation: 2,
+                    hasActiveSession ? AppColors.accent : AppColors.primary,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 textStyle: AppTextStyles.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 17,
                 ),
               ),
+              child: Text(hasActiveSession ? 'Check Out' : 'Check In'),
             ),
           ),
         ],

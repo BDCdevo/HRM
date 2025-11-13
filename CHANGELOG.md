@@ -4,9 +4,296 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.0] - 2025-11-13
+
+### ✨ New Features
+
+#### Chat Feature - Complete WhatsApp-Style Implementation
+- **Added** Complete chat feature with WhatsApp-inspired design
+- **Feature**: Internal employee-to-employee messaging system
+- **Screens Implemented**:
+  - **Chat List Screen**: View all conversations with search and FAB
+  - **Chat Room Screen**: Individual chat with message bubbles
+  - **Employee Selection Screen**: Enhanced employee picker with advanced features
+- **Models Created**:
+  - `MessageModel`: Individual message with sender info, type (text/image/file/voice), read status
+  - `ConversationModel`: Chat conversation with last message, unread count, participant info
+- **UI Components**:
+  - `ConversationCard`: WhatsApp-style conversation list item with avatar, preview, time, unread badge
+  - `MessageBubble`: Chat bubble with sent/received styling, time, read receipts (✓✓)
+- **Dark Mode Support**: Full support for both light and dark themes across all chat screens
+- **Dashboard Integration**: Added "Chat" card to services grid (WhatsApp green #25D366)
+- **Files Created**:
+  - `lib/features/chat/data/models/message_model.dart`
+  - `lib/features/chat/data/models/conversation_model.dart`
+  - `lib/features/chat/ui/screens/chat_list_screen.dart`
+  - `lib/features/chat/ui/screens/chat_room_screen.dart`
+  - `lib/features/chat/ui/screens/employee_selection_screen.dart`
+  - `lib/features/chat/ui/widgets/conversation_card.dart`
+  - `lib/features/chat/ui/widgets/message_bubble.dart`
+- **Files Modified**:
+  - `lib/features/dashboard/ui/widgets/services_grid_widget.dart` (added Chat card)
+- **Documentation**: `CHAT_FEATURE_IMPLEMENTATION.md`, `CHAT_DARK_MODE_SUPPORT.md`
+
+#### Chat Room Enhancements - Profile Access & Call Button Removal
+- **Removed** Video and voice call buttons from chat room AppBar
+- **Added** Tappable participant name/avatar to open profile
+- **Feature**: Tap on participant name in AppBar to view their profile
+- **UI Changes**:
+  - Removed `IconButton` for video call (Icons.videocam)
+  - Removed `IconButton` for voice call (Icons.call)
+  - Wrapped title Row with `InkWell` for tap interaction
+  - Changed status text from "Online" to "Tap to view profile"
+  - Added ripple effect feedback on tap
+- **New Functions**:
+  - `_openEmployeeProfile()`: Opens employee profile (currently shows SnackBar, ready for screen integration)
+  - `_showClearChatDialog()`: Confirmation dialog for clearing chat history
+- **PopupMenu Options**:
+  - "View profile" - Opens profile
+  - "Clear chat" - Shows confirmation dialog
+- **Benefits**:
+  - Cleaner interface focused on messaging
+  - Quick profile access without menu
+  - Better UX with visual hints
+- **Files Modified**:
+  - `lib/features/chat/ui/screens/chat_room_screen.dart`
+- **Documentation**: `CHAT_UI_ENHANCEMENTS.md`
+
+#### Chat Integration in Navigation Bar
+- **Added** Chat screen to bottom navigation bar (4 tabs now: Home, Chat, Leaves, More)
+- **Position**: Second position between Home and Leaves
+- **Icon**: chat_bubble_outline (inactive), chat_bubble (active)
+- **Color**: WhatsApp green (#25D366)
+- **Direct Access**: Tap Chat tab to instantly access conversations
+- **Removed** Chat card from Dashboard services grid (moved to navigation bar)
+- **Replaced** with Claims card in services grid
+- **Files Modified**:
+  - `lib/core/navigation/main_navigation_screen.dart` (added ChatListScreen)
+  - `lib/features/dashboard/ui/widgets/services_grid_widget.dart` (replaced Chat with Claims)
+
+#### Enhanced Employee Selection Screen - Advanced Features
+- **Complete Rewrite** of employee selection with 606 lines of enhanced code
+- **Animation Support**:
+  - FadeTransition animation for smooth list appearance (300ms)
+  - SingleTickerProviderStateMixin for advanced animations
+- **Enhanced Search Bar**:
+  - Active border highlighting (accent color when typing)
+  - Clear button (X) appears when search has text
+  - Live filtering as user types
+  - Better visual feedback
+- **Results Counter**:
+  - Shows "X employees available" when not searching
+  - Shows "X result(s) found" when searching
+  - Shows "No results found" with error icon when empty
+- **Department Grouping**:
+  - Employees automatically grouped by department
+  - Visual department headers with vertical accent line
+  - Employee count badge for each department
+  - Collapsible sections
+- **Enhanced Employee Cards**:
+  - **Gradient Avatar Backgrounds**: Two-color gradient with border
+  - **Initials Display**: Shows 2-letter initials (e.g., "AA" for Ahmed Abbas)
+  - **Online Status Indicator**: Green dot at bottom-right of avatar
+  - **Hero Animation Tag**: Smooth avatar transition to chat room
+  - **Department Icon**: Business icon next to department name
+  - **Chat Bubble Icon**: Indicator on right side
+  - Better typography and spacing
+- **Improved Empty State**:
+  - Circular container background with icon
+  - Larger search_off icon (60px)
+  - "Clear search" button when search active
+  - Better text layout and guidance
+- **Better AppBar**:
+  - Two-line title: "Select Employee" with "Start a new conversation" subtitle
+  - Clear visual hierarchy
+- **Direct Navigation**:
+  - No longer just closes screen (Navigator.pop)
+  - Directly opens ChatRoomScreen with selected employee
+  - Passes proper conversation ID and participant info
+- **More Mock Data**:
+  - Expanded from 8 to 13 employees
+  - 7 departments: Development (3), HR (2), Sales (2), Marketing (2), Finance (1), Operations (1), Customer Service (2)
+- **Performance**:
+  - Efficient ListView.builder scrolling
+  - Proper controller disposal (animation, search)
+  - No unnecessary rebuilds
+  - O(n) grouping algorithm
+- **Files Modified**:
+  - `lib/features/chat/ui/screens/employee_selection_screen.dart` (complete rewrite, 606 lines)
+- **Documentation**: `EMPLOYEE_SELECTION_ENHANCEMENT.md`
+
+### 🐛 Bug Fixes
+
+#### Chat Feature Syntax Errors
+- **Fixed** Syntax error in `chat_list_screen.dart:17`
+  - **Issue**: Incorrect StatefulWidget declaration
+  - **Solution**: Corrected `createState()` method and created proper `_ChatListScreenState` class
+- **Fixed** Context access error in `conversation_card.dart:175`
+  - **Issue**: `_buildUnreadBadge()` tried to access context directly
+  - **Solution**: Changed method signature to accept `isDark` parameter instead
+
+## [2.2.0] - 2025-11-12
+
+### ✨ New Features
+
+#### Attendance Swipeable Animation Card
+- **Added** Two-page swipeable view in Attendance check-in widget (SIMPLIFIED)
+- **Feature**: Users can swipe between animation and timer views
+- **Pages**:
+  - **Page 1**: Animation Card - Dashboard-style card with Lottie animations
+    - Shows `Welcome.json` when NOT checked in
+    - Shows `work_now.json` when checked in (working animation)
+  - **Page 2**: Counter Timer Card - Real-time work duration from Dashboard
+    - Shows `CheckInCounterCard` when checked in (same as Dashboard)
+    - Shows "No Active Timer" placeholder when not checked in
+    - Fixed timer calculation issues by reusing Dashboard component
+- **UI Enhancements**:
+  - Page indicators (2 dots) show active page
+  - Dynamic swipe hints guide navigation ("Swipe for timer →" / "← Swipe back")
+  - Smooth 300ms page transitions
+  - Increased card height from 240 to 280 pixels
+  - Full dark mode support
+- **Implementation**:
+  - Added `import 'package:lottie/lottie.dart'` for animations
+  - Created new `_buildAnimationCard()` method
+  - **Replaced old `_buildTimerCard()` with `CheckInCounterCard` from Dashboard**
+  - **Removed `_buildSummaryCard()` method to simplify UI**
+  - Removed buggy `_calculateLiveDuration()` method
+  - Changed PageView from 3 to 2 pages (removed motivational card)
+  - Animation container: 160 pixels height
+  - Assets verified: `work_now.json`, `Welcome.json`
+- **Benefits**:
+  - Simpler, cleaner UI with focus on essential information
+  - Consistent timer behavior across Dashboard and Attendance screens
+  - Fixed timer calculation bugs by using single source of truth
+  - Reduced code duplication and complexity
+  - Faster navigation with fewer pages
+- **Files Modified**:
+  - `lib/features/attendance/ui/widgets/attendance_check_in_widget.dart`
+- **Documentation**: See `ATTENDANCE_SWIPEABLE_CARD_FEATURE.md` for complete details
+
+#### Check-in Counter Card in Attendance Screen
+- **Added** Check-in counter timer card to Attendance screen
+- **Feature**: Real-time timer showing total work duration
+- **Displays**:
+  - Live counter (HH:MM:SS format) showing total work time
+  - Includes all completed and active sessions
+  - Updates every second in real-time
+  - "Check Point" button (coming soon)
+  - "Check Out" button with GPS location tracking
+- **Visibility**: Only shows when user has an active session (checked in)
+- **Location**: Appears between info box and sessions list
+- **Reuses**: Same `CheckInCounterCard` component from Dashboard
+- **Benefits**:
+  - Users can see their work duration directly in Attendance screen
+  - No need to switch to Dashboard to check timer
+  - Consistent UI between Dashboard and Attendance screens
+- **Files Modified**:
+  - `lib/features/attendance/ui/widgets/attendance_check_in_widget.dart` (Added import and widget)
+
+### 🎨 UI/UX Improvements
+
+#### Dark Mode Theme Unification
+- **Removed** Brown/warning colors throughout the app
+- **Unified** All features now use primary blue color
+- **Files Updated**:
+  - Navigation bar: Changed Leaves icon from brown to primary
+  - Leaves screens: Replaced all brown/accent colors with primary
+  - Dashboard cards: Updated pending leaves card from warning to accent
+  - All employees card: Changed colors to match primary theme
+- **Text Visibility**: Improved text contrast in dark mode across all screens
+  - Attendance summary screen: Simplified colors, removed red
+  - Leaves apply widget: Fixed vacation type text visibility
+  - Leaves balance widget: Enhanced card text contrast
+  - Leaves history widget: Improved filter chips and card borders
+
+#### Attendance Screen Polish
+- **Enhanced** "Ready to Start" card with dynamic colors
+- **Improved** Better icons and gradients
+- **Updated** Dark mode support for all attendance cards
+
+#### Login Screen Dark Mode
+- **Applied** Complete dark mode support to login screen
+- **Matched** Theme consistency with rest of application
+
 ## [2.1.2] - 2025-11-11
 
+### ✨ New Features
+
+#### Late Detection ON/OFF Toggle
+- **Added** Configurable late detection setting per work plan
+- **Feature**: Work plans can now enable/disable late detection independently
+- **Behavior**:
+  - **OFF** (late_detection_enabled = false):
+    - Uses 24-hour grace period (1440 minutes)
+    - Employee can check in anytime during the day and be "On Time"
+    - `late_minutes` = 0 (for any check-in within 24h of start time)
+    - `late_label` = "On time"
+    - No late reason bottom sheet in mobile app
+  - **ON** (late_detection_enabled = true):
+    - Uses actual grace period from work plan (e.g., 90 minutes)
+    - Late detection calculated based on: start_time + permission_minutes
+    - `late_minutes` = actual minutes late (after grace period)
+    - `late_label` = formatted string (e.g., "2h 3m late")
+    - Late reason bottom sheet appears when checking in late
+- **Implementation**:
+  - **Backend**:
+    - Added `late_detection_enabled` boolean field to `work_plans` table (default: TRUE)
+    - Updated `WorkPlan` model to include `late_detection_enabled` in fillable and casts
+    - Modified `AttendanceController::getStatus()` to return `late_detection_enabled` in API response
+    - Modified `Attendance::calculateLateMinutes()` to use 24-hour grace period when late detection is disabled
+    - Added Toggle field to `WorkPlanResource` form in Filament admin
+    - Added IconColumn to `WorkPlanResource` table for viewing status
+  - **Flutter**:
+    - Updated `WorkPlanModel` to include `lateDetectionEnabled` field
+    - Modified `_checkIfLate()` logic to use 24-hour grace period when late detection is disabled
+    - Enhanced debug logging to clearly show grace period used (1440 minutes when OFF, permission_minutes when ON)
+    - Added human-readable time format in logs (e.g., "1440 minutes (24.0h)")
+- **Files Modified**:
+  - **Backend**:
+    - `database/migrations/2025_11_11_124202_add_late_detection_enabled_to_work_plans_table.php` - Migration
+    - `app/Models/WorkPlan.php` - Added field to fillable and casts (Line 23, 28)
+    - `app/Http/Controllers/Api/V1/Employee/AttendanceController.php` - Added late_detection_enabled to API response and modified permission_minutes to return 1440 when late detection is OFF (Lines 564, 572)
+    - `app/Models/Hrm/Attendance.php` - Modified calculateLateMinutes() to check late_detection_enabled
+    - `app/Filament/Hrm/Resources/WorkPlanResource.php` - Added Toggle form field (Line 80) and IconColumn (Line 138)
+  - **Flutter**:
+    - `lib/features/attendance/data/models/attendance_model.dart` - Added _parseBool() helper to handle int/bool conversion (Lines 118-124)
+    - `lib/features/attendance/ui/widgets/attendance_check_in_widget.dart` - Late detection logic (Lines 581, 584-588)
+- **Use Cases**:
+  - Flexible work hours where late detection is not needed
+  - Special work plans (contractors, part-time) where arrival time doesn't matter
+  - Testing/debugging attendance without late reason prompts
+- **Admin Control**:
+  - Toggle button appears in Work Plan create/edit form
+  - IconColumn shows status (✓/✗) in Work Plans table
+  - Access via: `https://erp1.bdcbiz.com/admin/hrm/work-plans`
+  - Default: Enabled (TRUE) for all work plans
+
 ### 🐛 Critical Bug Fixes
+
+#### Backend Changes Not Reflecting in Mobile App
+- **Fixed** API caching issue preventing backend changes from appearing on mobile devices
+- **Root Cause**: Stale active attendance session from previous day using wrong work plan
+- **Problem Details**:
+  - Attendance session from 2025-11-10 was left open (not checked out)
+  - Session was using work_plan_id=1 (Default Work Plan) instead of work_plan_id=5 (Flexible Hours)
+  - API's `getStatus()` method prioritizes active session's work plan over employee's assigned work plan
+  - Result: Changes to correct work plan (ID 5) didn't appear because API returned wrong work plan (ID 1)
+- **Solution**:
+  - Closed stale attendance session (session_id=19) by setting check_out_time
+  - Created `DisableApiCaching` middleware to prevent HTTP response caching
+  - Added no-cache headers: `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`
+  - Registered middleware in `bootstrap/app.php` and applied to all HRM API routes
+  - Cleared Laravel caches
+- **Files Modified**:
+  - `/var/www/erp1/app/Http/Middleware/DisableApiCaching.php` - NEW middleware class
+  - `/var/www/erp1/bootstrap/app.php` - Registered and applied middleware to API routes
+  - Database: `attendance_sessions` table - Closed stale session ID 19
+- **Prevention**: Consider implementing auto-checkout for sessions older than 24 hours
+- **Test Results**:
+  - ✅ Stale session closed successfully
+  - ✅ No-cache middleware applied to all API endpoints
+  - ✅ Future backend changes will reflect immediately after cache clear
 
 #### Late Reason Detection Fix
 - **Fixed** Late Reason bottom sheet not appearing when employee checks in late

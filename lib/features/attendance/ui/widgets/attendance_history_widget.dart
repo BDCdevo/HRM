@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../logic/cubit/attendance_history_cubit.dart';
 import '../../logic/cubit/attendance_history_state.dart';
 
@@ -34,6 +35,10 @@ class _AttendanceHistoryWidgetState extends State<AttendanceHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
+
     return BlocProvider.value(
       value: _historyCubit,
       child: Column(
@@ -41,7 +46,7 @@ class _AttendanceHistoryWidgetState extends State<AttendanceHistoryWidget> {
           // Filter Section
           Container(
             padding: const EdgeInsets.all(16),
-            color: AppColors.white,
+            color: cardColor,
             child: Row(
               children: [
                 Expanded(

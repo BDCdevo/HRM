@@ -1,187 +1,188 @@
 import 'package:flutter/material.dart';
 
-/// App Colors
+/// App Colors - Blue Theme System
 ///
-/// Centralized color palette for the HRM app
-/// Based on the UI design reference with minimalist black & white theme
-///
-/// Primary colors derived from: C:\Users\B-SMART\AndroidStudioProjects\hrm\ui_design
+/// Modern blue color scheme with perfect harmony between Light & Dark modes
+/// Inspired by Material Design 3 Blue palette
 class AppColors {
   // ============================================
-  // Brand Colors (Primary Palette)
+  // LIGHT MODE - Blue Theme
   // ============================================
 
-  /// Main brand color - Dark Navy
-  /// Used for: Primary buttons, active states, important text
-  static const Color primary = Color(0xFF2D3142);
+  /// Primary - Warm Neutral Blue (محايد دافئ)
+  /// Used for: Primary buttons, AppBar, important elements
+  static const Color primary = Color(0xFF6B7FA8); // Warm desaturated blue
 
-  /// Lighter variant of primary
-  static const Color primaryLight = Color(0xFF4F5D75);
+  /// Primary Light - Soft Warm Blue
+  static const Color primaryLight = Color(0xFF8FA3C4); // Light warm blue
 
-  /// Darker variant of primary - Pure black for maximum contrast
-  static const Color primaryDark = Color(0xFF000000);
+  /// Primary Dark - Deep Warm Blue
+  static const Color primaryDark = Color(0xFF4A5D7E); // Dark warm blue
 
   // ============================================
-  // Accent Colors
+  // Accent Colors (Light Mode)
   // ============================================
 
-  /// Accent color - Coral/Orange
-  /// Used for: CTAs, highlights, warnings, active indicators
-  static const Color accent = Color(0xFFEF8354);
+  /// Accent/Secondary - Warm Teal (تيل دافئ محايد)
+  /// Used for: Secondary actions, highlights
+  static const Color accent = Color(0xFF7FA89A); // Warm desaturated teal
 
-  /// Secondary color - Green (alias for success, for backwards compatibility)
-  /// Used for: Secondary buttons, success indicators
-  /// @deprecated Use `accent` for secondary actions or `success` for success states
-  static const Color secondary = Color(0xFF10B981);
+  /// Secondary (alias for accent)
+  static const Color secondary = Color(0xFF7FA89A);
 
-  /// Secondary accent - Purple
-  /// Used for: Secondary actions, special highlights
-  static const Color accentPurple = Color(0xFF9B72AA);
+  /// Accent Light - Soft Warm Teal
+  static const Color accentLight = Color(0xFFA3C4B7); // Light warm teal
 
-  /// Tertiary accent - Light Gray
-  /// Used for: Subtle backgrounds, inactive states
-  static const Color accentGray = Color(0xFFBFC0C0);
+  /// Accent Dark - Deep Warm Teal
+  static const Color accentDark = Color(0xFF5A7E70); // Dark warm teal
+
+  /// Accent Purple - Warm Neutral Purple
+  static const Color accentPurple = Color(0xFF9B8AA4); // Warm desaturated purple
+
+  /// Accent Gray - Warm Subtle Gray
+  static const Color accentGray = Color(0xFFA8ADB3); // Warm neutral gray
 
   // ============================================
   // Semantic Colors
   // ============================================
 
-  /// Error/Danger color - Coral (matches accent)
-  static const Color error = Color(0xFFEF4444);
-  static const Color errorLight = Color(0xFFF87171);
-  static const Color errorDark = Color(0xFFDC2626);
+  /// Success - Warm Neutral Green
+  static const Color success = Color(0xFF6B9B7F);
+  static const Color successLight = Color(0xFF8FB5A3);
+  static const Color successDark = Color(0xFF4A7E5D);
 
-  /// Success color - Green
-  static const Color success = Color(0xFF10B981);
-  static const Color successLight = Color(0xFF34D399);
-  static const Color successDark = Color(0xFF059669);
+  /// Error - Warm Neutral Red
+  static const Color error = Color(0xFFB37373);
+  static const Color errorLight = Color(0xFFC99999);
+  static const Color errorDark = Color(0xFF8F5757);
 
-  /// Warning color - Amber
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color warningLight = Color(0xFFFBBF24);
-  static const Color warningDark = Color(0xFFD97706);
+  /// Warning - Warm Amber
+  static const Color warning = Color(0xFFBF9B6F);
+  static const Color warningLight = Color(0xFFD4B594);
+  static const Color warningDark = Color(0xFF9A7A54);
 
-  /// Info color - Dark Navy (matches primary)
-  static const Color info = Color(0xFF4F5D75);
-  static const Color infoLight = Color(0xFF9CA3AF);
+  /// Info - Warm Neutral Blue
+  static const Color info = Color(0xFF8FA3C4);
+  static const Color infoLight = Color(0xFFAFBFD6);
 
   // ============================================
-  // Text Colors
+  // Special Purpose Colors
   // ============================================
 
-  /// Primary text - Near black
+  /// WhatsApp Green - For chat/messaging
+  static const Color whatsappGreen = Color(0xFF25D366);
+
+  /// Services Colors - Warm neutral tones
+  static const Color servicesGray = Color(0xFF6B7280);
+  static const Color servicesLightGray = Color(0xFF9CA3AF);
+
+  // ============================================
+  // Text Colors (Light Mode) - Enhanced Contrast
+  // ============================================
+
+  /// Primary text - Very Dark (for maximum readability)
   static const Color textPrimary = Color(0xFF1F2937);
 
-  /// Secondary text - Medium gray
-  static const Color textSecondary = Color(0xFF6B7280);
+  /// Secondary text - Dark gray (better contrast)
+  static const Color textSecondary = Color(0xFF374151);
 
-  /// Tertiary text - Light gray
-  static const Color textTertiary = Color(0xFF9CA3AF);
+  /// Tertiary text - Medium gray (improved visibility)
+  static const Color textTertiary = Color(0xFF6B7280);
 
-  /// Disabled text - Very light gray
-  static const Color textDisabled = Color(0xFFD1D5DB);
-
-  /// Text on dark backgrounds - White
-  static const Color textOnDark = Color(0xFFFFFFFF);
+  /// Disabled text - Light gray
+  static const Color textDisabled = Color(0xFF9CA3AF);
 
   /// Text on primary color - White
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
+  /// Text on dark backgrounds - White
+  static const Color textOnDark = Color(0xFFFFFFFF);
+
   // ============================================
-  // Background Colors
+  // Background Colors (Light Mode)
   // ============================================
 
-  /// Main background - Pure white
-  static const Color background = Color(0xFFFFFFFF);
+  /// Main background - Very light blue-gray
+  static const Color background = Color(0xFFF5F7FA);
 
-  /// Light background - Very light gray
-  static const Color backgroundLight = Color(0xFFF8F9FA);
+  /// Light background - Almost white with blue tint
+  static const Color backgroundLight = Color(0xFFF8FAFC);
 
-  /// Alternate background - Light gray
-  static const Color backgroundAlt = Color(0xFFF3F4F6);
+  /// Alternate background - Light blue-gray
+  static const Color backgroundAlt = Color(0xFFEDF2F7);
 
-  /// Dark background - Dark navy (for cards, modals)
-  static const Color backgroundDark = Color(0xFF2D3142);
+  /// Dark background (for dark sections in light mode)
+  static const Color backgroundDark = Color(0xFF6B7FA8);
 
-  /// Surface color - White (for elevated elements)
+  /// Surface - Pure white
   static const Color surface = Color(0xFFFFFFFF);
 
   /// Surface variant - Very light gray
-  static const Color surfaceVariant = Color(0xFFF5F5F5);
+  static const Color surfaceVariant = Color(0xFFF7FAFC);
+
+  /// Input/Field Background - Very light warm gray
+  static const Color fieldBackground = Color(0xFFF8F9FA);
 
   // ============================================
-  // Border Colors
+  // Border Colors (Light Mode)
   // ============================================
 
-  /// Default border - Light gray
-  static const Color border = Color(0xFFE5E7EB);
+  /// Default border - Light gray with blue tint
+  static const Color border = Color(0xFFE2E8F0);
 
   /// Light border - Very light gray
-  static const Color borderLight = Color(0xFFF3F4F6);
+  static const Color borderLight = Color(0xFFF1F5F9);
 
   /// Medium border - Medium gray
-  static const Color borderMedium = Color(0xFFD1D5DB);
+  static const Color borderMedium = Color(0xFFCBD5E0);
+
+  /// Soft border - Warm light gray
+  static const Color borderSoft = Color(0xFFDDE2E8);
+
+  /// Neutral border - Light warm gray
+  static const Color borderNeutral = Color(0xFFD1D5DB);
 
   /// Dark border - Dark gray
-  static const Color borderDark = Color(0xFF9CA3AF);
+  static const Color borderDark = Color(0xFF718096);
 
   // ============================================
   // Shadow & Overlay Colors
   // ============================================
 
-  /// Default shadow - Black with 10% opacity
+  /// Default shadow - Black with opacity
   static const Color shadow = Color(0x1A000000);
-
-  /// Light shadow - Black with 5% opacity
   static const Color shadowLight = Color(0x0D000000);
-
-  /// Medium shadow - Black with 15% opacity
   static const Color shadowMedium = Color(0x26000000);
 
-  /// Modal/Drawer overlay - Black with 50% opacity
+  /// Overlays
   static const Color overlay = Color(0x80000000);
-
-  /// Light overlay - Black with 25% opacity
   static const Color overlayLight = Color(0x40000000);
 
   // ============================================
-  // Icon Colors
+  // Icon Colors (Light Mode) - Enhanced Contrast
   // ============================================
 
-  /// Primary icon - Dark gray
+  /// Primary icon - Very Dark (better visibility)
   static const Color iconPrimary = Color(0xFF1F2937);
 
-  /// Secondary icon - Medium gray
-  static const Color iconSecondary = Color(0xFF6B7280);
+  /// Secondary icon - Dark gray (improved contrast)
+  static const Color iconSecondary = Color(0xFF374151);
 
-  /// Tertiary icon - Light gray
-  static const Color iconTertiary = Color(0xFF9CA3AF);
+  /// Tertiary icon - Medium gray (better visibility)
+  static const Color iconTertiary = Color(0xFF6B7280);
 
   /// Icon on dark backgrounds - White
   static const Color iconOnDark = Color(0xFFFFFFFF);
 
   // ============================================
-  // Divider Colors
+  // Divider Colors (Light Mode)
   // ============================================
 
   /// Default divider - Light gray
-  static const Color divider = Color(0xFFE5E7EB);
+  static const Color divider = Color(0xFFE2E8F0);
 
   /// Light divider - Very light gray
-  static const Color dividerLight = Color(0xFFF3F4F6);
-
-  // ============================================
-  // Chart Colors (for data visualization)
-  // ============================================
-
-  /// Chart color palette matching the design
-  static const List<Color> chartColors = [
-    Color(0xFF2D3142), // Dark navy
-    Color(0xFF4F5D75), // Medium blue-gray
-    Color(0xFFBFC0C0), // Light gray
-    Color(0xFFEF8354), // Coral/orange
-    Color(0xFF9B72AA), // Purple
-  ];
+  static const Color dividerLight = Color(0xFFF1F5F9);
 
   // ============================================
   // Base Colors
@@ -193,34 +194,112 @@ class AppColors {
   /// Pure black
   static const Color black = Color(0xFF000000);
 
-  /// Dark - Dark Navy (alias for consistency)
-  static const Color dark = Color(0xFF2D3142);
+  /// Dark - Primary dark (alias)
+  static const Color dark = Color(0xFF4A5D7E);
 
   /// Transparent
   static const Color transparent = Colors.transparent;
 
   // ============================================
-  // Gradient Colors
+  // DARK MODE - Modern Black Theme (Updated Design)
   // ============================================
 
-  /// Primary gradient - Dark navy to medium gray
+  /// Dark mode - Main background (Pure dark black)
+  static const Color darkBackground = Color(0xFF1A1A1A);
+
+  /// Dark mode - Card/Surface (Dark gray)
+  static const Color darkCard = Color(0xFF2D2D2D);
+
+  /// Dark mode - AppBar & Navigation Bar (Darker black)
+  static const Color darkAppBar = Color(0xFF1F1F1F);
+
+  /// Dark mode - Input fields (Dark gray)
+  static const Color darkInput = Color(0xFF2D2D2D);
+
+  /// Dark mode - Borders (Lighter gray for better visibility)
+  static const Color darkBorder = Color(0xFF4B5563);
+
+  /// Dark mode - Dividers (Lighter gray for better visibility)
+  static const Color darkDivider = Color(0xFF4B5563);
+
+  /// Dark mode - Primary text (Pure white)
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+
+  /// Dark mode - Secondary text (Brighter gray for enhanced contrast)
+  static const Color darkTextSecondary = Color(0xFFD1D5DB);
+
+  /// Dark mode - Tertiary text (Medium-light gray for better visibility)
+  static const Color darkTextTertiary = Color(0xFFA0A0A0);
+
+  /// Dark mode - Hint text (Light gray for improved visibility)
+  static const Color darkTextHint = Color(0xFF9CA3AF);
+
+  /// Dark mode - Icons (White)
+  static const Color darkIcon = Color(0xFFFFFFFF);
+
+  /// Dark mode - Skeleton/Shimmer base
+  static const Color darkSkeleton = Color(0xFF2D2D2D);
+
+  /// Dark mode - Skeleton/Shimmer highlight
+  static const Color darkSkeletonHighlight = Color(0xFF3D3D3D);
+
+  /// Dark mode - Unselected navigation items
+  static const Color darkNavUnselected = Color(0xFF808080);
+
+  /// Dark mode - Primary color (Keep existing blue for buttons)
+  static const Color darkPrimary = Color(0xFF8FA3C4);
+
+  /// Dark mode - Accent color (Green for badges and success states)
+  static const Color darkAccent = Color(0xFF4CAF50);
+
+  /// Dark mode - Success/Badge color (Green for promo badges)
+  static const Color darkSuccess = Color(0xFF4CAF50);
+
+  /// Dark mode - Card elevated (Slightly lighter for hover/selected states)
+  static const Color darkCardElevated = Color(0xFF363636);
+
+  // ============================================
+  // Chart Colors (Blue Theme)
+  // ============================================
+
+  /// Chart color palette - Warm Neutral harmony
+  static const List<Color> chartColors = [
+    Color(0xFF6B7FA8), // Warm neutral blue
+    Color(0xFF7FA89A), // Warm teal
+    Color(0xFF9B8AA4), // Warm purple
+    Color(0xFFBF9B6F), // Warm amber
+    Color(0xFFA8ADB3), // Warm gray
+  ];
+
+  // ============================================
+  // Gradient Colors (Blue Theme)
+  // ============================================
+
+  /// Primary gradient - Warm Neutral Blue gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF2D3142), Color(0xFF4F5D75)],
+    colors: [Color(0xFF6B7FA8), Color(0xFF8FA3C4)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Accent gradient - Coral to orange
+  /// Accent gradient - Warm Teal gradient
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFFEF8354), Color(0xFFE76F51)],
+    colors: [Color(0xFF7FA89A), Color(0xFFA3C4B7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Purple gradient
+  /// Purple gradient - Warm Neutral Purple
   static const LinearGradient purpleGradient = LinearGradient(
-    colors: [Color(0xFF9B72AA), Color(0xFF8B5FA8)],
+    colors: [Color(0xFF9B8AA4), Color(0xFFB8AAC4)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  /// Dark mode gradient - Dark blue to lighter blue
+  static const LinearGradient darkGradient = LinearGradient(
+    colors: [Color(0xFF0A1929), Color(0xFF1E293B)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 }

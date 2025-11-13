@@ -33,16 +33,19 @@ class VacationTypesLoading extends LeaveState {
 
 /// Vacation Types Loaded
 class VacationTypesLoaded extends LeaveState {
-  final List<VacationTypeModel> vacationTypes;
+  final List<VacationTypeModel> availableTypes;
+  final List<VacationTypeModel> unavailableTypes;
 
-  const VacationTypesLoaded({required this.vacationTypes});
+  const VacationTypesLoaded({
+    required this.availableTypes,
+    this.unavailableTypes = const [],
+  });
 
   @override
-  List<Object?> get props => [vacationTypes];
+  List<Object?> get props => [availableTypes, unavailableTypes];
 
-  /// Get available vacation types only
-  List<VacationTypeModel> get availableTypes =>
-      vacationTypes.where((v) => v.isAvailable).toList();
+  /// Get all vacation types (available + unavailable)
+  List<VacationTypeModel> get allTypes => [...availableTypes, ...unavailableTypes];
 }
 
 /// Applying Leave State

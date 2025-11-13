@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/services/location_service.dart';
@@ -148,119 +150,99 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
 
   @override
   Widget build(BuildContext context) {
-    final hours = _elapsed.inHours.toString().padLeft(2, '0');
-    final minutes = (_elapsed.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (_elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
       child: Column(
         children: [
-          // Title
-          Text(
-            'Check in Time Counter',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+          // Working Animation
+          SizedBox(
+            width: double.infinity,
+            height: 180,
+            child: _buildWorkingAnimation(),
           ),
+
           const SizedBox(height: 16),
 
-          // Counter Display
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _TimeBox(value: hours),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  ':',
-                  style: AppTextStyles.headlineLarge.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              _TimeBox(value: minutes),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  ':',
-                  style: AppTextStyles.headlineLarge.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              _TimeBox(value: seconds),
-            ],
+          // Message
+          Text(
+            'Together We Grow Up',
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
           ),
 
           const SizedBox(height: 20),
 
           // Action Buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Check Point Button
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Check Point - Coming Soon')),
-                  );
-                },
-                icon: const Icon(Icons.location_on_outlined, size: 14),
-                label: const Text('Check Point'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.warning,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Check Point - Coming Soon')),
+                    );
+                  },
+                  icon: const Icon(Icons.location_on_outlined, size: 16),
+                  label: const Text('Check Point'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6B7280), // Gray
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
 
               // Check Out Button
-              ElevatedButton.icon(
-                onPressed: () => _handleCheckOut(context),
-                icon: const Icon(Icons.logout, size: 14),
-                label: const Text('Check Out'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleCheckOut(context),
+                  icon: const Icon(Icons.logout, size: 16),
+                  label: const Text('Check Out'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -311,35 +293,26 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
       }
     }
   }
-}
 
-/// Time Box Widget for Counter
-class _TimeBox extends StatelessWidget {
-  final String value;
-
-  const _TimeBox({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-      ),
-      child: Text(
-        value,
-        style: const TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          fontFeatures: [FontFeature.tabularFigures()],
-        ),
-      ),
+  /// Build Working Animation
+  Widget _buildWorkingAnimation() {
+    return Lottie.asset(
+      'assets/svgs/working_online.json',
+      width: double.infinity,
+      fit: BoxFit.contain,
+      repeat: true,
+      animate: true,
+      errorBuilder: (context, error, stackTrace) {
+        // If animation fails to load, show icon
+        return Center(
+          child: Icon(
+            Icons.work_outline,
+            size: 80,
+            color: AppColors.success,
+          ),
+        );
+      },
     );
   }
 }
+

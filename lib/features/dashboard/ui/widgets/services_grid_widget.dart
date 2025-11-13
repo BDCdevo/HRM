@@ -20,7 +20,7 @@ class ServicesGridWidget extends StatelessWidget {
               child: _ServiceCard(
                 icon: Icons.event_available,
                 label: 'Attendance',
-                color: AppColors.info, // Blue-gray from AppColors
+                color: AppColors.primary,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -35,7 +35,7 @@ class ServicesGridWidget extends StatelessWidget {
               child: _ServiceCard(
                 icon: Icons.event_busy,
                 label: 'Track Leave',
-                color: AppColors.error, // Red from AppColors
+                color: AppColors.accent,
                 onTap: () {
                   Navigator.pushNamed(context, '/leaves');
                 },
@@ -44,9 +44,9 @@ class ServicesGridWidget extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ServiceCard(
-                icon: Icons.description,
+                icon: Icons.receipt_long,
                 label: 'Claims',
-                color: AppColors.warning, // Orange from AppColors
+                color: AppColors.servicesGray,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -68,7 +68,7 @@ class ServicesGridWidget extends StatelessWidget {
               child: _ServiceCard(
                 icon: Icons.campaign,
                 label: 'Notice Board',
-                color: AppColors.accentPurple, // Purple from AppColors
+                color: AppColors.primary,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -83,7 +83,7 @@ class ServicesGridWidget extends StatelessWidget {
               child: _ServiceCard(
                 icon: Icons.flight_takeoff,
                 label: 'Holidays',
-                color: AppColors.success, // Green from AppColors
+                color: AppColors.servicesGray, // Gray
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -98,7 +98,7 @@ class ServicesGridWidget extends StatelessWidget {
               child: _ServiceCard(
                 icon: Icons.bar_chart,
                 label: 'Reports',
-                color: AppColors.primary, // Dark navy from AppColors
+                color: AppColors.accent,
                 onTap: () {
                   Navigator.pushNamed(context, '/reports');
                 },
@@ -129,48 +129,60 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Ink(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey.shade200,
-              width: 1,
-            ),
+            color: Theme.of(context).cardColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                color: AppColors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+                spreadRadius: -3,
+              ),
+              BoxShadow(
+                color: AppColors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+                spreadRadius: 0,
               ),
             ],
           ),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon (larger size)
-                Icon(
-                  icon,
-                  color: color,
-                  size: 40,
+                // Icon in colored container
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 30,
+                  ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Label
                 Text(
                   label,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 11,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,

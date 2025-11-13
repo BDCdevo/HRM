@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/logic/cubit/auth_state.dart';
 import '../../../auth/ui/screens/user_type_selection_screen.dart';
@@ -14,8 +15,14 @@ class MoreMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.watch<ThemeCubit>().isDarkMode;
+    final backgroundColor = isDarkMode ? AppColors.darkBackground : AppColors.background;
+    final cardColor = isDarkMode ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDarkMode ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: backgroundColor,
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (state is! AuthAuthenticated) {
@@ -35,10 +42,15 @@ class MoreMainScreen extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.secondary,
-                        AppColors.secondary.withOpacity(0.8),
-                      ],
+                      colors: isDarkMode
+                        ? [
+                            AppColors.darkAppBar,
+                            AppColors.darkCard,
+                          ]
+                        : [
+                            AppColors.primary,
+                            AppColors.primaryLight,
+                          ],
                     ),
                   ),
                   child: SafeArea(
@@ -121,13 +133,16 @@ class MoreMainScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       // Reports & Analytics Section
-                      _SectionHeader(title: 'Reports & Analytics'),
+                      _SectionHeader(title: 'Reports & Analytics', textColor: secondaryTextColor),
                       const SizedBox(height: 12),
                       _MenuItem(
                         icon: Icons.assessment,
                         title: 'Monthly Report',
                         subtitle: 'View your monthly work report',
                         color: AppColors.info,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Navigate to monthly report
                         },
@@ -138,6 +153,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'Work Schedule',
                         subtitle: 'View your work schedule',
                         color: AppColors.primary,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Navigate to work schedule
                         },
@@ -146,13 +164,16 @@ class MoreMainScreen extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // Account Section
-                      _SectionHeader(title: 'Account'),
+                      _SectionHeader(title: 'Account', textColor: secondaryTextColor),
                       const SizedBox(height: 12),
                       _MenuItem(
                         icon: Icons.person,
                         title: 'My Profile',
                         subtitle: 'View and edit your profile',
                         color: AppColors.secondary,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Navigate to profile
                         },
@@ -163,6 +184,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'Notifications',
                         subtitle: 'Manage your notifications',
                         color: AppColors.warning,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         badge: '3',
                         onTap: () {
                           // TODO: Navigate to notifications
@@ -172,13 +196,16 @@ class MoreMainScreen extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // Settings Section
-                      _SectionHeader(title: 'Settings'),
+                      _SectionHeader(title: 'Settings', textColor: secondaryTextColor),
                       const SizedBox(height: 12),
                       _MenuItem(
                         icon: Icons.lock,
                         title: 'Change Password',
                         subtitle: 'Update your password',
                         color: AppColors.textSecondary,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Navigate to change password
                         },
@@ -189,6 +216,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'Language',
                         subtitle: 'English',
                         color: AppColors.info,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Show language selector
                         },
@@ -199,6 +229,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'Help & Support',
                         subtitle: 'Get help and support',
                         color: AppColors.primary,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Navigate to help
                         },
@@ -209,6 +242,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'About',
                         subtitle: 'Version 1.0.0',
                         color: AppColors.textSecondary,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           // TODO: Show about dialog
                         },
@@ -222,6 +258,9 @@ class MoreMainScreen extends StatelessWidget {
                         title: 'Logout',
                         subtitle: 'Sign out from your account',
                         color: AppColors.error,
+                        cardColor: cardColor,
+                        textColor: textColor,
+                        secondaryTextColor: secondaryTextColor,
                         onTap: () {
                           _showLogoutDialog(context);
                         },
@@ -278,8 +317,9 @@ class MoreMainScreen extends StatelessWidget {
 /// Section Header
 class _SectionHeader extends StatelessWidget {
   final String title;
+  final Color textColor;
 
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +329,7 @@ class _SectionHeader extends StatelessWidget {
         title,
         style: AppTextStyles.titleMedium.copyWith(
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: textColor,
         ),
       ),
     );
@@ -302,6 +342,9 @@ class _MenuItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final Color cardColor;
+  final Color textColor;
+  final Color secondaryTextColor;
   final String? badge;
   final VoidCallback onTap;
 
@@ -310,6 +353,9 @@ class _MenuItem extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
+    required this.cardColor,
+    required this.textColor,
+    required this.secondaryTextColor,
     this.badge,
     required this.onTap,
   });
@@ -318,7 +364,7 @@ class _MenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -360,13 +406,14 @@ class _MenuItem extends StatelessWidget {
                       title,
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: secondaryTextColor,
                       ),
                     ),
                   ],

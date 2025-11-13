@@ -92,6 +92,7 @@ class WorkPlanModel extends Equatable {
   final String? endTime;
   final String schedule;
   final int permissionMinutes;
+  final bool lateDetectionEnabled; // NEW: Enable/disable late detection
 
   const WorkPlanModel({
     required this.name,
@@ -99,6 +100,7 @@ class WorkPlanModel extends Equatable {
     this.endTime,
     required this.schedule,
     this.permissionMinutes = 0,
+    this.lateDetectionEnabled = true, // Default: enabled
   });
 
   factory WorkPlanModel.fromJson(Map<String, dynamic> json) {
@@ -108,7 +110,17 @@ class WorkPlanModel extends Equatable {
       endTime: json['end_time'] as String?,
       schedule: json['schedule'] as String,
       permissionMinutes: json['permission_minutes'] as int? ?? 0,
+      lateDetectionEnabled: _parseBool(json['late_detection_enabled']) ?? true,
     );
+  }
+
+  /// Helper method to parse boolean from API (handles both int and bool)
+  static bool? _parseBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) return value == '1' || value.toLowerCase() == 'true';
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -118,11 +130,12 @@ class WorkPlanModel extends Equatable {
       if (endTime != null) 'end_time': endTime,
       'schedule': schedule,
       'permission_minutes': permissionMinutes,
+      'late_detection_enabled': lateDetectionEnabled,
     };
   }
 
   @override
-  List<Object?> get props => [name, startTime, endTime, schedule, permissionMinutes];
+  List<Object?> get props => [name, startTime, endTime, schedule, permissionMinutes, lateDetectionEnabled];
 }
 
 /// Attendance Status Model

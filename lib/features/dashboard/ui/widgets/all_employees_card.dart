@@ -110,7 +110,7 @@ class AllEmployeesCard extends StatelessWidget {
                 icon: Icons.access_time,
                 label: 'Late',
                 value: '8',
-                color: AppColors.warning,
+                color: AppColors.accent,
               ),
             ],
           ),

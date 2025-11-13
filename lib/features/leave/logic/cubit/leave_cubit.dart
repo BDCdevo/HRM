@@ -26,12 +26,32 @@ class LeaveCubit extends Cubit<LeaveState> {
 
       final vacationTypes = await _leaveRepo.getVacationTypes();
 
-      emit(VacationTypesLoaded(vacationTypes: vacationTypes));
+      print('✅ LeaveCubit: Loaded ${vacationTypes.length} vacation types');
+
+      // Log each type for debugging
+      for (var type in vacationTypes) {
+        print('  - ${type.name}: isAvailable=${type.isAvailable}, balance=${type.balance}');
+      }
+
+      if (vacationTypes.isEmpty) {
+        emit(const LeaveError(
+          message: 'لا توجد أنواع إجازات متاحة.\nيرجى التواصل مع قسم الموارد البشرية.',
+        ));
+        return;
+      }
+
+      // Return ALL vacation types (available and unavailable)
+      // The UI will handle disabling unavailable types
+      emit(VacationTypesLoaded(
+        availableTypes: vacationTypes.where((type) => type.isAvailable).toList(),
+        unavailableTypes: vacationTypes.where((type) => !type.isAvailable).toList(),
+      ));
     } on DioException catch (e) {
       _handleDioException(e);
     } catch (e) {
+      print('❌ LeaveCubit: Error fetching vacation types - $e');
       emit(LeaveError(
-        message: 'An unexpected error occurred: ${e.toString()}',
+        message: 'حدث خطأ أثناء تحميل أنواع الإجازات: ${e.toString()}',
       ));
     }
   }
@@ -260,12 +280,39 @@ class LeaveCubit extends Cubit<LeaveState> {
 
   /// Handle Dio Exception
   void _handleDioException(DioException e) {
+    print('❌ DioException: ${e.type} - ${e.message}');
+    print('Response: ${e.response?.data}');
+
     if (e.response != null) {
       // Server responded with error
       final statusCode = e.response?.statusCode;
-      final errorMessage = e.response?.data?['message'] ?? 'Operation failed';
+      final errorMessage = e.response?.data?['message'] ?? 'فشلت العملية';
 
-      // Handle validation errors
+      // Handle 401 Unauthorized
+      if (statusCode == 401) {
+        emit(const LeaveError(
+          message: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
+        ));
+        return;
+      }
+
+      // Handle 403 Forbidden
+      if (statusCode == 403) {
+        emit(const LeaveError(
+          message: 'ليس لديك صلاحية لهذه العملية',
+        ));
+        return;
+      }
+
+      // Handle 404 Not Found
+      if (statusCode == 404) {
+        emit(const LeaveError(
+          message: 'البيانات المطلوبة غير موجودة',
+        ));
+        return;
+      }
+
+      // Handle validation errors (422)
       if (statusCode == 422 && e.response?.data?['errors'] != null) {
         final errors = e.response?.data?['errors'];
         final errorList = <String>[];
@@ -289,25 +336,34 @@ class LeaveCubit extends Cubit<LeaveState> {
         return;
       }
 
+      // Handle 500 Server Error
+      if (statusCode != null && statusCode >= 500) {
+        emit(const LeaveError(
+          message: 'خطأ في الخادم. يرجى المحاولة لاحقاً',
+        ));
+        return;
+      }
+
       emit(LeaveError(
-        message: '[$statusCode] $errorMessage',
+        message: errorMessage,
         errorDetails: e.response?.data?.toString(),
       ));
     } else if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
       // Timeout error
       emit(const LeaveError(
-        message: 'Request timeout. Please try again.',
+        message: 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى',
       ));
-    } else if (e.type == DioExceptionType.unknown) {
+    } else if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.unknown) {
       // Network error (no internet connection)
       emit(const LeaveError(
-        message: 'Network error. Please check your internet connection.',
+        message: 'خطأ في الاتصال. تحقق من الإنترنت',
       ));
     } else {
       // Other Dio errors
-      emit(LeaveError(
-        message: e.message ?? 'An unexpected error occurred',
+      emit(const LeaveError(
+        message: 'حدث خطأ غير متوقع',
       ));
     }
   }

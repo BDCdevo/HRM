@@ -16,69 +16,22 @@ class LeaveRepo {
   /// Fetches all available vacation types for the employee
   Future<List<VacationTypeModel>> getVacationTypes() async {
     try {
-      // TODO: Uncomment when backend endpoint is ready
-      /*
       final response = await _dioClient.get(ApiConfig.vacationTypes);
 
-      final data = response.data['data'];
-      if (data == null) {
-        return [];
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data == null) {
+          return [];
+        }
+
+        final List<dynamic> list = data is List ? data : [];
+        return list.map((json) => VacationTypeModel.fromJson(json as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to fetch vacation types');
       }
-
-      final List<dynamic> list = data is List ? data : [];
-      return list.map((json) => VacationTypeModel.fromJson(json as Map<String, dynamic>)).toList();
-      */
-
-      // TEMPORARY: Demo data until backend is ready
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final List<Map<String, dynamic>> demoData = [
-        {
-          'id': 1,
-          'name': 'Annual Leave',
-          'description': 'Annual paid leave',
-          'balance': 21,
-          'unlock_after_months': 0,
-          'required_days_before': 3,
-          'requires_approval': true,
-          'is_available': true,
-        },
-        {
-          'id': 2,
-          'name': 'Sick Leave',
-          'description': 'Medical leave with certificate',
-          'balance': 15,
-          'unlock_after_months': 0,
-          'required_days_before': 1,
-          'requires_approval': true,
-          'is_available': true,
-        },
-        {
-          'id': 3,
-          'name': 'Emergency Leave',
-          'description': 'Urgent personal matters',
-          'balance': 5,
-          'unlock_after_months': 0,
-          'required_days_before': 0,
-          'requires_approval': true,
-          'is_available': true,
-        },
-        {
-          'id': 4,
-          'name': 'Unpaid Leave',
-          'description': 'Leave without pay',
-          'balance': 30,
-          'unlock_after_months': 6,
-          'required_days_before': 7,
-          'requires_approval': true,
-          'is_available': true,
-        },
-      ];
-
-      return demoData.map((json) => VacationTypeModel.fromJson(json)).toList();
     } catch (e) {
       print('❌ Error fetching vacation types: $e');
-      return [];
+      rethrow;
     }
   }
 

@@ -29,21 +29,25 @@ class TodayAttendanceStatsCard extends StatelessWidget {
     // Format today's date
     final today = DateFormat('E, MMM dd, yyyy').format(DateTime.now());
     final totalCount = presentCount + absentCount + checkedOutCount;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -62,14 +66,14 @@ class TodayAttendanceStatsCard extends StatelessWidget {
                     "Today's Attendance",
                     style: AppTextStyles.titleLarge.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     today,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -121,7 +125,8 @@ class TodayAttendanceStatsCard extends StatelessWidget {
                 child: _buildStatItem(
                   label: 'Present',
                   count: presentCount,
-                  color: AppColors.success,
+                  color: const Color(0xFF6B7280),
+                  context: context,
                 ),
               ),
 
@@ -137,7 +142,8 @@ class TodayAttendanceStatsCard extends StatelessWidget {
                 child: _buildStatItem(
                   label: 'Absent',
                   count: absentCount,
-                  color: AppColors.error,
+                  color: const Color(0xFF6B7280), // Gray
+                  context: context,
                 ),
               ),
 
@@ -153,7 +159,8 @@ class TodayAttendanceStatsCard extends StatelessWidget {
                 child: _buildStatItem(
                   label: 'Checked Out',
                   count: checkedOutCount,
-                  color: AppColors.info,
+                  color: AppColors.accent,
+                  context: context,
                 ),
               ),
             ],
@@ -163,34 +170,47 @@ class TodayAttendanceStatsCard extends StatelessWidget {
     );
   }
 
-  /// Build individual stat item - Simple design
+  /// Build individual stat item - Clean professional design
   Widget _buildStatItem({
     required String label,
     required int count,
     required Color color,
+    required BuildContext context,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
+        // Count in colored container
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            count.toString(),
+            style: AppTextStyles.headlineLarge.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 28,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 12),
+
         // Label
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
             fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
           textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-
-        // Count
-        Text(
-          count.toString(),
-          style: AppTextStyles.headlineLarge.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-          ),
-          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../logic/cubit/attendance_cubit.dart';
 import '../widgets/attendance_check_in_widget.dart';
 import '../widgets/attendance_history_widget.dart';
@@ -34,10 +35,15 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.watch<ThemeCubit>().isDarkMode;
+    final backgroundColor = isDarkMode ? AppColors.darkBackground : AppColors.background;
+    final cardColor = isDarkMode ? AppColors.darkCard : AppColors.surface;
+    final appBarColor = isDarkMode ? AppColors.darkAppBar : AppColors.primary;
+
     return BlocProvider(
       create: (context) => AttendanceCubit(),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: backgroundColor,
         body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -46,19 +52,40 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
               expandedHeight: 140,
               floating: false,
               pinned: true,
-              backgroundColor: AppColors.primary,
+              backgroundColor: appBarColor,
               elevation: 0,
+              actions: [
+                // Dark Mode Toggle
+                IconButton(
+                  icon: Icon(
+                    context.watch<ThemeCubit>().isDarkMode
+                        ? Icons.light_mode
+                        : Icons.dark_mode,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    context.read<ThemeCubit>().toggleTheme();
+                  },
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withOpacity(0.85),
-                        AppColors.accent.withOpacity(0.3),
-                      ],
+                      colors: isDarkMode
+                        ? [
+                            AppColors.darkAppBar,
+                            AppColors.darkCard,
+                            AppColors.darkCard.withOpacity(0.8),
+                          ]
+                        : [
+                            AppColors.primary,
+                            AppColors.primary.withOpacity(0.85),
+                            AppColors.accent.withOpacity(0.3),
+                          ],
                     ),
                   ),
                   child: SafeArea(
@@ -147,8 +174,8 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
               delegate: _SliverTabBarDelegate(
                 TabBar(
                   controller: _tabController,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.textSecondary,
+                  labelColor: isDarkMode ? AppColors.white : AppColors.primary,
+                  unselectedLabelColor: isDarkMode ? AppColors.darkTextSecondary : AppColors.textSecondary,
                   indicatorColor: AppColors.accent,
                   indicatorWeight: 3,
                   indicatorSize: TabBarIndicatorSize.tab,
@@ -192,6 +219,8 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
                     ),
                   ],
                 ),
+                backgroundColor: cardColor,
+                isDark: isDarkMode,
               ),
             ),
           ];
@@ -215,8 +244,14 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
 /// Sliver Tab Bar Delegate
 class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
+  final Color backgroundColor;
+  final bool isDark;
 
-  _SliverTabBarDelegate(this._tabBar);
+  _SliverTabBarDelegate(
+    this._tabBar, {
+    required this.backgroundColor,
+    required this.isDark,
+  });
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
@@ -232,10 +267,10 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
-        boxShadow: [
+        color: backgroundColor,
+        boxShadow: isDark ? [] : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.black.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -247,6 +282,6 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+    return backgroundColor != oldDelegate.backgroundColor || isDark != oldDelegate.isDark;
   }
 }

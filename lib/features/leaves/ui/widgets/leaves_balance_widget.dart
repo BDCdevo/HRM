@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../../../leave/logic/cubit/leave_state.dart';
 import '../../../leave/data/models/leave_balance_model.dart';
@@ -46,12 +48,26 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeCubit>().isDarkMode;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return BlocBuilder<LeaveCubit, LeaveState>(
       builder: (context, state) {
-        // Show loading for initial state and loading state
+        // Show loading skeleton for initial state and loading state
         if (state is LeaveBalanceLoading || state is LeaveInitial) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: List.generate(
+                3,
+                (index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: CardSkeleton(height: 120),
+                ),
+              ),
+            ),
           );
         }
 
@@ -68,13 +84,13 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
                   Icon(
                     Icons.account_balance_wallet,
                     size: 80,
-                    color: AppColors.textSecondary.withOpacity(0.5),
+                    color: secondaryTextColor.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No leave balance information available',
                     style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
+                      color: secondaryTextColor,
                     ),
                   ),
                 ],
@@ -95,15 +111,20 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.warning,
-                        AppColors.warning.withOpacity(0.8),
-                      ],
+                      colors: isDark
+                        ? [
+                            AppColors.darkCard,
+                            AppColors.darkCardElevated,
+                          ]
+                        : [
+                            AppColors.primary,
+                            AppColors.primary.withOpacity(0.85),
+                          ],
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
+                    boxShadow: isDark ? [] : [
                       BoxShadow(
-                        color: AppColors.warning.withOpacity(0.3),
+                        color: AppColors.primary.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -149,6 +170,7 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
                   'Leave Balance by Type',
                   style: AppTextStyles.titleLarge.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
 
@@ -158,7 +180,13 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
                 ...balances.map((balance) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
-                    child: _LeaveBalanceCard(balance: balance),
+                    child: _LeaveBalanceCard(
+                      balance: balance,
+                      isDark: isDark,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      secondaryTextColor: secondaryTextColor,
+                    ),
                   );
                 }),
               ],
@@ -203,8 +231,18 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
 /// Leave Balance Card
 class _LeaveBalanceCard extends StatelessWidget {
   final LeaveBalanceModel balance;
+  final bool? isDark;
+  final Color? cardColor;
+  final Color? textColor;
+  final Color? secondaryTextColor;
 
-  const _LeaveBalanceCard({required this.balance});
+  const _LeaveBalanceCard({
+    required this.balance,
+    this.isDark,
+    this.cardColor,
+    this.textColor,
+    this.secondaryTextColor,
+  });
 
   IconData _getIcon() {
     final name = balance.vacationTypeName.toLowerCase();
@@ -217,10 +255,10 @@ class _LeaveBalanceCard extends StatelessWidget {
 
   Color _getColor() {
     final name = balance.vacationTypeName.toLowerCase();
-    if (name.contains('sick')) return AppColors.error;
+    if (name.contains('sick')) return AppColors.info;
     if (name.contains('annual') || name.contains('vacation')) return AppColors.success;
     if (name.contains('casual')) return AppColors.primary;
-    if (name.contains('emergency')) return AppColors.warning;
+    if (name.contains('emergency')) return AppColors.accent;
     return AppColors.info;
   }
 
@@ -228,13 +266,17 @@ class _LeaveBalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _getColor();
     final percentage = balance.remainingPercentage;
+    final effectiveIsDark = isDark ?? false;
+    final effectiveCardColor = cardColor ?? AppColors.white;
+    final effectiveTextColor = textColor ?? AppColors.textPrimary;
+    final effectiveSecondaryTextColor = secondaryTextColor ?? AppColors.textSecondary;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: effectiveCardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: effectiveIsDark ? [] : [
           BoxShadow(
             color: AppColors.shadowLight,
             blurRadius: 10,
@@ -250,7 +292,7 @@ class _LeaveBalanceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withOpacity(effectiveIsDark ? 0.2 : 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -270,13 +312,14 @@ class _LeaveBalanceCard extends StatelessWidget {
                       balance.vacationTypeName,
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: effectiveTextColor,
                       ),
                     ),
                     if (balance.description != null && balance.description!.isNotEmpty)
                       Text(
                         balance.description!,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: effectiveSecondaryTextColor,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -292,7 +335,7 @@ class _LeaveBalanceCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withOpacity(effectiveIsDark ? 0.2 : 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -313,7 +356,7 @@ class _LeaveBalanceCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: percentage / 100,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withOpacity(effectiveIsDark ? 0.2 : 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 8,
             ),
@@ -328,13 +371,13 @@ class _LeaveBalanceCard extends StatelessWidget {
               Text(
                 'Total: ${balance.total} days',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: effectiveSecondaryTextColor,
                 ),
               ),
               Text(
                 'Used: ${balance.used} days',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: effectiveSecondaryTextColor,
                 ),
               ),
               Text(
@@ -353,7 +396,7 @@ class _LeaveBalanceCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.info.withOpacity(effectiveIsDark ? 0.2 : 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -361,14 +404,14 @@ class _LeaveBalanceCard extends StatelessWidget {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: AppColors.warning,
+                    color: AppColors.info,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       balance.availabilityInfo,
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.warning,
+                        color: AppColors.info,
                       ),
                     ),
                   ),

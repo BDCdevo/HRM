@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../widgets/leaves_apply_widget.dart';
 import '../widgets/leaves_history_widget.dart';
@@ -35,10 +36,16 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.watch<ThemeCubit>().isDarkMode;
+    final backgroundColor = isDarkMode ? AppColors.darkBackground : AppColors.background;
+    final cardColor = isDarkMode ? AppColors.darkCard : AppColors.surface;
+    final textColor = isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final appBarColor = isDarkMode ? AppColors.darkAppBar : AppColors.primary;
+
     return BlocProvider(
       create: (context) => LeaveCubit(),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: backgroundColor,
         body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -47,17 +54,37 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
               expandedHeight: 160,
               floating: false,
               pinned: true,
-              backgroundColor: AppColors.warning,
+              backgroundColor: appBarColor,
+              actions: [
+                // Dark Mode Toggle
+                IconButton(
+                  icon: Icon(
+                    context.watch<ThemeCubit>().isDarkMode
+                        ? Icons.light_mode
+                        : Icons.dark_mode,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    context.read<ThemeCubit>().toggleTheme();
+                  },
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.warning,
-                        AppColors.warning.withOpacity(0.8),
-                      ],
+                      colors: isDarkMode
+                        ? [
+                            AppColors.darkAppBar,
+                            AppColors.darkCard,
+                          ]
+                        : [
+                            AppColors.primary,
+                            AppColors.primary.withOpacity(0.85),
+                          ],
                     ),
                   ),
                   child: SafeArea(
@@ -126,9 +153,9 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
               delegate: _SliverTabBarDelegate(
                 TabBar(
                   controller: _tabController,
-                  labelColor: AppColors.warning,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  indicatorColor: AppColors.warning,
+                  labelColor: isDarkMode ? AppColors.white : AppColors.primary,
+                  unselectedLabelColor: isDarkMode ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                  indicatorColor: AppColors.accent,
                   indicatorWeight: 3,
                   labelStyle: AppTextStyles.labelLarge.copyWith(
                     fontWeight: FontWeight.w600,
@@ -140,6 +167,7 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
                     Tab(text: 'Balance'),
                   ],
                 ),
+                backgroundColor: isDarkMode ? AppColors.darkCard : AppColors.surface,
               ),
             ),
           ];
@@ -166,8 +194,9 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
 /// Sliver Tab Bar Delegate
 class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
+  final Color backgroundColor;
 
-  _SliverTabBarDelegate(this._tabBar);
+  _SliverTabBarDelegate(this._tabBar, {required this.backgroundColor});
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
@@ -182,13 +211,13 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      color: AppColors.background,
+      color: backgroundColor,
       child: _tabBar,
     );
   }
 
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+    return backgroundColor != oldDelegate.backgroundColor;
   }
 }

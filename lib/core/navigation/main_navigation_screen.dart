@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/logic/cubit/auth_cubit.dart';
 import '../../features/auth/logic/cubit/auth_state.dart';
 import '../../features/home/ui/screens/home_main_screen.dart';
+import '../../features/chat/ui/screens/chat_list_screen.dart';
 import '../../features/leaves/ui/screens/leaves_main_screen.dart';
 import '../../features/more/ui/screens/more_main_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
@@ -12,6 +13,7 @@ import '../styles/app_colors.dart';
 ///
 /// Modern bottom navigation bar with main app sections:
 /// - Home (Dashboard & Quick Actions)
+/// - Chat (Employee Messaging)
 /// - Leaves (Apply, History, Balance)
 /// - More (Reports, Profile, Settings)
 class MainNavigationScreen extends StatefulWidget {
@@ -26,6 +28,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = const [
     HomeMainScreen(),
+    ChatListScreen(),
     LeavesMainScreen(),
     MoreMainScreen(),
   ];
@@ -38,16 +41,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       color: AppColors.primary,
     ),
     NavBarItem(
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
+      label: 'Chat',
+      color: Color(0xFF25D366), // WhatsApp green
+    ),
+    NavBarItem(
       icon: Icons.event_busy_outlined,
       activeIcon: Icons.event_busy,
       label: 'Leaves',
-      color: AppColors.warning,
+      color: AppColors.primary,
     ),
     NavBarItem(
       icon: Icons.more_horiz,
       activeIcon: Icons.more_horiz,
       label: 'More',
-      color: AppColors.secondary,
+      color: AppColors.primary,
     ),
   ];
 
