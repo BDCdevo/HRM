@@ -52,7 +52,8 @@
       "Bash(flutter test:*)",
       "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_current.php)",
       "WebSearch",
-      "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_backup.php)"
+      "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_backup.php)",
+      "Bash(/tmp/chatcontroller_current.php)"
     ],
     "deny": [],
     "ask": []
