@@ -755,190 +755,136 @@ class _LeaveTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Responsive grid: 1 column on small, 2 on medium, 3 on large screens
-        final screenWidth = constraints.maxWidth;
-        final crossAxisCount = screenWidth > 900 ? 3 : (screenWidth > 600 ? 2 : 1);
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: 2.0,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border.withOpacity(0.5),
+        ),
+        boxShadow: isDark ? [] : [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
-          itemCount: vacationTypes.length,
-          itemBuilder: (context, index) {
-            final type = vacationTypes[index];
-            final isSelected = selectedTypeId == type.id;
-
-            return InkWell(
-              onTap: type.isAvailable ? () => onChanged(type.id) : null,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primary,
-                            AppColors.primaryLight,
-                          ],
-                        )
-                      : null,
-                  color: isSelected ? null : cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark ? AppColors.darkBorder : AppColors.border.withOpacity(0.5)),
-                    width: isSelected ? 2 : 1,
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          isExpanded: true,
+          value: selectedTypeId,
+          hint: Text(
+            'اختر نوع الإجازة',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            ),
+          ),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+          ),
+          dropdownColor: cardColor,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: textColor,
+          ),
+          items: vacationTypes.map((type) {
+            return DropdownMenuItem<int>(
+              value: type.id,
+              enabled: type.isAvailable,
+              child: Row(
+                children: [
+                  // Icon
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getIconForType(type.name),
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
                   ),
-                  boxShadow: (isSelected && !isDark)
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : isDark ? [] : [
-                          BoxShadow(
-                            color: AppColors.shadowLight,
-                            blurRadius: 3,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header: Icon + Balance Badge
-                    Row(
+                  const SizedBox(width: 12),
+
+                  // Type name and details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.white.withOpacity(0.2)
-                                : AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
+                        Text(
+                          type.name,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: type.isAvailable
+                                ? textColor
+                                : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                            fontWeight: FontWeight.w600,
                           ),
-                          child: Icon(
-                            _getIconForType(type.name),
-                            color: isSelected ? AppColors.white : AppColors.primary,
-                            size: 20,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.white.withOpacity(0.2)
-                                : AppColors.success.withOpacity(isDark ? 0.2 : 0.15),
-                            borderRadius: BorderRadius.circular(16),
+                        if (type.description != null && type.description!.isNotEmpty)
+                          Text(
+                            type.description!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.event_available,
-                                color: isSelected ? AppColors.white : AppColors.success,
-                                size: 12,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${type.balance}',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: isSelected ? AppColors.white : AppColors.success,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Balance badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: type.isAvailable
+                          ? AppColors.success.withOpacity(isDark ? 0.2 : 0.15)
+                          : AppColors.error.withOpacity(isDark ? 0.2 : 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          type.isAvailable ? Icons.event_available : Icons.lock_outline,
+                          color: type.isAvailable ? AppColors.success : AppColors.error,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          type.isAvailable ? '${type.balance}' : '0',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: type.isAvailable ? AppColors.success : AppColors.error,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 6),
-
-                    // Leave Type Name
-                    Text(
-                      type.name,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: isSelected ? AppColors.white : textColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    if (type.description != null && type.description!.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        type.description!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: isSelected
-                              ? AppColors.white.withOpacity(0.9)
-                              : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
-                          fontSize: 11,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-
-                    // Notice requirement info
-                    if (type.requiredDaysBefore > 0) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.white.withOpacity(0.15)
-                              : AppColors.accent.withOpacity(isDark ? 0.2 : 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 12,
-                              color: isSelected ? AppColors.white : AppColors.accent,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'إشعار ${type.requiredDaysBefore} يوم',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: isSelected
-                                      ? AppColors.white.withOpacity(0.9)
-                                      : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
-        },
-      );
-    },
+          }).toList(),
+          onChanged: (int? value) {
+            if (value != null) {
+              final type = vacationTypes.firstWhere((t) => t.id == value);
+              if (type.isAvailable) {
+                onChanged(value);
+              }
+            }
+          },
+        ),
+      ),
     );
   }
 }

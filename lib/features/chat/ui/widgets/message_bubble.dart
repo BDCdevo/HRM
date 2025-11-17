@@ -70,19 +70,8 @@ class MessageBubble extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Sender name (only for received messages)
-                  if (!isSentByMe) ...[
-                    Text(
-                      message.senderName,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: isDark ? AppColors.darkAccent : AppColors.accent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-
                   // Message content
                   _buildMessageContent(isDark),
 
@@ -97,9 +86,7 @@ class MessageBubble extends StatelessWidget {
                         style: AppTextStyles.bodySmall.copyWith(
                           color: isSentByMe
                               ? (isDark
-                                    ? AppColors.darkTextSecondary.withOpacity(
-                                        0.8,
-                                      )
+                                    ? AppColors.darkTextSecondary.withOpacity(0.8)
                                     : AppColors.textSecondary)
                               : (isDark
                                     ? AppColors.darkTextSecondary
@@ -132,12 +119,14 @@ class MessageBubble extends StatelessWidget {
       case 'voice':
         return _buildVoiceMessage(isDark);
       default:
+        // Text message
         return Text(
           message.message,
           style: AppTextStyles.bodyMedium.copyWith(
             color: isSentByMe
                 ? (isDark ? AppColors.white : AppColors.textPrimary)
                 : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+            height: 1.4,
           ),
         );
     }
@@ -254,18 +243,28 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// Build Message Status Icon
+  /// Build Message Status Icon (WhatsApp Style)
   Widget _buildMessageStatus() {
+    // ✓✓ Blue = Read (رسالة مقروءة)
     if (message.isRead) {
-      // Double check (read)
       return Icon(
         Icons.done_all,
         size: 16,
-        color: const Color(0xFF34B7F1), // WhatsApp blue for read
+        color: const Color(0xFF53BDEB), // WhatsApp blue
       );
-    } else {
-      // Single check (delivered) or double check (not read)
-      return Icon(Icons.done, size: 16, color: AppColors.textSecondary);
     }
+
+    // ✓✓ Grey = Delivered (تم التوصيل)
+    // Note: Backend should send 'delivered_at' field
+    // For now, we assume if not read, it's delivered
+    return Icon(
+      Icons.done_all,
+      size: 16,
+      color: Colors.grey[600],
+    );
+
+    // ✓ Grey = Sent (تم الإرسال)
+    // This would be shown if message just sent but not delivered yet
+    // return Icon(Icons.done, size: 16, color: Colors.grey[600]);
   }
 }

@@ -26,12 +26,25 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeMainScreen(),
-    ChatListScreen(),
-    LeavesMainScreen(),
-    MoreMainScreen(),
-  ];
+  List<Widget> _buildScreens(AuthState authState) {
+    // Get user data from auth state
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final userId = user?.id ?? 0;
+
+    // Company ID is always 6 (BDC) - hardcoded since UserModel doesn't contain company_id
+    // TODO: Add company_id to UserModel in future versions
+    const companyId = 6;
+
+    return [
+      const HomeMainScreen(),
+      ChatListScreen(
+        companyId: companyId,
+        currentUserId: userId,
+      ),
+      const LeavesMainScreen(),
+      const MoreMainScreen(),
+    ];
+  }
 
   final List<NavBarItem> _navItems = const [
     NavBarItem(
@@ -73,7 +86,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         return Scaffold(
           body: IndexedStack(
             index: _currentIndex,
-            children: _screens,
+            children: _buildScreens(state),
           ),
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,

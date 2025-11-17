@@ -28,6 +28,9 @@ class ConversationModel {
   @JsonKey(name: 'updated_at')
   final String updatedAt;
 
+  @JsonKey(name: 'is_online')
+  final bool isOnline;
+
   const ConversationModel({
     required this.id,
     required this.participantId,
@@ -37,10 +40,77 @@ class ConversationModel {
     this.lastMessage,
     this.unreadCount = 0,
     required this.updatedAt,
+    this.isOnline = false,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationModelFromJson(json);
+
+  /// Factory for API response
+  /// API returns: {id, type, name, avatar, last_message, unread_count, is_online, last_seen_at, participants}
+  ///
+  /// Important: Pass currentUserId to extract the OTHER participant's info correctly
+  factory ConversationModel.fromApiJson(
+    Map<String, dynamic> json, {
+    required int currentUserId,
+  }) {
+    // Extract participant info from participants array
+    int participantId = 0;
+    String participantName = 'Unknown';
+    String? participantAvatar;
+    String? participantDepartment;
+
+    // Try to get participant info from participants array (if provided by backend)
+    if (json['participants'] != null && json['participants'] is List) {
+      final participants = json['participants'] as List;
+
+      // Find the OTHER participant (not current user)
+      final otherParticipant = participants.firstWhere(
+        (p) => p['id'] != currentUserId,
+        orElse: () => null,
+      );
+
+      if (otherParticipant != null) {
+        participantId = otherParticipant['id'] as int;
+        participantName = otherParticipant['name'] ??
+                         otherParticipant['email'] ??
+                         'Unknown';
+        participantAvatar = otherParticipant['avatar'] as String?;
+        participantDepartment = otherParticipant['department'] as String?;
+      }
+    }
+
+    // Fallback to conversation name if no participant found
+    // (Backend returns participant name as conversation name for private chats)
+    if (participantId == 0) {
+      participantName = json['name'] as String? ?? 'Unknown';
+      participantAvatar = json['avatar'] as String?;
+    }
+
+    return ConversationModel(
+      id: json['id'] as int,
+      participantId: participantId,
+      participantName: participantName,
+      participantAvatar: participantAvatar,
+      participantDepartment: participantDepartment,
+      lastMessage: json['last_message'] != null && json['last_message'] is String
+          ? MessageModel(
+              id: 0,
+              conversationId: json['id'] as int,
+              senderId: 0,
+              senderName: '',
+              message: json['last_message'] as String,
+              messageType: 'text',
+              isRead: true,
+              createdAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
+              updatedAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
+            )
+          : null,
+      unreadCount: json['unread_count'] as int? ?? 0,
+      updatedAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
+      isOnline: json['is_online'] as bool? ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$ConversationModelToJson(this);
 

@@ -48,6 +48,23 @@ class MessageModel {
   factory MessageModel.fromJson(Map<String, dynamic> json) =>
       _$MessageModelFromJson(json);
 
+  /// Factory for API response
+  /// API returns: {id, body, user_id, user_name, user_avatar, created_at, is_mine, attachment_type, attachment_name, attachment_url, read_at}
+  factory MessageModel.fromApiJson(Map<String, dynamic> json) {
+    return MessageModel(
+      id: json['id'] as int,
+      conversationId: 0, // Not provided, set to 0
+      senderId: json['user_id'] as int,
+      senderName: json['user_name'] as String? ?? 'Unknown',
+      senderAvatar: json['user_avatar'] as String?,
+      message: json['body'] as String? ?? '',
+      messageType: json['attachment_type'] as String? ?? 'text',
+      isRead: json['read_at'] != null,
+      createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
+      updatedAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
+    );
+  }
+
   Map<String, dynamic> toJson() => _$MessageModelToJson(this);
 
   /// Check if this message was sent by current user
@@ -56,14 +73,19 @@ class MessageModel {
   /// Format created at time (e.g., "10:30 AM")
   String get formattedTime {
     try {
+      // Parse datetime
       final dateTime = DateTime.parse(createdAt);
+
+      // Convert to 12-hour format
       final hour = dateTime.hour;
       final minute = dateTime.minute.toString().padLeft(2, '0');
       final period = hour >= 12 ? 'PM' : 'AM';
       final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+
       return '$displayHour:$minute $period';
     } catch (e) {
-      return '';
+      // Fallback: return createdAt as is
+      return createdAt;
     }
   }
 

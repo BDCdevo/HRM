@@ -30,14 +30,18 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.bdcbiz.hrm"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 24  // Android 7.0 (Nougat) - Required for security features
+        targetSdk = 36  // Latest Android 14
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Security configurations
+        multiDexEnabled = true
+        vectorDrawables.useSupportLibrary = true
+
+        // Prevent screenshots in recent apps (optional - can be removed if not needed)
+        manifestPlaceholders["usesCleartextTraffic"] = "false"
     }
 
     signingConfigs {
@@ -54,6 +58,12 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

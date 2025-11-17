@@ -106,6 +106,7 @@ lib/core/
 - `dashboard` - Dashboard statistics with service cards
 - `attendance` - Check-in/out with location tracking, history, calendar, multiple sessions
 - `leave` / `leaves` - Leave requests, balance, history (note: separate features for logic vs UI)
+- `chat` - WhatsApp-style messaging with real-time chat, file attachments, employee selection
 - `profile` - User profile, edit, change password
 - `notifications` - Notification list and management
 - `work_schedule` - Work schedule display
@@ -141,10 +142,9 @@ flutter test
 flutter clean
 flutter pub get
 
-# Build release
-flutter build apk --release
-flutter build apk --obfuscate --split-debug-info=build/debug_info
-flutter build appbundle
+# Build release (recommended with obfuscation and shrinking)
+flutter build apk --release --obfuscate --split-debug-info=build/debug_info
+flutter build appbundle --release --obfuscate --split-debug-info=build/debug_info
 flutter build windows
 ```
 
@@ -444,18 +444,26 @@ Use `BlocConsumer` when you need both listening and building from the same cubit
 
 ## Key Dependencies
 
-- **dio**: HTTP client
-- **flutter_bloc**: State management
-- **equatable**: Value equality for states
-- **flutter_secure_storage**: Secure token storage
-- **json_annotation** + **build_runner** + **json_serializable**: JSON code generation
+**State & Networking**:
+- **flutter_bloc**: State management (Cubit pattern)
+- **equatable**: Value equality for states (required for BLoC rebuilds)
+- **dio**: HTTP client (singleton pattern via DioClient)
+- **flutter_secure_storage**: Secure token storage (key: `auth_token`)
+
+**Code Generation**:
+- **json_annotation** + **build_runner** + **json_serializable**: JSON serialization
+
+**UI & Media**:
 - **fl_chart**: Charts and visualizations
-- **go_router**: Routing
 - **cached_network_image**: Image caching
-- **intl**: Date/time formatting
-- **geolocator**: GPS location services
+- **image_picker**: Image/file selection
+
+**Location & Permissions**:
+- **geolocator**: GPS location services (for attendance)
 - **permission_handler**: Runtime permissions
-- **image_picker**: Image selection
+
+**Utilities**:
+- **intl**: Date/time formatting
 - **timeago**: Relative time formatting
 - **shared_preferences**: Local key-value storage
 
@@ -479,9 +487,11 @@ Use `mockito` for mocking dependencies and `bloc_test` for testing cubits. Curre
 
 ## Navigation System
 
+**Note**: Despite `go_router` being in dependencies, the app uses a **custom routing system** via `AppRouter` with manual route generation and custom transitions.
+
 ### Centralized Routing
 
-All navigation uses named routes via `AppRouter`:
+All navigation uses named routes via `AppRouter` (not go_router):
 
 ```dart
 // Navigate to a screen
@@ -545,6 +555,20 @@ NavigationHelper.showLoadingDialog(context);
 
 Full navigation guide: `lib/core/routing/README.md`
 
+### Bottom Navigation Structure
+
+The app uses `MainNavigationScreen` as the main container with 4 tabs:
+
+1. **Home** (`HomeMainScreen`) - Dashboard with attendance widget and service cards
+2. **Chat** (`ChatListScreen`) - WhatsApp-style messaging
+3. **Leaves** (`LeavesMainScreen`) - Leave management (apply, history, balance)
+4. **More** (`MoreMainScreen`) - Settings, reports, profile, etc.
+
+**Important**:
+- After login, users land on `MainNavigationScreen` (not individual screens)
+- Each tab maintains its own navigation stack
+- Company ID is currently hardcoded to `6` (BDC) in `MainNavigationScreen` - TODO: Add to UserModel
+
 ## Documentation References
 
 - **API Documentation**: `API_DOCUMENTATION.md` - All backend endpoints and response formats
@@ -555,6 +579,9 @@ Full navigation guide: `lib/core/routing/README.md`
 - **Changelog**: `CHANGELOG.md` - Detailed change history
 - **Production Testing**: `PRODUCTION_TESTING_GUIDE.md` - Production testing checklist
 - **Production Switch**: `PRODUCTION_SWITCH_README.md` - Environment switching guide
+- **Chat Implementation**: `CHAT_FEATURE_IMPLEMENTATION_REPORT.md` - Complete chat feature documentation
+- **Security Guide**: `SECURITY_QUICK_GUIDE.md` - Security improvements and testing (Arabic)
+- **Attendance Documentation**: `ATTENDANCE_FEATURE_DOCUMENTATION.md` - Multiple sessions implementation
 - **Figma Designs**: https://www.figma.com/design/gNAzHVWnkINNfxNmDZX7Nt
 - **Backend Location**: `D:\php_project\filament-hrm` (local), `/var/www/erp1` (production server)
 
@@ -602,7 +629,8 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ### Environment Mismatch
 - **Symptom**: "Connection refused" or "Cannot connect to server"
 - **Solution**: Verify `baseUrl` in `lib/core/config/api_config.dart:26` matches your target environment
-- **Hot restart** Flutter app after changing `baseUrl`
+- **CRITICAL**: After changing `baseUrl`, you MUST perform a **hot restart** (not hot reload) - press `R` in terminal or use IDE restart button
+- Hot reload will NOT pick up `const` changes in `api_config.dart`
 
 ## Attendance Feature: Multiple Sessions
 
@@ -818,3 +846,136 @@ Password: password
 ```
 
 Or create test employees via Admin Panel at `http://localhost:8000/admin`
+
+## Chat Feature
+
+### Overview
+WhatsApp-inspired chat system with private and group messaging, file attachments, and real-time updates.
+
+### Architecture Pattern
+```
+ChatListScreen (conversations) → ChatRoomScreen (messages)
+      ↓                                    ↓
+  ChatCubit                          MessagesCubit
+      ↓                                    ↓
+           ChatRepository (shared)
+```
+
+### Key Implementation Details
+
+**Repository**: `lib/features/chat/data/repo/chat_repository.dart`
+- `getConversations(companyId)` - Fetch all conversations
+- `createConversation(companyId, participantIds, type, name?)` - Create new chat
+- `getMessages(conversationId, companyId)` - Fetch messages
+- `sendMessage(conversationId, companyId, body, attachment?)` - Send message with optional file
+- `getUsers(companyId)` - Get employees for new chat
+
+**Cubits**:
+- `ChatCubit` - Manages conversation list state
+- `MessagesCubit` - Manages messages within a conversation
+- `EmployeesCubit` - Manages employee selection with search
+
+**Usage Example**:
+```dart
+// Navigate to chat list
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ChatListScreen(
+      companyId: authState.user.companyId,
+      currentUserId: authState.user.id,
+    ),
+  ),
+);
+```
+
+**Models**:
+- Chat models use special `fromApiJson()` factory methods (not standard `fromJson()`) due to nested API response structure
+- Example: `ConversationModel.fromApiJson()` unwraps `data` wrapper from API
+- Standard models use `fromJson()` generated by `json_serializable`
+- Supports text messages, images, files, and voice messages
+
+**Testing**: Backend test available via `/api/conversations` endpoints
+
+See `CHAT_FEATURE_IMPLEMENTATION_REPORT.md` for complete implementation details.
+
+### Important: Model Parsing Patterns
+
+This codebase uses **two different JSON parsing patterns**:
+
+**Pattern 1: Standard Models** (most features)
+```dart
+// Uses json_serializable generated fromJson()
+final model = UserModel.fromJson(response.data['data']);
+```
+
+**Pattern 2: Chat Models** (chat feature only)
+```dart
+// Uses custom fromApiJson() that handles nested structure
+final conversation = ConversationModel.fromApiJson(response.data);
+// fromApiJson() internally unwraps response.data['data']
+```
+
+**When adding new features**: Use Pattern 1 (standard `fromJson()`) unless dealing with complex nested API structures.
+
+## Real-time Features (WebSocket)
+
+The app supports real-time updates via Laravel Reverb (Pusher protocol) for chat and notifications.
+
+### WebSocketService
+
+**Location**: `lib/core/services/websocket_service.dart`
+
+**Configuration** (Production):
+- Host: `31.97.46.103:8081`
+- Protocol: `ws://` (WebSocket)
+- App Key: `pgvjq8gblbrxpk5ptogp`
+
+**Usage Pattern**:
+```dart
+// Initialize (typically in main.dart or after login)
+await WebSocketService.instance.initialize();
+
+// Subscribe to private channel
+WebSocketService.instance.subscribeToPrivateChannel(
+  channelName: 'private-user.${userId}',
+  eventName: 'NewMessage',
+  onEvent: (data) {
+    // Handle real-time event
+    print('New message: $data');
+  },
+);
+
+// Disconnect (on logout)
+await WebSocketService.instance.disconnect();
+```
+
+**Authentication**: Uses `/api/broadcasting/auth` endpoint with Bearer token from `flutter_secure_storage`.
+
+**Important**: WebSocket is optional - features work with polling fallback if WebSocket fails to connect.
+
+## Security Configuration
+
+### Android Release Builds
+
+The app is configured with production-grade security:
+
+**Network Security** (`android/app/src/main/res/xml/network_security_config.xml`):
+- HTTPS-only in production (`cleartextTrafficPermitted="false"`)
+- Development localhost exception for testing
+- SSL certificate pinning configured
+
+**ProGuard** (`android/app/proguard-rules.pro`):
+- Code obfuscation enabled in release builds
+- Removes debug logs and unused code
+- Protects against reverse engineering
+
+**Build Configuration** (`android/app/build.gradle.kts`):
+- `isMinifyEnabled = true` - Code shrinking and obfuscation
+- `isShrinkResources = true` - Removes unused resources
+- `allowBackup = false` - Prevents data extraction
+- Package name: `com.bdcbiz.hrm`
+
+**Important**: Before production release, remove localhost exceptions from `network_security_config.xml`
+
+See `SECURITY_QUICK_GUIDE.md` for security testing checklist and MobSF testing instructions.

@@ -18,6 +18,7 @@ ConversationModel _$ConversationModelFromJson(Map<String, dynamic> json) =>
           : MessageModel.fromJson(json['last_message'] as Map<String, dynamic>),
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
       updatedAt: json['updated_at'] as String,
+      isOnline: json['is_online'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
@@ -30,4 +31,5 @@ Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
       'last_message': instance.lastMessage,
       'unread_count': instance.unreadCount,
       'updated_at': instance.updatedAt,
+      'is_online': instance.isOnline,
     };

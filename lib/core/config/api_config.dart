@@ -95,6 +95,13 @@ class ApiConfig {
   static const String contactUs = '/contact-us';
   static const String updateFcmToken = '/fcm-token';
 
+  /// Chat Endpoints
+  static const String conversations = '/conversations';
+  static const String users = '/users'; // Get users for starting new chat
+  static String conversationMessages(int conversationId) => '/conversations/$conversationId/messages';
+  static String sendMessage(int conversationId) => '/conversations/$conversationId/messages';
+  static String createConversation = '/conversations';
+
   // HTTP Headers
   // =====================================================
 

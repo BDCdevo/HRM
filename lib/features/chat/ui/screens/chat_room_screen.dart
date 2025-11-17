@@ -1,37 +1,197 @@
+import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/networking/dio_client.dart';
+import '../../../../core/services/websocket_service.dart';
+import '../../data/repo/chat_repository.dart';
 import '../../data/models/message_model.dart';
+import '../../logic/cubit/messages_cubit.dart';
+import '../../logic/cubit/messages_state.dart';
 import '../widgets/message_bubble.dart';
 
 /// Chat Room Screen - WhatsApp Style
 ///
 /// Displays messages between two users
-class ChatRoomScreen extends StatefulWidget {
+class ChatRoomScreen extends StatelessWidget {
   final int conversationId;
   final String participantName;
   final String? participantAvatar;
+  final int companyId;
+  final int currentUserId;
 
   const ChatRoomScreen({
     super.key,
     required this.conversationId,
     required this.participantName,
     this.participantAvatar,
+    required this.companyId,
+    required this.currentUserId,
   });
 
   @override
-  State<ChatRoomScreen> createState() => _ChatRoomScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          MessagesCubit(ChatRepository())
+            ..fetchMessages(
+              conversationId: conversationId,
+              companyId: companyId,
+            ),
+      child: _ChatRoomView(
+        conversationId: conversationId,
+        participantName: participantName,
+        participantAvatar: participantAvatar,
+        companyId: companyId,
+        currentUserId: currentUserId,
+      ),
+    );
+  }
 }
 
-class _ChatRoomScreenState extends State<ChatRoomScreen> {
+class _ChatRoomView extends StatefulWidget {
+  final int conversationId;
+  final String participantName;
+  final String? participantAvatar;
+  final int companyId;
+  final int currentUserId;
+
+  const _ChatRoomView({
+    required this.conversationId,
+    required this.participantName,
+    this.participantAvatar,
+    required this.companyId,
+    required this.currentUserId,
+  });
+
+  @override
+  State<_ChatRoomView> createState() => _ChatRoomViewState();
+}
+
+class _ChatRoomViewState extends State<_ChatRoomView> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ImagePicker _imagePicker = ImagePicker();
+  final WebSocketService _websocket = WebSocketService.instance;
+  Timer? _pollingTimer;
+  int _lastMessageId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupWebSocket();
+    // Start polling as fallback for real-time updates
+    _startPolling();
+  }
+
+  /// Setup WebSocket listener for real-time messages
+  Future<void> _setupWebSocket() async {
+    try {
+      // Initialize WebSocket connection
+      await _websocket.initialize();
+
+      // Get channel name: chat.{companyId}.conversation.{conversationId}
+      final channelName = WebSocketService.getChatChannelName(
+        widget.companyId,
+        widget.conversationId,
+      );
+
+      // Subscribe to private channel
+      await _websocket.subscribeToPrivateChannel(
+        channelName: channelName,
+        onEvent: (PusherEvent event) {
+          print('📨 Received real-time message: ${event.data}');
+
+          // Handle incoming message
+          if (event.eventName == 'message.sent') {
+            _handleIncomingMessage(event.data);
+          }
+        },
+      );
+
+      print('✅ WebSocket listener setup complete for conversation ${widget.conversationId}');
+    } catch (e) {
+      print('❌ Failed to setup WebSocket: $e');
+    }
+  }
+
+  /// Handle incoming real-time message
+  void _handleIncomingMessage(dynamic data) {
+    try {
+      // Parse message data
+      final messageData = data is Map ? data : {};
+
+      // Create MessageModel from incoming data
+      final message = MessageModel(
+        id: messageData['id'] ?? 0,
+        conversationId: widget.conversationId,
+        senderId: messageData['user_id'] ?? 0,
+        senderName: messageData['user_name'] ?? 'Unknown',
+        senderAvatar: messageData['user_avatar'],
+        message: messageData['body'] ?? '',
+        messageType: messageData['attachment_type'] ?? 'text',
+        isRead: messageData['read_at'] != null,
+        createdAt: messageData['created_at'] ?? DateTime.now().toIso8601String(),
+        updatedAt: messageData['created_at'] ?? DateTime.now().toIso8601String(),
+      );
+
+      // Add message to cubit (which will update UI)
+      context.read<MessagesCubit>().addOptimisticMessage(message);
+
+      // Scroll to bottom
+      Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+
+      print('✅ Real-time message added to chat');
+    } catch (e) {
+      print('❌ Failed to handle incoming message: $e');
+    }
+  }
+
+  /// Start polling for new messages (fallback for WebSocket)
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      // Check if widget is still mounted before refreshing
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      // Refresh messages every 3 seconds (keeps showing current messages)
+      context.read<MessagesCubit>().refreshMessages(
+        conversationId: widget.conversationId,
+        companyId: widget.companyId,
+      );
+    });
+    print('✅ Polling started (checking for new messages every 3 seconds)');
+  }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
+    // Unsubscribe from channel
+    final channelName = WebSocketService.getChatChannelName(
+      widget.companyId,
+      widget.conversationId,
+    );
+    _websocket.unsubscribe(channelName);
+
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -42,23 +202,61 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       backgroundColor: isDark
           ? AppColors.darkBackground
           : const Color(0xFFECE5DD), // WhatsApp background color
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          // Messages List
-          Expanded(child: _buildMessagesList()),
+      appBar: _buildAppBar(isDark),
+      resizeToAvoidBottomInset: true, // Ensure input field is visible above keyboard
+      body: SafeArea(
+        bottom: true,
+        child: BlocConsumer<MessagesCubit, MessagesState>(
+        listener: (context, state) {
+          if (state is MessageSent) {
+            _messageController.clear();
+            // Scroll to bottom after sending
+            Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+          }
 
-          // Message Input
-          _buildMessageInput(),
-        ],
+          if (state is MessageSendError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+                action: SnackBarAction(
+                  label: 'Dismiss',
+                  textColor: AppColors.white,
+                  onPressed: () {},
+                ),
+              ),
+            );
+          }
+
+          if (state is MessagesError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Column(
+            children: [
+              // Messages List
+              Expanded(
+                child: _buildMessagesList(state, isDark),
+              ),
+
+              // Message Input
+              _buildMessageInput(state, isDark),
+            ],
+          );
+        },
+        ),
       ),
     );
   }
 
   /// Build App Bar
-  PreferredSizeWidget _buildAppBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
       backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
       elevation: 0,
@@ -125,13 +323,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: AppColors.white),
+          onPressed: () {
+            context.read<MessagesCubit>().refreshMessages(
+                  conversationId: widget.conversationId,
+                  companyId: widget.companyId,
+                );
+          },
+        ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.white),
           onSelected: (value) {
             if (value == 'view_profile') {
               _openEmployeeProfile();
-            } else if (value == 'clear_chat') {
-              _showClearChatDialog();
             }
           },
           itemBuilder: (context) => [
@@ -139,7 +344,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               value: 'view_profile',
               child: Text('View profile'),
             ),
-            const PopupMenuItem(value: 'clear_chat', child: Text('Clear chat')),
           ],
         ),
       ],
@@ -147,32 +351,155 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   /// Build Messages List
-  Widget _buildMessagesList() {
-    // TODO: Replace with BlocBuilder when cubit is ready
-    final mockMessages = _getMockMessages();
-
-    if (mockMessages.isEmpty) {
-      return _buildEmptyState();
+  Widget _buildMessagesList(MessagesState state, bool isDark) {
+    if (state is MessagesLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: isDark ? AppColors.darkAccent : AppColors.accent,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading messages...',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(8),
-      itemCount: mockMessages.length,
-      itemBuilder: (context, index) {
-        final message = mockMessages[index];
-        return MessageBubble(
-          message: message,
-          isSentByMe: message.senderId == 34, // Current user ID
-        );
+    if (state is MessagesError && state.messages == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load messages',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color:
+                      isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                state.message,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.read<MessagesCubit>().fetchMessages(
+                        conversationId: widget.conversationId,
+                        companyId: widget.companyId,
+                      );
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isDark ? AppColors.darkAccent : AppColors.accent,
+                  foregroundColor: AppColors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Get messages from state
+    final messages = state is MessagesLoaded
+        ? state.messages
+        : state is MessageSending
+            ? state.messages
+            : state is MessageSent
+                ? state.messages
+                : state is MessagesRefreshing
+                    ? state.messages
+                    : state is MessagesError
+                        ? (state.messages ?? [])
+                        : [];
+
+    if (messages.isEmpty) {
+      return _buildEmptyState(isDark);
+    }
+
+    // Scroll to bottom after messages load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (state is MessagesLoaded && _scrollController.hasClients) {
+        _scrollToBottom();
+      }
+    });
+
+    return RefreshIndicator(
+      color: isDark ? AppColors.darkAccent : AppColors.accent,
+      onRefresh: () async {
+        await context.read<MessagesCubit>().refreshMessages(
+              conversationId: widget.conversationId,
+              companyId: widget.companyId,
+            );
       },
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(8),
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final message = messages[index];
+
+          // Check if we need to show date separator
+          bool showDateSeparator = false;
+          if (index == 0) {
+            showDateSeparator = true;
+          } else {
+            final previousMessage = messages[index - 1];
+            showDateSeparator = _shouldShowDateSeparator(
+              previousMessage.createdAt,
+              message.createdAt,
+            );
+          }
+
+          return Column(
+            children: [
+              // Date separator
+              if (showDateSeparator)
+                _buildDateSeparator(message.createdAt, isDark),
+
+              // Message bubble
+              MessageBubble(
+                message: message,
+                isSentByMe: message.senderId == widget.currentUserId,
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
   /// Build Empty State
-  Widget _buildEmptyState() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -210,8 +537,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   /// Build Message Input
-  Widget _buildMessageInput() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildMessageInput(MessagesState state, bool isDark) {
+    final isSending = state is MessageSending;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -235,7 +562,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   ? AppColors.darkTextSecondary
                   : AppColors.textSecondary,
             ),
-            onPressed: () {
+            onPressed: isSending ? null : () {
               // TODO: Show emoji picker
             },
           ),
@@ -250,6 +577,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ),
               child: TextField(
                 controller: _messageController,
+                enabled: !isSending,
                 style: TextStyle(
                   color: isDark
                       ? AppColors.darkTextPrimary
@@ -281,9 +609,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   ? AppColors.darkTextSecondary
                   : AppColors.textSecondary,
             ),
-            onPressed: () {
-              // TODO: Show attachment options
-            },
+            onPressed: isSending ? null : _pickFile,
           ),
 
           // Camera button
@@ -294,9 +620,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   ? AppColors.darkTextSecondary
                   : AppColors.textSecondary,
             ),
-            onPressed: () {
-              // TODO: Open camera
-            },
+            onPressed: isSending ? null : _pickImageFromCamera,
           ),
 
           // Send button
@@ -304,13 +628,23 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkAccent : AppColors.accent,
+              color: isSending
+                  ? (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)
+                  : (isDark ? AppColors.darkAccent : AppColors.accent),
               shape: BoxShape.circle,
             ),
-            child: IconButton(
-              icon: const Icon(Icons.send, color: AppColors.white, size: 20),
-              onPressed: _sendMessage,
-            ),
+            child: isSending
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.white,
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.send, color: AppColors.white, size: 20),
+                    onPressed: _sendMessage,
+                  ),
           ),
         ],
       ),
@@ -322,9 +656,48 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    // TODO: Send message via cubit
+    context.read<MessagesCubit>().sendMessage(
+          conversationId: widget.conversationId,
+          companyId: widget.companyId,
+          message: message,
+        );
+  }
 
-    _messageController.clear();
+  /// Pick Image from Camera
+  Future<void> _pickImageFromCamera() async {
+    final XFile? image = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+
+    if (image != null) {
+      _sendFileMessage(File(image.path));
+    }
+  }
+
+  /// Pick File (Image/Document)
+  Future<void> _pickFile() async {
+    final XFile? image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+
+    if (image != null) {
+      _sendFileMessage(File(image.path));
+    }
+  }
+
+  /// Send File Message
+  void _sendFileMessage(File file) {
+    context.read<MessagesCubit>().sendMessage(
+          conversationId: widget.conversationId,
+          companyId: widget.companyId,
+          attachment: file,
+        );
   }
 
   /// Open Employee Profile
@@ -338,116 +711,114 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
   }
 
-  /// Show Clear Chat Dialog
-  void _showClearChatDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear chat'),
-        content: const Text(
-          'Are you sure you want to clear this chat? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Clear chat via cubit
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Chat cleared successfully')),
-              );
-            },
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: AppColors.error),
+  /// Check if date separator should be shown
+  bool _shouldShowDateSeparator(String previousDateStr, String currentDateStr) {
+    try {
+      final previousDate = DateTime.parse(previousDateStr);
+      final currentDate = DateTime.parse(currentDateStr);
+
+      final prevDay = DateTime(
+        previousDate.year,
+        previousDate.month,
+        previousDate.day,
+      );
+      final currDay = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+      );
+
+      return prevDay != currDay;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Build Date Separator (Today, Yesterday, Date)
+  Widget _buildDateSeparator(String dateStr, bool isDark) {
+    String dateText = _getDateText(dateStr);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      alignment: Alignment.center,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.darkCard.withOpacity(0.8)
+              : const Color(0xFFE1F5FE).withOpacity(0.8),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
+          ],
+        ),
+        child: Text(
+          dateText,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : const Color(0xFF0277BD),
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
           ),
-        ],
+        ),
       ),
     );
   }
 
-  /// Get Mock Messages (for testing UI)
-  List<MessageModel> _getMockMessages() {
-    return [
-      MessageModel(
-        id: 1,
-        conversationId: widget.conversationId,
-        senderId: 32,
-        senderName: widget.participantName,
-        message: 'Hey! How are you doing?',
-        messageType: 'text',
-        isRead: true,
-        createdAt: DateTime.now()
-            .subtract(const Duration(hours: 2))
-            .toIso8601String(),
-        updatedAt: DateTime.now()
-            .subtract(const Duration(hours: 2))
-            .toIso8601String(),
-      ),
-      MessageModel(
-        id: 2,
-        conversationId: widget.conversationId,
-        senderId: 34,
-        senderName: 'You',
-        message: 'I\'m good, thanks! How about you?',
-        messageType: 'text',
-        isRead: true,
-        createdAt: DateTime.now()
-            .subtract(const Duration(hours: 2, minutes: -5))
-            .toIso8601String(),
-        updatedAt: DateTime.now()
-            .subtract(const Duration(hours: 2, minutes: -5))
-            .toIso8601String(),
-      ),
-      MessageModel(
-        id: 3,
-        conversationId: widget.conversationId,
-        senderId: 32,
-        senderName: widget.participantName,
-        message: 'Pretty good! Working on the new project.',
-        messageType: 'text',
-        isRead: true,
-        createdAt: DateTime.now()
-            .subtract(const Duration(hours: 1, minutes: 50))
-            .toIso8601String(),
-        updatedAt: DateTime.now()
-            .subtract(const Duration(hours: 1, minutes: 50))
-            .toIso8601String(),
-      ),
-      MessageModel(
-        id: 4,
-        conversationId: widget.conversationId,
-        senderId: 34,
-        senderName: 'You',
-        message: 'That sounds great! Need any help?',
-        messageType: 'text',
-        isRead: false,
-        createdAt: DateTime.now()
-            .subtract(const Duration(minutes: 30))
-            .toIso8601String(),
-        updatedAt: DateTime.now()
-            .subtract(const Duration(minutes: 30))
-            .toIso8601String(),
-      ),
-      MessageModel(
-        id: 5,
-        conversationId: widget.conversationId,
-        senderId: 32,
-        senderName: widget.participantName,
-        message: 'Actually yes! Can we discuss this later?',
-        messageType: 'text',
-        isRead: false,
-        createdAt: DateTime.now()
-            .subtract(const Duration(minutes: 5))
-            .toIso8601String(),
-        updatedAt: DateTime.now()
-            .subtract(const Duration(minutes: 5))
-            .toIso8601String(),
-      ),
-    ];
+  /// Get date text (Today, Yesterday, or formatted date)
+  String _getDateText(String dateStr) {
+    try {
+      final messageDate = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final messageDay = DateTime(
+        messageDate.year,
+        messageDate.month,
+        messageDate.day,
+      );
+
+      if (messageDay == today) {
+        return 'اليوم'; // Today
+      } else if (messageDay == yesterday) {
+        return 'أمس'; // Yesterday
+      } else if (messageDate.isAfter(today.subtract(const Duration(days: 7)))) {
+        // Show day name for messages within last week
+        const days = [
+          'الإثنين',
+          'الثلاثاء',
+          'الأربعاء',
+          'الخميس',
+          'الجمعة',
+          'السبت',
+          'الأحد'
+        ];
+        return days[messageDate.weekday - 1];
+      } else {
+        // Show formatted date for older messages
+        const months = [
+          'يناير',
+          'فبراير',
+          'مارس',
+          'أبريل',
+          'مايو',
+          'يونيو',
+          'يوليو',
+          'أغسطس',
+          'سبتمبر',
+          'أكتوبر',
+          'نوفمبر',
+          'ديسمبر'
+        ];
+        return '${messageDate.day} ${months[messageDate.month - 1]} ${messageDate.year}';
+      }
+    } catch (e) {
+      return '';
+    }
   }
 }

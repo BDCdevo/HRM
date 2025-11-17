@@ -16,6 +16,7 @@ import '../../features/leave/ui/screens/leave_history_screen.dart';
 import '../../features/leave/ui/screens/leave_balance_screen.dart';
 import '../../features/attendance/ui/screens/attendance_history_screen.dart';
 import '../../features/about/ui/screens/about_screen.dart';
+import '../../features/chat/ui/screens/chat_test_screen.dart';
 import 'route_transitions.dart';
 
 /// App Router
@@ -42,6 +43,7 @@ class AppRouter {
   static const String leaveHistory = '/leave-history';
   static const String leaveBalance = '/leave-balance';
   static const String attendanceHistory = '/attendance-history';
+  static const String chatTest = '/chat-test';
 
   /// Generate Route
   ///
@@ -170,6 +172,14 @@ class AppRouter {
       case attendanceHistory:
         return _buildRoute(
           const AttendanceHistoryScreen(),
+          settings: settings,
+          transition: RouteTransitionType.slideFromRight,
+        );
+
+      // Chat Test Route
+      case chatTest:
+        return _buildRoute(
+          const ChatTestScreen(),
           settings: settings,
           transition: RouteTransitionType.slideFromRight,
         );

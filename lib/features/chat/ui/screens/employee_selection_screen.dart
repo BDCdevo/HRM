@@ -1,23 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/networking/dio_client.dart';
+import '../../data/repo/chat_repository.dart';
+import '../../logic/cubit/employees_cubit.dart';
+import '../../logic/cubit/employees_state.dart';
+import '../../logic/cubit/chat_cubit.dart';
+import '../../logic/cubit/chat_state.dart';
 import 'chat_room_screen.dart';
 
 /// Employee Selection Screen
 ///
-/// Select an employee to start a new chat - Enhanced version
-class EmployeeSelectionScreen extends StatefulWidget {
-  const EmployeeSelectionScreen({super.key});
+/// Select an employee to start a new chat
+class EmployeeSelectionScreen extends StatelessWidget {
+  final int companyId;
+  final int currentUserId;
+
+  const EmployeeSelectionScreen({
+    super.key,
+    required this.companyId,
+    required this.currentUserId,
+  });
 
   @override
-  State<EmployeeSelectionScreen> createState() =>
-      _EmployeeSelectionScreenState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) =>
+              EmployeesCubit(ChatRepository())
+                ..fetchEmployees(companyId),
+        ),
+        BlocProvider(
+          create: (context) => ChatCubit(ChatRepository()),
+        ),
+      ],
+      child: _EmployeeSelectionView(
+        companyId: companyId,
+        currentUserId: currentUserId,
+      ),
+    );
+  }
 }
 
-class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
+class _EmployeeSelectionView extends StatefulWidget {
+  final int companyId;
+  final int currentUserId;
+
+  const _EmployeeSelectionView({
+    required this.companyId,
+    required this.currentUserId,
+  });
+
+  @override
+  State<_EmployeeSelectionView> createState() => _EmployeeSelectionViewState();
+}
+
+class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
   late AnimationController _animationController;
 
   @override
@@ -43,26 +85,60 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          // Search Bar
-          _buildSearchBar(),
+      appBar: _buildAppBar(isDark),
+      body: BlocConsumer<ChatCubit, ChatState>(
+        listener: (context, state) {
+          if (state is ConversationCreated) {
+            // Navigate to chat room after creating conversation
+            // Use pop then push instead of pushReplacement to avoid overlay issues
+            Navigator.of(context).pop(); // Close employee selection screen
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ChatRoomScreen(
+                  conversationId: state.conversationId,
+                  participantName: 'Chat', // Will be updated from conversation data
+                  companyId: widget.companyId,
+                  currentUserId: widget.currentUserId,
+                ),
+              ),
+            );
+          }
 
-          // Results Count
-          _buildResultsCount(),
+          if (state is ConversationCreateError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        builder: (context, chatState) {
+          return BlocBuilder<EmployeesCubit, EmployeesState>(
+            builder: (context, employeesState) {
+              return Column(
+                children: [
+                  // Search Bar
+                  _buildSearchBar(isDark),
 
-          // Employees List
-          Expanded(child: _buildEmployeesList()),
-        ],
+                  // Results Count
+                  _buildResultsCount(employeesState, isDark),
+
+                  // Employees List
+                  Expanded(
+                    child: _buildBody(employeesState, chatState, isDark),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 
   /// Build App Bar
-  PreferredSizeWidget _buildAppBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  PreferredSizeWidget _buildAppBar(bool isDark) {
     return AppBar(
       backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
       elevation: 0,
@@ -93,9 +169,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
   }
 
   /// Build Search Bar
-  Widget _buildSearchBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildSearchBar(bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
@@ -117,7 +191,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
                 color: isDark ? AppColors.darkInput : AppColors.background,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _searchQuery.isNotEmpty
+                  color: _searchController.text.isNotEmpty
                       ? (isDark ? AppColors.darkAccent : AppColors.accent)
                       : Colors.transparent,
                   width: 1.5,
@@ -143,12 +217,11 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
                         fontSize: 15,
                       ),
                       onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
+                        setState(() {});
+                        context.read<EmployeesCubit>().searchEmployees(value);
                       },
                       decoration: InputDecoration(
-                        hintText: 'Search by name or department...',
+                        hintText: 'Search by name or email...',
                         hintStyle: AppTextStyles.bodyMedium.copyWith(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -161,7 +234,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
                       ),
                     ),
                   ),
-                  if (_searchQuery.isNotEmpty)
+                  if (_searchController.text.isNotEmpty)
                     IconButton(
                       icon: Icon(
                         Icons.clear,
@@ -173,8 +246,8 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
                       onPressed: () {
                         setState(() {
                           _searchController.clear();
-                          _searchQuery = '';
                         });
+                        context.read<EmployeesCubit>().searchEmployees('');
                       },
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -189,12 +262,16 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
   }
 
   /// Build Results Count
-  Widget _buildResultsCount() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mockEmployees = _getMockEmployees();
-    final filteredEmployees = _getFilteredEmployees(mockEmployees);
+  Widget _buildResultsCount(EmployeesState state, bool isDark) {
+    if (state is! EmployeesLoaded) {
+      return const SizedBox.shrink();
+    }
 
-    if (_searchQuery.isEmpty) {
+    final filteredCount = state.filteredEmployees.length;
+    final totalCount = state.employees.length;
+    final searchQuery = _searchController.text;
+
+    if (searchQuery.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -208,7 +285,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              '${mockEmployees.length} employees available',
+              '$totalCount employees available',
               style: AppTextStyles.bodySmall.copyWith(
                 color: isDark
                     ? AppColors.darkTextSecondary
@@ -226,21 +303,19 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
       child: Row(
         children: [
           Icon(
-            filteredEmployees.isEmpty
-                ? Icons.search_off
-                : Icons.filter_list,
+            filteredCount == 0 ? Icons.search_off : Icons.filter_list,
             size: 18,
-            color: filteredEmployees.isEmpty
+            color: filteredCount == 0
                 ? AppColors.error
                 : (isDark ? AppColors.darkAccent : AppColors.accent),
           ),
           const SizedBox(width: 8),
           Text(
-            filteredEmployees.isEmpty
+            filteredCount == 0
                 ? 'No results found'
-                : '${filteredEmployees.length} result${filteredEmployees.length > 1 ? 's' : ''} found',
+                : '$filteredCount result${filteredCount > 1 ? 's' : ''} found',
             style: AppTextStyles.bodySmall.copyWith(
-              color: filteredEmployees.isEmpty
+              color: filteredCount == 0
                   ? AppColors.error
                   : (isDark ? AppColors.darkAccent : AppColors.accent),
               fontWeight: FontWeight.w600,
@@ -251,278 +326,101 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
     );
   }
 
-  /// Get Filtered Employees
-  List<Map<String, String>> _getFilteredEmployees(
-      List<Map<String, String>> employees) {
-    if (_searchQuery.isEmpty) return employees;
+  /// Build Body
+  Widget _buildBody(EmployeesState employeesState, ChatState chatState, bool isDark) {
+    if (employeesState is EmployeesLoading || chatState is ConversationCreating) {
+      return _buildLoadingState(isDark);
+    }
 
-    return employees
-        .where(
-          (emp) =>
-              emp['name']!.toLowerCase().contains(_searchQuery) ||
-              emp['department']!.toLowerCase().contains(_searchQuery),
-        )
-        .toList();
+    if (employeesState is EmployeesError) {
+      return _buildErrorState(employeesState.message, isDark);
+    }
+
+    if (employeesState is EmployeesLoaded) {
+      if (employeesState.filteredEmployees.isEmpty) {
+        return _buildEmptyState(isDark);
+      }
+      return _buildEmployeesList(employeesState.filteredEmployees, isDark);
+    }
+
+    return const SizedBox.shrink();
   }
 
-  /// Build Employees List
-  Widget _buildEmployeesList() {
-    final mockEmployees = _getMockEmployees();
-    final filteredEmployees = _getFilteredEmployees(mockEmployees);
-
-    if (filteredEmployees.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    // Group by department
-    final groupedEmployees = <String, List<Map<String, String>>>{};
-    for (var emp in filteredEmployees) {
-      final dept = emp['department']!;
-      groupedEmployees.putIfAbsent(dept, () => []);
-      groupedEmployees[dept]!.add(emp);
-    }
-
-    return FadeTransition(
-      opacity: _animationController,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 16),
-        itemCount: groupedEmployees.length,
-        itemBuilder: (context, index) {
-          final department = groupedEmployees.keys.elementAt(index);
-          final employees = groupedEmployees[department]!;
-          return _buildDepartmentSection(department, employees);
-        },
+  /// Build Loading State
+  Widget _buildLoadingState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: isDark ? AppColors.darkAccent : AppColors.accent,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading employees...',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  /// Build Department Section
-  Widget _buildDepartmentSection(
-      String department, List<Map<String, String>> employees) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Department Header
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkAccent : AppColors.accent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                department,
-                style: AppTextStyles.titleSmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: (isDark ? AppColors.darkAccent : AppColors.accent)
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${employees.length}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: isDark ? AppColors.darkAccent : AppColors.accent,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Employees in this department
-        ...employees.map((emp) => _buildEmployeeCard(emp)).toList(),
-      ],
-    );
-  }
-
-  /// Build Employee Card
-  Widget _buildEmployeeCard(Map<String, String> employee) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // Navigate to chat room with this employee
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatRoomScreen(
-                conversationId: DateTime.now().millisecondsSinceEpoch,
-                participantName: employee['name']!,
-                participantAvatar: null,
+  /// Build Error State
+  Widget _buildErrorState(String message, bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load employees',
+              style: AppTextStyles.titleMedium.copyWith(
+                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: (isDark ? AppColors.darkBorder : AppColors.border)
-                    .withOpacity(0.1),
-                width: 0.5,
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<EmployeesCubit>().fetchEmployees(widget.companyId);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
-          ),
-          child: Row(
-            children: [
-              // Avatar with online indicator
-              Stack(
-                children: [
-                  Hero(
-                    tag: 'avatar_${employee['name']}',
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            (isDark
-                                    ? AppColors.darkPrimary
-                                    : AppColors.primary)
-                                .withOpacity(0.15),
-                            (isDark ? AppColors.darkAccent : AppColors.accent)
-                                .withOpacity(0.15),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: (isDark
-                                  ? AppColors.darkPrimary
-                                  : AppColors.primary)
-                              .withOpacity(0.2),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          employee['name']!
-                              .split(' ')
-                              .take(2)
-                              .map((n) => n[0])
-                              .join()
-                              .toUpperCase(),
-                          style: AppTextStyles.titleLarge.copyWith(
-                            color:
-                                isDark ? AppColors.darkPrimary : AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Online indicator
-                  Positioned(
-                    right: 2,
-                    bottom: 2,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isDark ? AppColors.darkCard : AppColors.white,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(width: 16),
-
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      employee['name']!,
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color:
-                            isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.business_center,
-                          size: 14,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            employee['department']!,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Start chat icon
-              Icon(
-                Icons.chat_bubble_outline,
-                color: (isDark ? AppColors.darkAccent : AppColors.accent)
-                    .withOpacity(0.6),
-                size: 22,
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   /// Build Empty State
-  Widget _buildEmptyState() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildEmptyState(bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -554,7 +452,7 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Try searching with a different name or department',
+              'Try searching with a different name or email',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: isDark
                     ? AppColors.darkTextSecondary
@@ -564,13 +462,13 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
             ),
           ),
           const SizedBox(height: 24),
-          if (_searchQuery.isNotEmpty)
+          if (_searchController.text.isNotEmpty)
             TextButton.icon(
               onPressed: () {
                 setState(() {
                   _searchController.clear();
-                  _searchQuery = '';
                 });
+                context.read<EmployeesCubit>().searchEmployees('');
               },
               icon: const Icon(Icons.clear_all),
               label: const Text('Clear search'),
@@ -584,22 +482,152 @@ class _EmployeeSelectionScreenState extends State<EmployeeSelectionScreen>
     );
   }
 
-  /// Get Mock Employees (for testing UI)
-  List<Map<String, String>> _getMockEmployees() {
-    return [
-      {'name': 'Ahmed Abbas', 'department': 'Development'},
-      {'name': 'Ibrahim Abusham', 'department': 'Development'},
-      {'name': 'Khaled Mohamed', 'department': 'Development'},
-      {'name': 'Mohamed Ali', 'department': 'HR'},
-      {'name': 'Laila Hassan', 'department': 'HR'},
-      {'name': 'Sara Ahmed', 'department': 'Sales'},
-      {'name': 'Youssef Ibrahim', 'department': 'Sales'},
-      {'name': 'Omar Hassan', 'department': 'Marketing'},
-      {'name': 'Nadia Saleh', 'department': 'Marketing'},
-      {'name': 'Fatma Mahmoud', 'department': 'Finance'},
-      {'name': 'Ali Said', 'department': 'Operations'},
-      {'name': 'Nour Khaled', 'department': 'Customer Service'},
-      {'name': 'Hana Fouad', 'department': 'Customer Service'},
-    ];
+  /// Build Employees List
+  Widget _buildEmployeesList(List<Map<String, dynamic>> employees, bool isDark) {
+    return FadeTransition(
+      opacity: _animationController,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 16),
+        itemCount: employees.length,
+        itemBuilder: (context, index) {
+          final employee = employees[index];
+          return _buildEmployeeCard(employee, isDark);
+        },
+      ),
+    );
+  }
+
+  /// Build Employee Card
+  Widget _buildEmployeeCard(Map<String, dynamic> employee, bool isDark) {
+    final name = employee['name'] as String? ?? 'Unknown';
+    final email = employee['email'] as String? ?? '';
+    final id = employee['id'] as int;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _startConversation(id, name),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: (isDark ? AppColors.darkBorder : AppColors.border)
+                    .withOpacity(0.1),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              Hero(
+                tag: 'avatar_$name',
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        (isDark ? AppColors.darkPrimary : AppColors.primary)
+                            .withOpacity(0.15),
+                        (isDark ? AppColors.darkAccent : AppColors.accent)
+                            .withOpacity(0.15),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color:
+                          (isDark ? AppColors.darkPrimary : AppColors.primary)
+                              .withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      name.split(' ').take(2).map((n) => n.isNotEmpty ? n[0] : '').join().toUpperCase(),
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color:
+                            isDark ? AppColors.darkPrimary : AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color:
+                            isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.email,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            email,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Start chat icon
+              Icon(
+                Icons.chat_bubble_outline,
+                color: (isDark ? AppColors.darkAccent : AppColors.accent)
+                    .withOpacity(0.6),
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Start Conversation
+  void _startConversation(int userId, String userName) {
+    // Create conversation
+    context.read<ChatCubit>().createConversation(
+          companyId: widget.companyId,
+          userIds: [userId],
+        );
   }
 }
