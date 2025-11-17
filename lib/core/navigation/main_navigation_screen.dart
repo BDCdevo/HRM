@@ -58,8 +58,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       color: AppColors.primary,
     ),
     NavBarItem(
-      icon: Icons.chat_bubble_outline,
-      activeIcon: Icons.chat_bubble,
+      svgIcon: 'assets/whatsapp_icons/whatsapp.svg',
       label: 'Chat',
       color: Color(0xFF25D366), // WhatsApp green
     ),

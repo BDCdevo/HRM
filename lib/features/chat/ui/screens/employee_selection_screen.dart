@@ -216,31 +216,38 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
             context.read<EmployeesCubit>().searchEmployees('');
           },
         ),
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w400,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
           ),
-          decoration: InputDecoration(
-            hintText: 'Search...',
-            hintStyle: TextStyle(
-              color: AppColors.white.withOpacity(0.65),
+          child: TextField(
+            controller: _searchController,
+            autofocus: true,
+            style: const TextStyle(
+              color: AppColors.white,
               fontSize: 17,
+              fontWeight: FontWeight.w400,
             ),
-            filled: false,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            isDense: true,
-            contentPadding: EdgeInsets.zero,
+            decoration: InputDecoration(
+              hintText: 'Search...',
+              hintStyle: TextStyle(
+                color: AppColors.white.withOpacity(0.65),
+                fontSize: 17,
+              ),
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (value) {
+              setState(() {}); // Rebuild to show/hide clear button
+              context.read<EmployeesCubit>().searchEmployees(value);
+            },
           ),
-          onChanged: (value) {
-            setState(() {}); // Rebuild to show/hide clear button
-            context.read<EmployeesCubit>().searchEmployees(value);
-          },
         ),
         actions: [
           if (_searchController.text.isNotEmpty)

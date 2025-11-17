@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
@@ -93,19 +94,23 @@ class CustomBottomNavBar extends StatelessWidget {
 
 /// Navigation Bar Item Model
 class NavBarItem {
-  final IconData icon;
+  final IconData? icon;
   final IconData? activeIcon;
+  final String? svgIcon;
+  final String? activeSvgIcon;
   final String label;
   final Color? color;
   final int? badgeCount;
 
   const NavBarItem({
-    required this.icon,
+    this.icon,
     this.activeIcon,
+    this.svgIcon,
+    this.activeSvgIcon,
     required this.label,
     this.color,
     this.badgeCount,
-  });
+  }) : assert(icon != null || svgIcon != null, 'Either icon or svgIcon must be provided');
 }
 
 /// Navigation Bar Button
@@ -145,15 +150,24 @@ class _NavBarButton extends StatelessWidget {
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                    size: isSelected ? 26 : 22,
-                    color: isSelected
-                        ? color
-                        : (isDark
-                            ? AppColors.darkTextSecondary
-                            : Colors.grey.shade600),
-                  ),
+                  child: item.svgIcon != null
+                      ? SvgPicture.asset(
+                          isSelected
+                              ? (item.activeSvgIcon ?? item.svgIcon!)
+                              : item.svgIcon!,
+                          width: isSelected ? 26 : 22,
+                          height: isSelected ? 26 : 22,
+                          // Don't apply color filter to keep original WhatsApp colors
+                        )
+                      : Icon(
+                          isSelected ? (item.activeIcon ?? item.icon!) : item.icon!,
+                          size: isSelected ? 26 : 22,
+                          color: isSelected
+                              ? color
+                              : (isDark
+                                  ? AppColors.darkTextSecondary
+                                  : Colors.grey.shade600),
+                        ),
                 ),
                 // Badge
                 if (item.badgeCount != null && item.badgeCount! > 0)
