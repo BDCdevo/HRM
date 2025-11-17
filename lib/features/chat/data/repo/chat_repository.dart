@@ -151,6 +151,7 @@ class ChatRepository {
     required int companyId,
     String? message,
     File? attachment,
+    String? attachmentType, // 'image', 'file', 'voice'
   }) async {
     try {
       // Prepare form data for multipart request (if attachment exists)
@@ -160,6 +161,7 @@ class ChatRepository {
         // Multipart request for file upload
         final formData = FormData.fromMap({
           if (message != null && message.isNotEmpty) 'message': message,
+          if (attachmentType != null) 'attachment_type': attachmentType,
           'attachment': await MultipartFile.fromFile(
             attachment.path,
             filename: attachment.path.split('/').last,

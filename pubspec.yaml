@@ -76,6 +76,10 @@ dependencies:
   # Real-time WebSocket (Pusher/Reverb)
   pusher_channels_flutter: ^2.2.1
 
+  # Audio Recording
+  record: ^6.1.2
+  path_provider: ^2.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

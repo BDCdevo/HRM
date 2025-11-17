@@ -2,8 +2,12 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/networking/dio_client.dart';
@@ -13,6 +17,7 @@ import '../../data/models/message_model.dart';
 import '../../logic/cubit/messages_cubit.dart';
 import '../../logic/cubit/messages_state.dart';
 import '../widgets/message_bubble.dart';
+import '../widgets/voice_recording_widget.dart';
 import 'group_info_screen.dart';
 
 /// Chat Room Screen - WhatsApp Style
@@ -83,8 +88,11 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
   final WebSocketService _websocket = WebSocketService.instance;
+  final AudioRecorder _audioRecorder = AudioRecorder();
   Timer? _pollingTimer;
   int _lastMessageId = 0;
+  bool _isRecording = false;
+  String? _recordedFilePath;
 
   @override
   void initState() {
@@ -179,6 +187,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    _audioRecorder.dispose();
     // Unsubscribe from channel
     final channelName = WebSocketService.getChatChannelName(
       widget.companyId,
@@ -590,9 +599,40 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   /// Build Message Input
   Widget _buildMessageInput(MessagesState state, bool isDark) {
     final isSending = state is MessageSending;
+    final hasText = _messageController.text.isNotEmpty;
+
+    // Show recording widget if recording
+    if (_isRecording) {
+      return VoiceRecordingWidget(
+        onRecordingComplete: () async {
+          print('🎤 Send button pressed - stopping recording...');
+
+          // Stop recording and get the path
+          final path = await _audioRecorder.stop();
+
+          print('🎤 Recording stopped, path: $path');
+
+          if (path != null && path.isNotEmpty) {
+            print('🎤 Path is valid, sending recording...');
+            await _sendRecording(path);
+          } else {
+            print('❌ Path is null or empty!');
+            // Try using the stored path
+            if (_recordedFilePath != null) {
+              print('🎤 Using stored path: $_recordedFilePath');
+              await _sendRecording(_recordedFilePath!);
+            }
+          }
+        },
+        onSendRecording: (path) async {
+          await _sendRecording(path);
+        },
+        onCancel: _cancelRecording,
+      );
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.white,
         boxShadow: [
@@ -604,99 +644,168 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Emoji button
-          IconButton(
-            icon: Icon(
-              Icons.emoji_emotions_outlined,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-            onPressed: isSending ? null : () {
-              // TODO: Show emoji picker
-            },
-          ),
-
-          // Text field
+          // Text field with emoji, attachment, and camera icons inside
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkInput : AppColors.background,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
               ),
-              child: TextField(
-                controller: _messageController,
-                enabled: !isSending,
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Type a message',
-                  hintStyle: AppTextStyles.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 4),
-
-          // Attachment button
-          IconButton(
-            icon: Icon(
-              Icons.attach_file,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-            onPressed: isSending ? null : _pickFile,
-          ),
-
-          // Camera button
-          IconButton(
-            icon: Icon(
-              Icons.camera_alt,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-            onPressed: isSending ? null : _pickImageFromCamera,
-          ),
-
-          // Send button
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSending
-                  ? (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)
-                  : (isDark ? AppColors.darkAccent : AppColors.accent),
-              shape: BoxShape.circle,
-            ),
-            child: isSending
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.white,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Emoji button (inside TextField)
+                  IconButton(
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      Icons.emoji_emotions_outlined,
+                      color: isDark
+                          ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                          : const Color(0xFF54656F),  // WhatsApp gray
+                      size: 26,
                     ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.send, color: AppColors.white, size: 20),
-                    onPressed: _sendMessage,
+                    onPressed: isSending ? null : () {
+                      // TODO: Show emoji picker
+                    },
                   ),
+
+                  const SizedBox(width: 4),
+
+                  // Text input
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      enabled: !isSending,
+                      style: TextStyle(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Message',
+                        hintStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.darkTextSecondary.withOpacity(0.6)
+                              : AppColors.textSecondary.withOpacity(0.6),
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 4,
+                        ),
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (value) {
+                        setState(() {
+                          // Rebuild to show/hide mic/send buttons
+                        });
+                      },
+                    ),
+                  ),
+
+                  // Show attachment and camera only when no text
+                  if (!hasText) ...[
+                    // Attachment button
+                    IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                      icon: Transform.rotate(
+                        angle: -0.785398, // -45 degrees in radians
+                        child: Icon(
+                          Icons.attach_file,
+                          color: isDark
+                              ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                              : const Color(0xFF54656F),  // WhatsApp gray
+                          size: 24,
+                        ),
+                      ),
+                      onPressed: isSending ? null : _pickFile,
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    // Camera button (using WhatsApp icon)
+                    IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                      icon: SvgPicture.asset(
+                        'assets/whatsapp_icons/Camera.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          isDark
+                              ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                              : const Color(0xFF54656F),  // WhatsApp gray
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      onPressed: isSending ? null : _pickImageFromCamera,
+                    ),
+
+                    const SizedBox(width: 4),
+                  ],
+                ],
+              ),
+            ),
           ),
+
+          const SizedBox(width: 8),
+
+          // Microphone button (when no text) or Send button (when has text)
+          if (!hasText)
+            // Microphone button - Large circular green button
+            GestureDetector(
+              onTap: isSending ? null : _startRecording,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF25D366), // WhatsApp green
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/whatsapp_icons/mic.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            // Send button
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: Color(0xFF25D366), // WhatsApp green
+                shape: BoxShape.circle,
+              ),
+              child: isSending
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.send, color: AppColors.white, size: 22),
+                      onPressed: _sendMessage,
+                    ),
+            ),
         ],
       ),
     );
@@ -743,12 +852,141 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   }
 
   /// Send File Message
-  void _sendFileMessage(File file) {
+  void _sendFileMessage(File file, {String? attachmentType}) {
+    // Auto-detect attachment type if not provided
+    String type = attachmentType ?? 'file';
+    if (attachmentType == null) {
+      final extension = file.path.split('.').last.toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension)) {
+        type = 'image';
+      } else if (['m4a', 'mp3', 'wav', 'aac', 'ogg'].contains(extension)) {
+        type = 'voice';
+      }
+    }
+
+    print('📎 Sending file with type: $type');
+
     context.read<MessagesCubit>().sendMessage(
           conversationId: widget.conversationId,
           companyId: widget.companyId,
           attachment: file,
+          attachmentType: type,
         );
+  }
+
+  /// Start Voice Recording
+  Future<void> _startRecording() async {
+    // Check microphone permission
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Microphone permission denied')),
+      );
+      return;
+    }
+
+    try {
+      // Get temporary directory
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final filePath = '${tempDir.path}/$fileName';
+
+      // Start recording
+      await _audioRecorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 128000,
+          sampleRate: 44100,
+        ),
+        path: filePath,
+      );
+
+      setState(() {
+        _isRecording = true;
+        _recordedFilePath = filePath;
+      });
+
+      print('🎤 Recording started: $filePath');
+    } catch (e) {
+      print('❌ Error starting recording: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to start recording: $e')),
+      );
+    }
+  }
+
+  /// Stop Voice Recording
+  Future<void> _stopRecording() async {
+    try {
+      final path = await _audioRecorder.stop();
+      print('🎤 Recording stopped: $path');
+
+      setState(() {
+        _isRecording = false;
+      });
+    } catch (e) {
+      print('❌ Error stopping recording: $e');
+      setState(() {
+        _isRecording = false;
+      });
+    }
+  }
+
+  /// Cancel Voice Recording
+  Future<void> _cancelRecording() async {
+    try {
+      await _audioRecorder.stop();
+
+      // Delete the recorded file
+      if (_recordedFilePath != null) {
+        final file = File(_recordedFilePath!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+
+      setState(() {
+        _isRecording = false;
+        _recordedFilePath = null;
+      });
+
+      print('🎤 Recording canceled');
+    } catch (e) {
+      print('❌ Error canceling recording: $e');
+    }
+  }
+
+  /// Send Voice Recording
+  Future<void> _sendRecording(String path) async {
+    try {
+      print('🎤 Attempting to send recording: $path');
+
+      final file = File(path);
+      final exists = await file.exists();
+
+      print('🎤 File exists: $exists');
+
+      if (exists) {
+        final fileSize = await file.length();
+        print('🎤 File size: ${fileSize} bytes');
+
+        _sendFileMessage(file);
+        print('🎤 Recording sent successfully');
+      } else {
+        print('❌ Recording file does not exist: $path');
+      }
+
+      setState(() {
+        _isRecording = false;
+        _recordedFilePath = null;
+      });
+    } catch (e) {
+      print('❌ Error sending recording: $e');
+      setState(() {
+        _isRecording = false;
+        _recordedFilePath = null;
+      });
+    }
   }
 
   /// Open Employee Profile
