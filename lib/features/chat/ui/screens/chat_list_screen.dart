@@ -359,6 +359,7 @@ class _ChatListView extends StatelessWidget {
                     participantAvatar: conversation.participantAvatar,
                     companyId: companyId,
                     currentUserId: currentUserId,
+                    isGroupChat: conversation.isGroup,
                   ),
                 ),
               );

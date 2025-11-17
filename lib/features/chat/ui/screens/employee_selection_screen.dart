@@ -168,6 +168,7 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
                   participantName: 'Chat', // Will be updated from conversation data
                   companyId: widget.companyId,
                   currentUserId: widget.currentUserId,
+                  isGroupChat: false, // Private chat
                 ),
               ),
             );

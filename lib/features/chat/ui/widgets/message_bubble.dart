@@ -9,11 +9,13 @@ import '../../data/models/message_model.dart';
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isSentByMe;
+  final bool isGroupChat;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.isSentByMe,
+    this.isGroupChat = false,
   });
 
   @override
@@ -34,6 +36,20 @@ class MessageBubble extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
+            // Sender name (for group chats only, received messages only)
+            if (isGroupChat && !isSentByMe)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, bottom: 4),
+                child: Text(
+                  message.senderName,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: _getColorForUser(message.senderId),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
             // Message bubble
             Container(
               constraints: BoxConstraints(
@@ -277,5 +293,24 @@ class MessageBubble extends StatelessWidget {
     // ✓ Grey = Sent (تم الإرسال)
     // This would be shown if message just sent but not delivered yet
     // return Icon(Icons.done, size: 16, color: Colors.grey[600]);
+  }
+
+  /// Get unique color for each user in group (WhatsApp Style)
+  Color _getColorForUser(int userId) {
+    // WhatsApp-style colors for group member names
+    final colors = [
+      const Color(0xFF00A884), // WhatsApp Green
+      const Color(0xFF0088CC), // Telegram Blue
+      const Color(0xFFFF8800), // Orange
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF009688), // Teal
+      const Color(0xFFFF5722), // Deep Orange
+      const Color(0xFF795548), // Brown
+      const Color(0xFF607D8B), // Blue Grey
+      const Color(0xFF4CAF50), // Green
+    ];
+
+    return colors[userId % colors.length];
   }
 }

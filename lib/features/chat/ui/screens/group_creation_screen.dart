@@ -157,6 +157,7 @@ class _GroupCreationViewState extends State<_GroupCreationView>
                   participantName: _groupNameController.text.trim(),
                   companyId: widget.companyId,
                   currentUserId: widget.currentUserId,
+                  isGroupChat: true, // Group chat
                 ),
               ),
             );

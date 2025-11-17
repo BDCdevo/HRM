@@ -16,13 +16,14 @@ import '../widgets/message_bubble.dart';
 
 /// Chat Room Screen - WhatsApp Style
 ///
-/// Displays messages between two users
+/// Displays messages between users (private or group)
 class ChatRoomScreen extends StatelessWidget {
   final int conversationId;
   final String participantName;
   final String? participantAvatar;
   final int companyId;
   final int currentUserId;
+  final bool isGroupChat;
 
   const ChatRoomScreen({
     super.key,
@@ -31,6 +32,7 @@ class ChatRoomScreen extends StatelessWidget {
     this.participantAvatar,
     required this.companyId,
     required this.currentUserId,
+    this.isGroupChat = false,
   });
 
   @override
@@ -503,6 +505,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                   return MessageBubble(
                     message: message,
                     isSentByMe: isMine,
+                    isGroupChat: isGroupChat,
                   );
                 },
               ),
