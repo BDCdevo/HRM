@@ -50,6 +50,7 @@ class ChatRoomScreen extends StatelessWidget {
         participantAvatar: participantAvatar,
         companyId: companyId,
         currentUserId: currentUserId,
+        isGroupChat: isGroupChat,
       ),
     );
   }
@@ -61,6 +62,7 @@ class _ChatRoomView extends StatefulWidget {
   final String? participantAvatar;
   final int companyId;
   final int currentUserId;
+  final bool isGroupChat;
 
   const _ChatRoomView({
     required this.conversationId,
@@ -68,6 +70,7 @@ class _ChatRoomView extends StatefulWidget {
     this.participantAvatar,
     required this.companyId,
     required this.currentUserId,
+    this.isGroupChat = false,
   });
 
   @override
