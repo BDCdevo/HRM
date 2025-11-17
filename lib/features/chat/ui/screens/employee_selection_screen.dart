@@ -68,6 +68,9 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
   final Set<int> _selectedEmployeeIds = {};
   final Map<int, String> _selectedEmployeeNames = {};
 
+  // Search mode
+  bool _isSearchMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -209,6 +212,51 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
 
   /// Build App Bar
   PreferredSizeWidget _buildAppBar(bool isDark) {
+    // If in search mode, show search TextField in AppBar
+    if (_isSearchMode) {
+      return AppBar(
+        backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          onPressed: () {
+            setState(() {
+              _isSearchMode = false;
+              _searchController.clear();
+            });
+            // Clear search in cubit
+            context.read<EmployeesCubit>().searchEmployees('');
+          },
+        ),
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: const TextStyle(color: AppColors.white),
+          decoration: InputDecoration(
+            hintText: 'Search...',
+            hintStyle: TextStyle(
+              color: AppColors.white.withOpacity(0.7),
+            ),
+            border: InputBorder.none,
+          ),
+          onChanged: (value) {
+            context.read<EmployeesCubit>().searchEmployees(value);
+          },
+        ),
+        actions: [
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear, color: AppColors.white),
+              onPressed: () {
+                _searchController.clear();
+                context.read<EmployeesCubit>().searchEmployees('');
+              },
+            ),
+        ],
+      );
+    }
+
+    // Normal AppBar
     return AppBar(
       backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
       elevation: 0,
@@ -249,25 +297,16 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
         ],
       ),
       actions: [
-        if (!_isMultiSelectMode)
-          TextButton.icon(
-            onPressed: _toggleMultiSelectMode,
-            icon: const Icon(
-              Icons.group_add,
-              color: AppColors.white,
-              size: 20,
-            ),
-            label: Text(
-              'New Group',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-          ),
+        // Search icon
+        IconButton(
+          icon: const Icon(Icons.search, color: AppColors.white),
+          onPressed: () {
+            setState(() {
+              _isSearchMode = true;
+            });
+          },
+        ),
+        const SizedBox(width: 4),
       ],
     );
   }
@@ -592,12 +631,78 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
       opacity: _animationController,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 16),
-        itemCount: employees.length,
+        itemCount: _isMultiSelectMode ? employees.length : employees.length + 1,
         itemBuilder: (context, index) {
-          final employee = employees[index];
+          // Show "New Group" option at top (only in normal mode)
+          if (!_isMultiSelectMode && index == 0) {
+            return _buildNewGroupTile(isDark);
+          }
+
+          // Adjust index for employees when "New Group" is shown
+          final employeeIndex = _isMultiSelectMode ? index : index - 1;
+          final employee = employees[employeeIndex];
           return _buildEmployeeCard(employee, isDark);
         },
       ),
+    );
+  }
+
+  /// Build "New Group" Tile (WhatsApp Style)
+  Widget _buildNewGroupTile(bool isDark) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: _toggleMultiSelectMode,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.white,
+            ),
+            child: Row(
+              children: [
+                // Group Icon with circular background
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: (isDark ? AppColors.darkAccent : AppColors.accent),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.group,
+                    color: AppColors.white,
+                    size: 24,
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // "New Group" Text
+                Expanded(
+                  child: Text(
+                    'New group',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Divider
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: (isDark ? AppColors.darkBorder : AppColors.border)
+              .withOpacity(0.3),
+        ),
+      ],
     );
   }
 
