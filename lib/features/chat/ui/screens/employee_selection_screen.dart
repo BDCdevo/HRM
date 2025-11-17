@@ -189,20 +189,8 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
         builder: (context, chatState) {
           return BlocBuilder<EmployeesCubit, EmployeesState>(
             builder: (context, employeesState) {
-              return Column(
-                children: [
-                  // Search Bar
-                  _buildSearchBar(isDark),
-
-                  // Results Count
-                  _buildResultsCount(employeesState, isDark),
-
-                  // Employees List
-                  Expanded(
-                    child: _buildBody(employeesState, chatState, isDark),
-                  ),
-                ],
-              );
+              // Directly show body without search bar and results count
+              return _buildBody(employeesState, chatState, isDark);
             },
           );
         },
@@ -228,20 +216,31 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
             context.read<EmployeesCubit>().searchEmployees('');
           },
         ),
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: const TextStyle(color: AppColors.white),
-          decoration: InputDecoration(
-            hintText: 'Search...',
-            hintStyle: TextStyle(
-              color: AppColors.white.withOpacity(0.7),
-            ),
-            border: InputBorder.none,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
           ),
-          onChanged: (value) {
-            context.read<EmployeesCubit>().searchEmployees(value);
-          },
+          child: TextField(
+            controller: _searchController,
+            autofocus: true,
+            style: const TextStyle(color: AppColors.white, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'Search...',
+              hintStyle: TextStyle(
+                color: AppColors.white.withOpacity(0.6),
+                fontSize: 16,
+              ),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (value) {
+              setState(() {}); // Rebuild to show/hide clear button
+              context.read<EmployeesCubit>().searchEmployees(value);
+            },
+          ),
         ),
         actions: [
           if (_searchController.text.isNotEmpty)
@@ -249,6 +248,7 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
               icon: const Icon(Icons.clear, color: AppColors.white),
               onPressed: () {
                 _searchController.clear();
+                setState(() {});
                 context.read<EmployeesCubit>().searchEmployees('');
               },
             ),
@@ -308,164 +308,6 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
         ),
         const SizedBox(width: 4),
       ],
-    );
-  }
-
-  /// Build Search Bar
-  Widget _buildSearchBar(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkInput : AppColors.background,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _searchController.text.isNotEmpty
-                      ? (isDark ? AppColors.darkAccent : AppColors.accent)
-                      : Colors.transparent,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.search,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
-                        fontSize: 15,
-                      ),
-                      onChanged: (value) {
-                        setState(() {});
-                        context.read<EmployeesCubit>().searchEmployees(value);
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search by name or email...',
-                        hintStyle: AppTextStyles.bodyMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.textSecondary,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  if (_searchController.text.isNotEmpty)
-                    IconButton(
-                      icon: Icon(
-                        Icons.clear,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.textSecondary,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                        });
-                        context.read<EmployeesCubit>().searchEmployees('');
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build Results Count
-  Widget _buildResultsCount(EmployeesState state, bool isDark) {
-    if (state is! EmployeesLoaded) {
-      return const SizedBox.shrink();
-    }
-
-    final filteredCount = state.filteredEmployees.length;
-    final totalCount = state.employees.length;
-    final searchQuery = _searchController.text;
-
-    if (searchQuery.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 18,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '$totalCount employees available',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(
-            filteredCount == 0 ? Icons.search_off : Icons.filter_list,
-            size: 18,
-            color: filteredCount == 0
-                ? AppColors.error
-                : (isDark ? AppColors.darkAccent : AppColors.accent),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            filteredCount == 0
-                ? 'No results found'
-                : '$filteredCount result${filteredCount > 1 ? 's' : ''} found',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: filteredCount == 0
-                  ? AppColors.error
-                  : (isDark ? AppColors.darkAccent : AppColors.accent),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
