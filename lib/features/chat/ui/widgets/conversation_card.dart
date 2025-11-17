@@ -151,23 +151,51 @@ class _ConversationCardState extends State<ConversationCard>
                         Row(
                           children: [
                             Expanded(
-                              child: Text(
-                                widget.conversation.lastMessagePreview,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: widget.conversation.hasUnreadMessages
-                                      ? (isDark
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary)
-                                      : (isDark
+                              child: Row(
+                                children: [
+                                  // For groups: show participants count
+                                  if (widget.conversation.isGroup &&
+                                      widget.conversation.participantsCount != null) ...[
+                                    Icon(
+                                      Icons.people,
+                                      size: 14,
+                                      color: isDark
                                           ? AppColors.darkTextSecondary
-                                          : AppColors.textSecondary),
-                                  fontWeight:
-                                      widget.conversation.hasUnreadMessages
-                                          ? FontWeight.w500
-                                          : FontWeight.normal,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                          : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${widget.conversation.participantsCount} • ',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: isDark
+                                            ? AppColors.darkTextSecondary
+                                            : AppColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                  // Last message preview
+                                  Expanded(
+                                    child: Text(
+                                      widget.conversation.lastMessagePreview,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: widget.conversation.hasUnreadMessages
+                                            ? (isDark
+                                                ? AppColors.darkTextPrimary
+                                                : AppColors.textPrimary)
+                                            : (isDark
+                                                ? AppColors.darkTextSecondary
+                                                : AppColors.textSecondary),
+                                        fontWeight:
+                                            widget.conversation.hasUnreadMessages
+                                                ? FontWeight.w500
+                                                : FontWeight.normal,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             if (widget.conversation.hasUnreadMessages) ...[
@@ -309,6 +337,24 @@ class _ConversationCardState extends State<ConversationCard>
 
   /// Build Avatar with Online Status
   Widget _buildAvatarWithStatus(bool isDark) {
+    // For groups: show group icon
+    if (widget.conversation.isGroup) {
+      return Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _getAvatarColor(widget.conversation.participantName),
+        ),
+        child: Icon(
+          Icons.group,
+          color: AppColors.white,
+          size: 28,
+        ),
+      );
+    }
+
+    // For private chats: show user avatar with online status
     return Stack(
       children: [
         // Avatar
@@ -337,7 +383,7 @@ class _ConversationCardState extends State<ConversationCard>
               : _buildAvatarPlaceholder(),
         ),
 
-        // Online Status Indicator
+        // Online Status Indicator (only for private chats)
         if (widget.conversation.isOnline)
           Positioned(
             right: 0,

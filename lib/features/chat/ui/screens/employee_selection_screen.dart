@@ -9,6 +9,7 @@ import '../../logic/cubit/employees_state.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
 import 'chat_room_screen.dart';
+import 'group_creation_screen.dart';
 
 /// Employee Selection Screen
 ///
@@ -62,6 +63,11 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
 
+  // Multi-select mode for group creation
+  bool _isMultiSelectMode = false;
+  final Set<int> _selectedEmployeeIds = {};
+  final Map<int, String> _selectedEmployeeNames = {};
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +85,55 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
     super.dispose();
   }
 
+  /// Toggle multi-select mode
+  void _toggleMultiSelectMode() {
+    setState(() {
+      _isMultiSelectMode = !_isMultiSelectMode;
+      if (!_isMultiSelectMode) {
+        _selectedEmployeeIds.clear();
+        _selectedEmployeeNames.clear();
+      }
+    });
+  }
+
+  /// Toggle employee selection
+  void _toggleEmployeeSelection(int id, String name) {
+    setState(() {
+      if (_selectedEmployeeIds.contains(id)) {
+        _selectedEmployeeIds.remove(id);
+        _selectedEmployeeNames.remove(id);
+      } else {
+        _selectedEmployeeIds.add(id);
+        _selectedEmployeeNames[id] = name;
+      }
+    });
+  }
+
+  /// Navigate to group creation screen
+  void _navigateToGroupCreation() {
+    if (_selectedEmployeeIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one employee'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Navigate to Group Creation Screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GroupCreationScreen(
+          companyId: widget.companyId,
+          currentUserId: widget.currentUserId,
+          selectedEmployeeIds: _selectedEmployeeIds.toList(),
+          selectedEmployeeNames: Map<int, String>.from(_selectedEmployeeNames),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -86,6 +141,20 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       appBar: _buildAppBar(isDark),
+      floatingActionButton: _isMultiSelectMode && _selectedEmployeeIds.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToGroupCreation,
+              backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
+              icon: const Icon(Icons.arrow_forward, color: AppColors.white),
+              label: Text(
+                'Next',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : null,
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
           if (state is ConversationCreated) {
@@ -143,21 +212,34 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
       backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.white),
-        onPressed: () => Navigator.pop(context),
+        icon: Icon(
+          _isMultiSelectMode ? Icons.close : Icons.arrow_back,
+          color: AppColors.white,
+        ),
+        onPressed: () {
+          if (_isMultiSelectMode) {
+            _toggleMultiSelectMode();
+          } else {
+            Navigator.pop(context);
+          }
+        },
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'New Chat',
+            _isMultiSelectMode
+                ? 'Add Group Members'
+                : 'New Chat',
             style: AppTextStyles.titleLarge.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           Text(
-            'Select a contact',
+            _isMultiSelectMode
+                ? '${_selectedEmployeeIds.length} selected'
+                : 'Select a contact',
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.white.withOpacity(0.8),
               fontSize: 12,
@@ -165,6 +247,27 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
           ),
         ],
       ),
+      actions: [
+        if (!_isMultiSelectMode)
+          TextButton.icon(
+            onPressed: _toggleMultiSelectMode,
+            icon: const Icon(
+              Icons.group_add,
+              color: AppColors.white,
+              size: 20,
+            ),
+            label: Text(
+              'New Group',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+          ),
+      ],
     );
   }
 
@@ -502,15 +605,25 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
     final name = employee['name'] as String? ?? 'Unknown';
     final email = employee['email'] as String? ?? '';
     final id = employee['id'] as int;
+    final isSelected = _selectedEmployeeIds.contains(id);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _startConversation(id, name),
+        onTap: () {
+          if (_isMultiSelectMode) {
+            _toggleEmployeeSelection(id, name);
+          } else {
+            _startConversation(id, name);
+          }
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.white,
+            color: _isMultiSelectMode && isSelected
+                ? (isDark ? AppColors.darkAccent : AppColors.accent)
+                    .withOpacity(0.1)
+                : (isDark ? AppColors.darkCard : AppColors.white),
             border: Border(
               bottom: BorderSide(
                 color: (isDark ? AppColors.darkBorder : AppColors.border)
@@ -521,6 +634,20 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
           ),
           child: Row(
             children: [
+              // Checkbox (multi-select mode only)
+              if (_isMultiSelectMode)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Checkbox(
+                    value: isSelected,
+                    onChanged: (value) => _toggleEmployeeSelection(id, name),
+                    activeColor: isDark ? AppColors.darkAccent : AppColors.accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+
               // Avatar
               Hero(
                 tag: 'avatar_$name',
@@ -540,10 +667,11 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color:
-                          (isDark ? AppColors.darkPrimary : AppColors.primary)
+                      color: isSelected && _isMultiSelectMode
+                          ? (isDark ? AppColors.darkAccent : AppColors.accent)
+                          : (isDark ? AppColors.darkPrimary : AppColors.primary)
                               .withOpacity(0.2),
-                      width: 2,
+                      width: isSelected && _isMultiSelectMode ? 3 : 2,
                     ),
                   ),
                   child: Center(
@@ -608,13 +736,20 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
                 ),
               ),
 
-              // Start chat icon
-              Icon(
-                Icons.chat_bubble_outline,
-                color: (isDark ? AppColors.darkAccent : AppColors.accent)
-                    .withOpacity(0.6),
-                size: 22,
-              ),
+              // Start chat icon (single mode) or selected indicator (multi mode)
+              if (!_isMultiSelectMode)
+                Icon(
+                  Icons.chat_bubble_outline,
+                  color: (isDark ? AppColors.darkAccent : AppColors.accent)
+                      .withOpacity(0.6),
+                  size: 22,
+                ),
+              if (_isMultiSelectMode && isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: isDark ? AppColors.darkAccent : AppColors.accent,
+                  size: 24,
+                ),
             ],
           ),
         ),

@@ -7,6 +7,9 @@ part 'conversation_model.g.dart';
 class ConversationModel {
   final int id;
 
+  /// Type of conversation: 'private' or 'group'
+  final String type;
+
   @JsonKey(name: 'participant_id')
   final int participantId;
 
@@ -31,8 +34,13 @@ class ConversationModel {
   @JsonKey(name: 'is_online')
   final bool isOnline;
 
+  /// Number of participants (for groups)
+  @JsonKey(name: 'participants_count')
+  final int? participantsCount;
+
   const ConversationModel({
     required this.id,
+    this.type = 'private',
     required this.participantId,
     required this.participantName,
     this.participantAvatar,
@@ -41,6 +49,7 @@ class ConversationModel {
     this.unreadCount = 0,
     required this.updatedAt,
     this.isOnline = false,
+    this.participantsCount,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -54,41 +63,56 @@ class ConversationModel {
     Map<String, dynamic> json, {
     required int currentUserId,
   }) {
-    // Extract participant info from participants array
+    final String conversationType = json['type'] as String? ?? 'private';
+
+    // Extract participant info based on conversation type
     int participantId = 0;
     String participantName = 'Unknown';
     String? participantAvatar;
     String? participantDepartment;
+    int? participantsCount;
 
-    // Try to get participant info from participants array (if provided by backend)
-    if (json['participants'] != null && json['participants'] is List) {
-      final participants = json['participants'] as List;
-
-      // Find the OTHER participant (not current user)
-      final otherParticipant = participants.firstWhere(
-        (p) => p['id'] != currentUserId,
-        orElse: () => null,
-      );
-
-      if (otherParticipant != null) {
-        participantId = otherParticipant['id'] as int;
-        participantName = otherParticipant['name'] ??
-                         otherParticipant['email'] ??
-                         'Unknown';
-        participantAvatar = otherParticipant['avatar'] as String?;
-        participantDepartment = otherParticipant['department'] as String?;
-      }
-    }
-
-    // Fallback to conversation name if no participant found
-    // (Backend returns participant name as conversation name for private chats)
-    if (participantId == 0) {
-      participantName = json['name'] as String? ?? 'Unknown';
+    if (conversationType == 'group') {
+      // For groups: use conversation name and count participants
+      participantName = json['name'] as String? ?? 'Group Chat';
       participantAvatar = json['avatar'] as String?;
+
+      // Count participants
+      if (json['participants'] != null && json['participants'] is List) {
+        participantsCount = (json['participants'] as List).length;
+      }
+    } else {
+      // For private chats: find the OTHER participant
+      if (json['participants'] != null && json['participants'] is List) {
+        final participants = json['participants'] as List;
+
+        // Find the OTHER participant (not current user)
+        final otherParticipant = participants.firstWhere(
+          (p) => p['id'] != currentUserId,
+          orElse: () => null,
+        );
+
+        if (otherParticipant != null) {
+          participantId = otherParticipant['id'] as int;
+          participantName = otherParticipant['name'] ??
+                           otherParticipant['email'] ??
+                           'Unknown';
+          participantAvatar = otherParticipant['avatar'] as String?;
+          participantDepartment = otherParticipant['department'] as String?;
+        }
+      }
+
+      // Fallback to conversation name if no participant found
+      // (Backend returns participant name as conversation name for private chats)
+      if (participantId == 0) {
+        participantName = json['name'] as String? ?? 'Unknown';
+        participantAvatar = json['avatar'] as String?;
+      }
     }
 
     return ConversationModel(
       id: json['id'] as int,
+      type: conversationType,
       participantId: participantId,
       participantName: participantName,
       participantAvatar: participantAvatar,
@@ -109,7 +133,8 @@ class ConversationModel {
           : null,
       unreadCount: json['unread_count'] as int? ?? 0,
       updatedAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
-      isOnline: json['is_online'] as bool? ?? false,
+      isOnline: conversationType == 'private' ? (json['is_online'] as bool? ?? false) : false,
+      participantsCount: participantsCount,
     );
   }
 
@@ -117,6 +142,12 @@ class ConversationModel {
 
   /// Check if conversation has unread messages
   bool get hasUnreadMessages => unreadCount > 0;
+
+  /// Check if conversation is a group
+  bool get isGroup => type == 'group';
+
+  /// Check if conversation is private
+  bool get isPrivate => type == 'private';
 
   /// Format last message time
   String get formattedTime {
