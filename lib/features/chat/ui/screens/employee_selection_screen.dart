@@ -219,17 +219,21 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
         title: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.15),
+            color: (isDark ? AppColors.darkCard : AppColors.background).withOpacity(0.3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: TextField(
             controller: _searchController,
             autofocus: true,
-            style: const TextStyle(color: AppColors.white, fontSize: 16),
+            style: const TextStyle(
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               hintText: 'Search...',
               hintStyle: TextStyle(
-                color: AppColors.white.withOpacity(0.6),
+                color: AppColors.white.withOpacity(0.7),
                 fontSize: 16,
               ),
               border: InputBorder.none,
