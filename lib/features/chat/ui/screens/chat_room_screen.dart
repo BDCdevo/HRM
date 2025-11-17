@@ -13,6 +13,7 @@ import '../../data/models/message_model.dart';
 import '../../logic/cubit/messages_cubit.dart';
 import '../../logic/cubit/messages_state.dart';
 import '../widgets/message_bubble.dart';
+import 'group_info_screen.dart';
 
 /// Chat Room Screen - WhatsApp Style
 ///
@@ -271,13 +272,13 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         onPressed: () => Navigator.pop(context),
       ),
       title: InkWell(
-        onTap: _openEmployeeProfile,
+        onTap: widget.isGroupChat ? _openGroupInfo : _openEmployeeProfile,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
-              // Avatar
+              // Avatar (Group icon or User initial)
               Container(
                 width: 36,
                 height: 36,
@@ -286,15 +287,21 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                   color: AppColors.white.withOpacity(0.2),
                 ),
                 child: Center(
-                  child: Text(
-                    widget.participantName.isNotEmpty
-                        ? widget.participantName[0].toUpperCase()
-                        : '?',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: widget.isGroupChat
+                      ? const Icon(
+                          Icons.group,
+                          color: AppColors.white,
+                          size: 20,
+                        )
+                      : Text(
+                          widget.participantName.isNotEmpty
+                              ? widget.participantName[0].toUpperCase()
+                              : '?',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
 
@@ -315,7 +322,9 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Tap to view profile',
+                      widget.isGroupChat
+                          ? 'Tap for group info'
+                          : 'Tap to view profile',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.white.withOpacity(0.8),
                         fontSize: 12,
@@ -343,14 +352,35 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
           onSelected: (value) {
             if (value == 'view_profile') {
               _openEmployeeProfile();
+            } else if (value == 'group_info') {
+              _openGroupInfo();
             }
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'view_profile',
-              child: Text('View profile'),
-            ),
-          ],
+          itemBuilder: (context) => widget.isGroupChat
+              ? [
+                  const PopupMenuItem(
+                    value: 'group_info',
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline),
+                        SizedBox(width: 8),
+                        Text('Group info'),
+                      ],
+                    ),
+                  ),
+                ]
+              : [
+                  const PopupMenuItem(
+                    value: 'view_profile',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person),
+                        SizedBox(width: 8),
+                        Text('View profile'),
+                      ],
+                    ),
+                  ),
+                ],
         ),
       ],
     );
@@ -728,6 +758,25 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
       SnackBar(
         content: Text('Opening ${widget.participantName}\'s profile...'),
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Open Group Info Screen
+  void _openGroupInfo() {
+    if (!widget.isGroupChat) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupInfoScreen(
+          conversationId: widget.conversationId,
+          groupName: widget.participantName,
+          groupAvatar: widget.participantAvatar,
+          participantsCount: 3, // TODO: Get actual count from conversation data
+          companyId: widget.companyId,
+          currentUserId: widget.currentUserId,
+        ),
       ),
     );
   }
