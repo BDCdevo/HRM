@@ -216,35 +216,28 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
             context.read<EmployeesCubit>().searchEmployees('');
           },
         ),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: (isDark ? AppColors.darkCard : AppColors.background).withOpacity(0.3),
-            borderRadius: BorderRadius.circular(8),
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
           ),
-          child: TextField(
-            controller: _searchController,
-            autofocus: true,
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          decoration: InputDecoration(
+            hintText: 'Search...',
+            hintStyle: TextStyle(
+              color: AppColors.white.withOpacity(0.65),
+              fontSize: 17,
             ),
-            decoration: InputDecoration(
-              hintText: 'Search...',
-              hintStyle: TextStyle(
-                color: AppColors.white.withOpacity(0.7),
-                fontSize: 16,
-              ),
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onChanged: (value) {
-              setState(() {}); // Rebuild to show/hide clear button
-              context.read<EmployeesCubit>().searchEmployees(value);
-            },
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
           ),
+          onChanged: (value) {
+            setState(() {}); // Rebuild to show/hide clear button
+            context.read<EmployeesCubit>().searchEmployees(value);
+          },
         ),
         actions: [
           if (_searchController.text.isNotEmpty)
