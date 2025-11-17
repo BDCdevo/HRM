@@ -24,10 +24,10 @@ class MessageBubble extends StatelessWidget {
       alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.only(
-          left: isSentByMe ? 64 : 8,
-          right: isSentByMe ? 8 : 64,
-          top: 4,
-          bottom: 4,
+          left: isSentByMe ? 60 : 12,
+          right: isSentByMe ? 12 : 60,
+          top: 2,
+          bottom: 2,
         ),
         child: Column(
           crossAxisAlignment: isSentByMe
@@ -36,37 +36,43 @@ class MessageBubble extends StatelessWidget {
           children: [
             // Message bubble
             Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isSentByMe
                     ? (isDark
-                          ? const Color(
-                              0xFF005C4B,
-                            ) // Darker green for dark mode
-                          : const Color(
-                              0xFFDCF8C6,
-                            )) // WhatsApp green for light mode
+                          ? const Color(0xFF005C4B) // WhatsApp dark green
+                          : const Color(0xFFDCF8C6)) // WhatsApp light green
                     : (isDark
-                          ? AppColors
-                                .darkCard // Dark card for dark mode
-                          : AppColors.white), // White for light mode
+                          ? const Color(0xFF1F2C34) // Dark grey for received
+                          : Colors.white), // White for light mode
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(12),
-                  topRight: const Radius.circular(12),
+                  topLeft: const Radius.circular(8),
+                  topRight: const Radius.circular(8),
                   bottomLeft: isSentByMe
-                      ? const Radius.circular(12)
+                      ? const Radius.circular(8)
                       : const Radius.circular(0),
                   bottomRight: isSentByMe
                       ? const Radius.circular(0)
-                      : const Radius.circular(12),
+                      : const Radius.circular(8),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.15 : 0.05),
-                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
                 ],
+                border: isSentByMe
+                    ? null
+                    : Border.all(
+                        color: isDark
+                            ? Colors.transparent
+                            : Colors.grey.shade200,
+                        width: 1,
+                      ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,11 +92,11 @@ class MessageBubble extends StatelessWidget {
                         style: AppTextStyles.bodySmall.copyWith(
                           color: isSentByMe
                               ? (isDark
-                                    ? AppColors.darkTextSecondary.withOpacity(0.8)
-                                    : AppColors.textSecondary)
+                                    ? Colors.white.withOpacity(0.7)
+                                    : const Color(0xFF667781)) // WhatsApp grey
                               : (isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.textSecondary),
+                                    ? Colors.white.withOpacity(0.6)
+                                    : const Color(0xFF667781)),
                           fontSize: 11,
                         ),
                       ),
@@ -124,9 +130,14 @@ class MessageBubble extends StatelessWidget {
           message.message,
           style: AppTextStyles.bodyMedium.copyWith(
             color: isSentByMe
-                ? (isDark ? AppColors.white : AppColors.textPrimary)
-                : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+                ? (isDark
+                      ? Colors.white
+                      : const Color(0xFF111B21)) // Dark text for light green
+                : (isDark
+                      ? Colors.white
+                      : const Color(0xFF111B21)), // Dark text
             height: 1.4,
+            fontSize: 15,
           ),
         );
     }

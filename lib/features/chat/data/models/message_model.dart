@@ -26,6 +26,9 @@ class MessageModel {
   @JsonKey(name: 'is_read')
   final bool isRead;
 
+  @JsonKey(name: 'is_mine')
+  final bool isMine;
+
   @JsonKey(name: 'created_at')
   final String createdAt;
 
@@ -41,6 +44,7 @@ class MessageModel {
     required this.message,
     this.messageType = 'text',
     this.isRead = false,
+    required this.isMine,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -60,6 +64,7 @@ class MessageModel {
       message: json['body'] as String? ?? '',
       messageType: json['attachment_type'] as String? ?? 'text',
       isRead: json['read_at'] != null,
+      isMine: json['is_mine'] as bool? ?? false,
       createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
       updatedAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
     );

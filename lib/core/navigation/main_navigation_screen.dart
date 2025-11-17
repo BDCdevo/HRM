@@ -31,6 +31,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final user = authState is AuthAuthenticated ? authState.user : null;
     final userId = user?.id ?? 0;
 
+    // Debug logging
+    print('🔍 MainNavigationScreen - userId from auth: $userId');
+    print('🔍 MainNavigationScreen - user email: ${user?.email}');
+
     // Company ID is always 6 (BDC) - hardcoded since UserModel doesn't contain company_id
     // TODO: Add company_id to UserModel in future versions
     const companyId = 6;

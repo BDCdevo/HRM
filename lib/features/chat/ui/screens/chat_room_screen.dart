@@ -135,6 +135,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         message: messageData['body'] ?? '',
         messageType: messageData['attachment_type'] ?? 'text',
         isRead: messageData['read_at'] != null,
+        isMine: messageData['is_mine'] ?? false,
         createdAt: messageData['created_at'] ?? DateTime.now().toIso8601String(),
         updatedAt: messageData['created_at'] ?? DateTime.now().toIso8601String(),
       );
@@ -200,8 +201,8 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
     return Scaffold(
       backgroundColor: isDark
-          ? AppColors.darkBackground
-          : const Color(0xFFECE5DD), // WhatsApp background color
+          ? const Color(0xFF0B141A) // WhatsApp dark background
+          : const Color(0xFFECE5DD), // WhatsApp light background
       appBar: _buildAppBar(isDark),
       resizeToAvoidBottomInset: true, // Ensure input field is visible above keyboard
       body: SafeArea(
@@ -487,9 +488,23 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                 _buildDateSeparator(message.createdAt, isDark),
 
               // Message bubble
-              MessageBubble(
-                message: message,
-                isSentByMe: message.senderId == widget.currentUserId,
+              Builder(
+                builder: (context) {
+                  // Use is_mine from Backend instead of comparing IDs
+                  final isMine = message.isMine;
+                  // Debug logging
+                  if (index == 0) {
+                    print('🔍 Message Debug:');
+                    print('  message.isMine: ${message.isMine}');
+                    print('  message.senderId: ${message.senderId}');
+                    print('  widget.currentUserId: ${widget.currentUserId}');
+                    print('  isSentByMe: $isMine');
+                  }
+                  return MessageBubble(
+                    message: message,
+                    isSentByMe: isMine,
+                  );
+                },
               ),
             ],
           );

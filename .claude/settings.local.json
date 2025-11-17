@@ -46,7 +46,13 @@
       "Bash($null)",
       "Bash(dart format:*)",
       "Bash(git add:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(flutter test:*)",
+      "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_current.php)",
+      "WebSearch",
+      "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_backup.php)"
     ],
     "deny": [],
     "ask": []

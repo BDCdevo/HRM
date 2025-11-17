@@ -102,6 +102,7 @@ class ConversationModel {
               message: json['last_message'] as String,
               messageType: 'text',
               isRead: true,
+              isMine: false,
               createdAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
               updatedAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
             )
