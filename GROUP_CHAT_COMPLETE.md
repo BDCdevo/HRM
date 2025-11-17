@@ -380,7 +380,8 @@ GROUP_CHAT_COMPLETE.md               # ✅ This file
 
 ### Commits:
 1. `feat: WhatsApp-Style Group Chat - Phases 1-3 Complete` (b2506ff)
-2. `feat: Group Chat Phase 4 - Message Sender Names in Groups` (66cbbc3)
+2. `fix: Use widget.isGroupChat instead of isGroupChat in ChatRoomScreen` (b0d4abe)
+3. `feat: Group Chat Phase 4 - Message Sender Names in Groups` (78d53e0)
 
 ---
 
