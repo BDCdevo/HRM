@@ -505,7 +505,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                   return MessageBubble(
                     message: message,
                     isSentByMe: isMine,
-                    isGroupChat: isGroupChat,
+                    isGroupChat: widget.isGroupChat,
                   );
                 },
               ),
