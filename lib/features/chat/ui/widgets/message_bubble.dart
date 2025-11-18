@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../data/models/message_model.dart';
+import 'voice_message_player.dart';
 
 /// Message Bubble Widget - WhatsApp Style
 ///
@@ -159,38 +161,54 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  /// Build Image Message
+  /// Build Image Message (WhatsApp Style)
   Widget _buildImageMessage(bool isDark) {
+    // Check if we have a valid image URL
+    if (message.attachmentUrl == null || message.attachmentUrl!.isEmpty) {
+      return _buildPlaceholderImage(isDark);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 200,
-          height: 150,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkInput : AppColors.background,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Icon(
-              Icons.image,
-              size: 48,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
+        // Image with rounded corners (WhatsApp style)
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: GestureDetector(
+            onTap: () => _showImageFullScreen(),
+            child: CachedNetworkImage(
+              imageUrl: message.attachmentUrl!,
+              width: 250,
+              height: 250,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: 250,
+                height: 250,
+                color: isDark ? AppColors.darkInput : AppColors.background,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isDark ? AppColors.darkAccent : AppColors.accent,
+                    ),
+                  ),
+                ),
+              ),
+              errorWidget: (context, url, error) => _buildPlaceholderImage(isDark),
             ),
           ),
         ),
+
+        // Caption (if exists)
         if (message.message.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             message.message,
             style: AppTextStyles.bodyMedium.copyWith(
               color: isSentByMe
-                  ? (isDark ? AppColors.white : AppColors.textPrimary)
-                  : (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary),
+                  ? (isDark ? Colors.white : const Color(0xFF111B21))
+                  : (isDark ? Colors.white : const Color(0xFF111B21)),
+              height: 1.4,
+              fontSize: 15,
             ),
           ),
         ],
@@ -198,75 +216,228 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// Build File Message
+  /// Build Placeholder Image (when URL is missing or error)
+  Widget _buildPlaceholderImage(bool isDark) {
+    return Container(
+      width: 250,
+      height: 250,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkInput : AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image,
+              size: 48,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Image unavailable',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show Image in Full Screen
+  void _showImageFullScreen() {
+    if (message.attachmentUrl == null) return;
+
+    // You can implement a full-screen image viewer here
+    // For now, we'll just print a message
+    print('📸 Opening image: ${message.attachmentUrl}');
+    // TODO: Implement full-screen image viewer with PhotoView or similar package
+  }
+
+  /// Build File Message (WhatsApp Style)
   Widget _buildFileMessage(bool isDark) {
     final accentColor = isDark ? AppColors.darkAccent : AppColors.accent;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primary;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(Icons.insert_drive_file, color: accentColor),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            message.message,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: isSentByMe
-                  ? (isDark ? AppColors.white : AppColors.textPrimary)
-                  : (isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary),
+    // Get file info
+    final fileName = message.attachmentName ?? message.message ?? 'Unknown file';
+    final fileSize = message.attachmentSize != null
+        ? _formatFileSize(message.attachmentSize!)
+        : '';
+
+    // Get file icon based on extension
+    final fileIcon = _getFileIcon(fileName);
+    final fileColor = _getFileColor(fileName, accentColor, primaryColor);
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 280),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.black.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // File Icon
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: fileColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              fileIcon,
+              color: fileColor,
+              size: 28,
             ),
           ),
-        ),
-      ],
+
+          const SizedBox(width: 12),
+
+          // File Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // File Name
+                Text(
+                  fileName,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: isSentByMe
+                        ? (isDark ? Colors.white : const Color(0xFF111B21))
+                        : (isDark ? Colors.white : const Color(0xFF111B21)),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                // File Size
+                if (fileSize.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    fileSize,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.6)
+                          : const Color(0xFF667781),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Download Icon
+          if (message.attachmentUrl != null && message.attachmentUrl!.isNotEmpty)
+            Icon(
+              Icons.download_rounded,
+              color: isDark
+                  ? Colors.white.withOpacity(0.7)
+                  : const Color(0xFF667781),
+              size: 20,
+            ),
+        ],
+      ),
     );
+  }
+
+  /// Format File Size (bytes to human-readable)
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+
+  /// Get File Icon based on extension
+  IconData _getFileIcon(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+
+    switch (extension) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart;
+      case 'ppt':
+      case 'pptx':
+        return Icons.slideshow;
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return Icons.folder_zip;
+      case 'txt':
+        return Icons.text_snippet;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  /// Get File Color based on type
+  Color _getFileColor(String fileName, Color accent, Color primary) {
+    final extension = fileName.split('.').last.toLowerCase();
+
+    switch (extension) {
+      case 'pdf':
+        return const Color(0xFFE53935); // Red for PDF
+      case 'doc':
+      case 'docx':
+        return const Color(0xFF1976D2); // Blue for Word
+      case 'xls':
+      case 'xlsx':
+        return const Color(0xFF388E3C); // Green for Excel
+      case 'ppt':
+      case 'pptx':
+        return const Color(0xFFD84315); // Orange for PowerPoint
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return const Color(0xFF7B1FA2); // Purple for archives
+      default:
+        return accent;
+    }
   }
 
   /// Build Voice Message
   Widget _buildVoiceMessage(bool isDark) {
-    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primary;
-    final accentColor = isDark ? AppColors.darkAccent : AppColors.accent;
+    // Check if we have a valid audio URL
+    if (message.attachmentUrl == null || message.attachmentUrl!.isEmpty) {
+      return Text(
+        'Voice message (no audio available)',
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: isSentByMe
+              ? (isDark ? Colors.white : AppColors.textPrimary)
+              : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.play_circle_filled,
-          color: isSentByMe ? accentColor : primaryColor,
-          size: 32,
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Container(
-            height: 32,
-            width: 150,
-            decoration: BoxDecoration(
-              color: isSentByMe
-                  ? accentColor.withOpacity(0.2)
-                  : primaryColor.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.graphic_eq,
-                size: 20,
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return VoiceMessagePlayer(
+      audioUrl: message.attachmentUrl!,
+      isMine: isSentByMe,
+      isDark: isDark,
     );
   }
 

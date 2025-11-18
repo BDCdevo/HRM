@@ -23,6 +23,15 @@ class MessageModel {
   @JsonKey(name: 'message_type')
   final String messageType; // text, image, file, voice
 
+  @JsonKey(name: 'attachment_url')
+  final String? attachmentUrl;
+
+  @JsonKey(name: 'attachment_name')
+  final String? attachmentName;
+
+  @JsonKey(name: 'attachment_size')
+  final int? attachmentSize;
+
   @JsonKey(name: 'is_read')
   final bool isRead;
 
@@ -43,6 +52,9 @@ class MessageModel {
     this.senderAvatar,
     required this.message,
     this.messageType = 'text',
+    this.attachmentUrl,
+    this.attachmentName,
+    this.attachmentSize,
     this.isRead = false,
     required this.isMine,
     required this.createdAt,
@@ -53,7 +65,7 @@ class MessageModel {
       _$MessageModelFromJson(json);
 
   /// Factory for API response
-  /// API returns: {id, body, user_id, user_name, user_avatar, created_at, is_mine, attachment_type, attachment_name, attachment_url, read_at}
+  /// API returns: {id, body, user_id, user_name, user_avatar, created_at, is_mine, attachment_type, attachment_name, attachment_url, attachment_size, read_at}
   factory MessageModel.fromApiJson(Map<String, dynamic> json) {
     return MessageModel(
       id: json['id'] as int,
@@ -63,6 +75,9 @@ class MessageModel {
       senderAvatar: json['user_avatar'] as String?,
       message: json['body'] as String? ?? '',
       messageType: json['attachment_type'] as String? ?? 'text',
+      attachmentUrl: json['attachment_url'] as String?,
+      attachmentName: json['attachment_name'] as String?,
+      attachmentSize: json['attachment_size'] as int?,
       isRead: json['read_at'] != null,
       isMine: json['is_mine'] as bool? ?? false,
       createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),

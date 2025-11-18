@@ -114,8 +114,8 @@ class ApiConfig {
   // =====================================================
 
   static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-  static const Duration sendTimeout = Duration(seconds: 30);
+  static const Duration receiveTimeout = Duration(seconds: 60); // Increased for file downloads
+  static const Duration sendTimeout = Duration(seconds: 120); // Increased for file uploads (images, voice, documents)
 
   // Helper Methods
   // =====================================================

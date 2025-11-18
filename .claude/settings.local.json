@@ -53,7 +53,14 @@
       "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_current.php)",
       "WebSearch",
       "Bash(C:UsersB-SMARTAppDataLocalTempchatcontroller_backup.php)",
-      "Bash(/tmp/chatcontroller_current.php)"
+      "Bash(/tmp/chatcontroller_current.php)",
+      "Bash(git reset:*)",
+      "Bash(scp:*)",
+      "Bash(python3:*)",
+      "Bash(php:*)",
+      "Bash(gradlew bundleRelease:*)",
+      "Bash(.gradlew.bat bundleRelease:*)",
+      "Bash(del nul 2)"
     ],
     "deny": [],
     "ask": []

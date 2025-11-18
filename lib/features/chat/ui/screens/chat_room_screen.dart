@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -837,17 +838,42 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     }
   }
 
-  /// Pick File (Image/Document)
+  /// Pick File (Image/Document/PDF/etc)
   Future<void> _pickFile() async {
-    final XFile? image = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 85,
-    );
+    try {
+      print('📎 Opening file picker...');
 
-    if (image != null) {
-      _sendFileMessage(File(image.path));
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final fileName = result.files.single.name;
+        final fileSize = await file.length();
+
+        print('📎 File picked:');
+        print('   Name: $fileName');
+        print('   Path: ${file.path}');
+        print('   Size: $fileSize bytes');
+
+        _sendFileMessage(file);
+      } else {
+        print('📎 No file selected');
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error picking file: $e');
+      print('❌ Stack trace: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -876,9 +902,14 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
   /// Start Voice Recording
   Future<void> _startRecording() async {
+    print('🎤 Starting recording process...');
+
     // Check microphone permission
     final status = await Permission.microphone.request();
+    print('🎤 Microphone permission status: ${status.isGranted}');
+
     if (!status.isGranted) {
+      print('❌ Microphone permission denied');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Microphone permission denied')),
       );
@@ -886,17 +917,31 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     }
 
     try {
+      // Check if recorder is available
+      final hasPermission = await _audioRecorder.hasPermission();
+      print('🎤 Audio recorder has permission: $hasPermission');
+
+      if (!hasPermission) {
+        print('❌ Audio recorder reports no permission');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Microphone access denied by audio recorder')),
+        );
+        return;
+      }
+
       // Get temporary directory
       final tempDir = await getTemporaryDirectory();
       final fileName = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       final filePath = '${tempDir.path}/$fileName';
+      print('🎤 Recording file path: $filePath');
 
-      // Start recording
+      // Start recording with Android-compatible settings
       await _audioRecorder.start(
         const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
+          encoder: AudioEncoder.aacLc,  // AAC-LC is widely supported
+          bitRate: 128000,               // 128 kbps
+          sampleRate: 44100,             // CD quality
+          numChannels: 1,                // Mono (better for voice)
         ),
         path: filePath,
       );
@@ -906,9 +951,10 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         _recordedFilePath = filePath;
       });
 
-      print('🎤 Recording started: $filePath');
-    } catch (e) {
+      print('✅ Recording started successfully: $filePath');
+    } catch (e, stackTrace) {
       print('❌ Error starting recording: $e');
+      print('❌ Stack trace: $stackTrace');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to start recording: $e')),
       );
@@ -918,14 +964,37 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   /// Stop Voice Recording
   Future<void> _stopRecording() async {
     try {
+      print('🎤 Stopping recording...');
       final path = await _audioRecorder.stop();
-      print('🎤 Recording stopped: $path');
+      print('🎤 Recording stopped, path returned: $path');
+
+      // Verify the file exists and get its size
+      if (path != null && path.isNotEmpty) {
+        final file = File(path);
+        final exists = await file.exists();
+        final size = exists ? await file.length() : 0;
+        print('🎤 File exists: $exists, Size: $size bytes');
+
+        if (size == 0) {
+          print('⚠️ WARNING: Recording file is empty (0 bytes)!');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Recording failed: File is empty. Microphone may not be working.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        print('⚠️ WARNING: No path returned from recorder.stop()');
+      }
 
       setState(() {
         _isRecording = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Error stopping recording: $e');
+      print('❌ Stack trace: $stackTrace');
       setState(() {
         _isRecording = false;
       });
