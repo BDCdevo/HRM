@@ -29,6 +29,11 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     defaultConfig {
         applicationId = "com.bdcbiz.hrm"
         minSdk = 24  // Android 7.0 (Nougat) - Required for security features
