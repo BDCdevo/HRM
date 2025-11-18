@@ -383,6 +383,9 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     }
 
     print('📎 Sending file with type: $type');
+    print('📎 File path: ${file.path}');
+    print('📎 Conversation ID: ${widget.conversationId}');
+    print('📎 Company ID: ${widget.companyId}');
 
     context.read<MessagesCubit>().sendMessage(
           conversationId: widget.conversationId,
@@ -390,6 +393,8 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
           attachment: file,
           attachmentType: type,
         );
+
+    print('📎 sendMessage() called successfully');
   }
 
   /// Start Voice Recording
@@ -476,14 +481,24 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
               duration: Duration(seconds: 4),
             ),
           );
+          setState(() {
+            _isRecording = false;
+          });
+        } else {
+          // File is valid - send it immediately
+          setState(() {
+            _isRecording = false;
+          });
+
+          print('🎤 Sending voice message automatically...');
+          await _sendRecording(path);
         }
       } else {
         print('⚠️ WARNING: No path returned from recorder.stop()');
+        setState(() {
+          _isRecording = false;
+        });
       }
-
-      setState(() {
-        _isRecording = false;
-      });
     } catch (e, stackTrace) {
       print('❌ Error stopping recording: $e');
       print('❌ Stack trace: $stackTrace');
