@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/networking/dio_client.dart';
 import '../../data/repo/chat_repository.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
@@ -294,8 +293,8 @@ class _ChatListView extends StatelessWidget {
 
             // Call to action button
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => EmployeeSelectionScreen(
@@ -304,6 +303,14 @@ class _ChatListView extends StatelessWidget {
                     ),
                   ),
                 );
+
+                // Refresh conversation list when returning from new chat
+                if (context.mounted) {
+                  context.read<ChatCubit>().fetchConversations(
+                    companyId: companyId,
+                    currentUserId: currentUserId,
+                  );
+                }
               },
               icon: const Icon(Icons.chat_bubble_outline),
               label: const Text('Start New Chat'),
@@ -349,8 +356,8 @@ class _ChatListView extends StatelessWidget {
             conversation: conversation,
             currentUserId: currentUserId,
             index: index,
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChatRoomScreen(
@@ -363,6 +370,14 @@ class _ChatListView extends StatelessWidget {
                   ),
                 ),
               );
+
+              // Refresh conversation list when returning
+              if (context.mounted) {
+                context.read<ChatCubit>().fetchConversations(
+                  companyId: companyId,
+                  currentUserId: currentUserId,
+                );
+              }
             },
             onArchive: () {
               _showSnackBar(

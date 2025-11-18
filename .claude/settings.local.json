@@ -60,7 +60,9 @@
       "Bash(php:*)",
       "Bash(gradlew bundleRelease:*)",
       "Bash(.gradlew.bat bundleRelease:*)",
-      "Bash(del nul 2)"
+      "Bash(del nul 2)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\delete_lines.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\find_large_screens.ps1\")"
     ],
     "deny": [],
     "ask": []

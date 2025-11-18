@@ -162,9 +162,7 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
         listener: (context, state) {
           if (state is ConversationCreated) {
             // Navigate to chat room after creating conversation
-            // Use pop then push instead of pushReplacement to avoid overlay issues
-            Navigator.of(context).pop(); // Close employee selection screen
-            Navigator.of(context).push(
+            Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => ChatRoomScreen(
                   conversationId: state.conversationId,

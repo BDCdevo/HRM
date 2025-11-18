@@ -19,9 +19,6 @@ import '../../logic/cubit/messages_cubit.dart';
 import '../../logic/cubit/messages_state.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/voice_recording_widget.dart';
-import '../widgets/chat_app_bar_widget.dart';
-import '../widgets/chat_messages_list_widget.dart';
-import '../widgets/chat_input_bar_widget.dart';
 import 'group_info_screen.dart';
 
 /// Chat Room Screen - WhatsApp Style
@@ -222,13 +219,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
       backgroundColor: isDark
           ? const Color(0xFF0B141A) // WhatsApp dark background
           : const Color(0xFFECE5DD), // WhatsApp light background
-      appBar: ChatAppBarWidget(
-        participantName: widget.participantName,
-        participantAvatar: widget.participantAvatar,
-        isGroupChat: widget.isGroupChat,
-        isDark: isDark,
-        onTap: widget.isGroupChat ? _openGroupInfo : _openEmployeeProfile,
-      ),
+      appBar: _buildAppBar(isDark),
       resizeToAvoidBottomInset: true, // Ensure input field is visible above keyboard
       body: SafeArea(
         bottom: true,
@@ -268,38 +259,555 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
             children: [
               // Messages List
               Expanded(
-                child: ChatMessagesListWidget(
-                  state: state,
-                  scrollController: _scrollController,
-                  isDark: isDark,
-                  conversationId: widget.conversationId,
-                  companyId: widget.companyId,
-                  isGroupChat: widget.isGroupChat,
-                  onRefresh: () => context.read<MessagesCubit>().refreshMessages(
-                    conversationId: widget.conversationId,
-                    companyId: widget.companyId,
-                  ),
-                ),
+                child: _buildMessagesList(state, isDark),
               ),
 
               // Message Input
-              ChatInputBarWidget(
-                messageController: _messageController,
-                isSending: state is MessageSending,
-                isRecording: _isRecording,
-                isDark: isDark,
-                onSendMessage: _sendMessage,
-                onPickImage: _pickImageFromCamera,
-                onPickFile: _pickFile,
-                onStartRecording: _startRecording,
-                onStopRecording: _stopRecording,
-                onSendRecording: _sendRecording,
-                onCancelRecording: _cancelRecording,
-              ),
+              _buildMessageInput(state, isDark),
             ],
           );
         },
         ),
+      ),
+    );
+  }
+
+  /// Build App Bar
+  PreferredSizeWidget _buildAppBar(bool isDark) {
+    return AppBar(
+      backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: AppColors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: InkWell(
+        onTap: widget.isGroupChat ? _openGroupInfo : _openEmployeeProfile,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              // Avatar (Group icon or User initial)
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.white.withOpacity(0.2),
+                ),
+                child: Center(
+                  child: widget.isGroupChat
+                      ? const Icon(
+                          Icons.group,
+                          color: AppColors.white,
+                          size: 20,
+                        )
+                      : Text(
+                          widget.participantName.isNotEmpty
+                              ? widget.participantName[0].toUpperCase()
+                              : '?',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.participantName,
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.isGroupChat
+                          ? 'Tap for group info'
+                          : 'Tap to view profile',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: AppColors.white),
+          onPressed: () {
+            context.read<MessagesCubit>().refreshMessages(
+                  conversationId: widget.conversationId,
+                  companyId: widget.companyId,
+                );
+          },
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: AppColors.white),
+          onSelected: (value) {
+            if (value == 'view_profile') {
+              _openEmployeeProfile();
+            } else if (value == 'group_info') {
+              _openGroupInfo();
+            }
+          },
+          itemBuilder: (context) => widget.isGroupChat
+              ? [
+                  const PopupMenuItem(
+                    value: 'group_info',
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline),
+                        SizedBox(width: 8),
+                        Text('Group info'),
+                      ],
+                    ),
+                  ),
+                ]
+              : [
+                  const PopupMenuItem(
+                    value: 'view_profile',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person),
+                        SizedBox(width: 8),
+                        Text('View profile'),
+                      ],
+                    ),
+                  ),
+                ],
+        ),
+      ],
+    );
+  }
+
+  /// Build Messages List
+  Widget _buildMessagesList(MessagesState state, bool isDark) {
+    if (state is MessagesLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: isDark ? AppColors.darkAccent : AppColors.accent,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading messages...',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state is MessagesError && state.messages == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load messages',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color:
+                      isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                state.message,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.read<MessagesCubit>().fetchMessages(
+                        conversationId: widget.conversationId,
+                        companyId: widget.companyId,
+                      );
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isDark ? AppColors.darkAccent : AppColors.accent,
+                  foregroundColor: AppColors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Get messages from state
+    final messages = state is MessagesLoaded
+        ? state.messages
+        : state is MessageSending
+            ? state.messages
+            : state is MessageSent
+                ? state.messages
+                : state is MessagesRefreshing
+                    ? state.messages
+                    : state is MessagesError
+                        ? (state.messages ?? [])
+                        : [];
+
+    if (messages.isEmpty) {
+      return _buildEmptyState(isDark);
+    }
+
+    // Scroll to bottom after messages load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (state is MessagesLoaded && _scrollController.hasClients) {
+        _scrollToBottom();
+      }
+    });
+
+    return RefreshIndicator(
+      color: isDark ? AppColors.darkAccent : AppColors.accent,
+      onRefresh: () async {
+        await context.read<MessagesCubit>().refreshMessages(
+              conversationId: widget.conversationId,
+              companyId: widget.companyId,
+            );
+      },
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(8),
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final message = messages[index];
+
+          // Check if we need to show date separator
+          bool showDateSeparator = false;
+          if (index == 0) {
+            showDateSeparator = true;
+          } else {
+            final previousMessage = messages[index - 1];
+            showDateSeparator = _shouldShowDateSeparator(
+              previousMessage.createdAt,
+              message.createdAt,
+            );
+          }
+
+          return Column(
+            children: [
+              // Date separator
+              if (showDateSeparator)
+                _buildDateSeparator(message.createdAt, isDark),
+
+              // Message bubble
+              Builder(
+                builder: (context) {
+                  // Use is_mine from Backend instead of comparing IDs
+                  final isMine = message.isMine;
+                  // Debug logging
+                  if (index == 0) {
+                    print('🔍 Message Debug:');
+                    print('  message.isMine: ${message.isMine}');
+                    print('  message.senderId: ${message.senderId}');
+                    print('  widget.currentUserId: ${widget.currentUserId}');
+                    print('  isSentByMe: $isMine');
+                  }
+                  return MessageBubble(
+                    message: message,
+                    isSentByMe: isMine,
+                    isGroupChat: widget.isGroupChat,
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Build Empty State
+  Widget _buildEmptyState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline,
+            size: 80,
+            color:
+                (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary)
+                    .withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No messages yet',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Send a message to start the conversation',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color:
+                  (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary)
+                      .withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Message Input
+  Widget _buildMessageInput(MessagesState state, bool isDark) {
+    final isSending = state is MessageSending;
+    final hasText = _messageController.text.isNotEmpty;
+
+    // Show recording widget if recording
+    if (_isRecording) {
+      return VoiceRecordingWidget(
+        onRecordingComplete: () async {
+          print('🎤 Send button pressed - stopping recording...');
+
+          // Stop recording and get the path
+          final path = await _audioRecorder.stop();
+
+          print('🎤 Recording stopped, path: $path');
+
+          if (path != null && path.isNotEmpty) {
+            print('🎤 Path is valid, sending recording...');
+            await _sendRecording(path);
+          } else {
+            print('❌ Path is null or empty!');
+            // Try using the stored path
+            if (_recordedFilePath != null) {
+              print('🎤 Using stored path: $_recordedFilePath');
+              await _sendRecording(_recordedFilePath!);
+            }
+          }
+        },
+        onSendRecording: (path) async {
+          await _sendRecording(path);
+        },
+        onCancel: _cancelRecording,
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.15 : 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Text field with emoji, attachment, and camera icons inside
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkInput : AppColors.background,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Emoji button (inside TextField)
+                  IconButton(
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      Icons.emoji_emotions_outlined,
+                      color: isDark
+                          ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                          : const Color(0xFF54656F),  // WhatsApp gray
+                      size: 26,
+                    ),
+                    onPressed: isSending ? null : () {
+                      // TODO: Show emoji picker
+                    },
+                  ),
+
+                  const SizedBox(width: 4),
+
+                  // Text input
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      enabled: !isSending,
+                      style: TextStyle(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Message',
+                        hintStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.darkTextSecondary.withOpacity(0.6)
+                              : AppColors.textSecondary.withOpacity(0.6),
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 4,
+                        ),
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (value) {
+                        setState(() {
+                          // Rebuild to show/hide mic/send buttons
+                        });
+                      },
+                    ),
+                  ),
+
+                  // Show attachment and camera only when no text
+                  if (!hasText) ...[
+                    // Attachment button
+                    IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                      icon: Transform.rotate(
+                        angle: -0.785398, // -45 degrees in radians
+                        child: Icon(
+                          Icons.attach_file,
+                          color: isDark
+                              ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                              : const Color(0xFF54656F),  // WhatsApp gray
+                          size: 24,
+                        ),
+                      ),
+                      onPressed: isSending ? null : _pickFile,
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    // Camera button (using WhatsApp icon)
+                    IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                      icon: SvgPicture.asset(
+                        'assets/whatsapp_icons/Camera.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          isDark
+                              ? const Color(0xFF8696A0)  // WhatsApp dark gray
+                              : const Color(0xFF54656F),  // WhatsApp gray
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      onPressed: isSending ? null : _pickImageFromCamera,
+                    ),
+
+                    const SizedBox(width: 4),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Microphone button (when no text) or Send button (when has text)
+          if (!hasText)
+            // Microphone button - Large circular green button
+            GestureDetector(
+              onTap: isSending ? null : _startRecording,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF25D366), // WhatsApp green
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/whatsapp_icons/mic.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            // Send button
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: Color(0xFF25D366), // WhatsApp green
+                shape: BoxShape.circle,
+              ),
+              child: isSending
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.send, color: AppColors.white, size: 22),
+                      onPressed: _sendMessage,
+                    ),
+            ),
+        ],
       ),
     );
   }
