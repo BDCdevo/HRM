@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../data/repo/attendance_repo.dart';
 import '../../../../core/services/location_service.dart';
 import 'attendance_state.dart';
+import '../../../../core/constants/error_messages.dart';
 
 /// Attendance Cubit
 ///
@@ -39,9 +40,7 @@ class AttendanceCubit extends Cubit<AttendanceState> {
       _handleDioException(e);
     } catch (e) {
       print('❌ Cubit: Exception in fetchTodayStatus - $e');
-      emit(AttendanceError(
-        message: 'An unexpected error occurred: ${e.toString()}',
-      ));
+      emit(const AttendanceError(message: ErrorMessages.unexpectedError));
     }
   }
 
@@ -90,9 +89,7 @@ class AttendanceCubit extends Cubit<AttendanceState> {
       _handleDioException(e);
     } catch (e) {
       print('❌ Cubit - Unexpected error: $e');
-      emit(AttendanceError(
-        message: 'An unexpected error occurred: ${e.toString()}',
-      ));
+      emit(const AttendanceError(message: ErrorMessages.checkInFailed));
     }
   }
 
@@ -115,9 +112,7 @@ class AttendanceCubit extends Cubit<AttendanceState> {
     } on DioException catch (e) {
       _handleDioException(e);
     } catch (e) {
-      emit(AttendanceError(
-        message: 'An unexpected error occurred: ${e.toString()}',
-      ));
+      emit(const AttendanceError(message: ErrorMessages.checkOutFailed));
     }
   }
 
@@ -139,54 +134,62 @@ class AttendanceCubit extends Cubit<AttendanceState> {
     } on DioException catch (e) {
       _handleDioException(e);
     } catch (e) {
-      emit(AttendanceError(
-        message: 'An unexpected error occurred: ${e.toString()}',
-      ));
+      emit(const AttendanceError(message: ErrorMessages.unexpectedError));
     }
   }
 
-  /// Handle Dio Exception
+  /// Handle Dio Exception with user-friendly error messages
   void _handleDioException(DioException e) {
     if (e.response != null) {
       // Server responded with error
       final statusCode = e.response?.statusCode;
       final data = e.response?.data;
-      String errorMessage = data?['message'] ?? 'Operation failed';
+      String errorMessage = data?['message'] ?? ErrorMessages.operationFailed;
 
-      // Special handling for geofencing errors (distance info)
-      if (statusCode == 400 && data?['errors'] != null) {
-        final errors = data['errors'];
-        final distanceMeters = errors['distance_meters'];
-        final allowedRadius = errors['allowed_radius'];
+      // Parse API message and provide localized errors
+      String apiMessage = errorMessage.toLowerCase();
 
-        if (distanceMeters != null && allowedRadius != null) {
-          // Enhanced error message with distance info
-          errorMessage = 'أنت بعيد عن موقع الفرع\n'
-              'المسافة الحالية: ${distanceMeters}م\n'
-              'المسافة المسموحة: ${allowedRadius}م\n'
-              'يرجى الاقتراب من الفرع للتسجيل';
+      if (apiMessage.contains('no branch') || apiMessage.contains('branch not assigned')) {
+        errorMessage = ErrorMessages.noBranchAssigned;
+      } else if (apiMessage.contains('outside') || apiMessage.contains('distance') || apiMessage.contains('geofence')) {
+        // Special handling for geofencing errors (distance info)
+        if (statusCode == 400 && data?['errors'] != null) {
+          final errors = data['errors'];
+          final distanceMeters = errors['distance_meters'];
+          final allowedRadius = errors['allowed_radius'];
+
+          if (distanceMeters != null && allowedRadius != null) {
+            // Enhanced error message with distance info
+            errorMessage = 'أنت بعيد عن موقع الفرع\n'
+                'المسافة الحالية: ${distanceMeters}م\n'
+                'المسافة المسموحة: ${allowedRadius}م\n'
+                'يرجى الاقتراب من الفرع للتسجيل';
+          } else {
+            errorMessage = ErrorMessages.outsideBranchArea;
+          }
+        } else {
+          errorMessage = ErrorMessages.outsideBranchArea;
         }
+      } else if (apiMessage.contains('already') && apiMessage.contains('checked in')) {
+        errorMessage = ErrorMessages.alreadyCheckedIn;
+      } else if (apiMessage.contains('no active session') || apiMessage.contains('not checked in')) {
+        errorMessage = ErrorMessages.noActiveSession;
+      } else if (apiMessage.contains('location') && apiMessage.contains('permission')) {
+        errorMessage = ErrorMessages.locationPermissionDenied;
       }
 
       emit(AttendanceError(
-        message: '[$statusCode] $errorMessage',
+        message: errorMessage,
         errorDetails: data?.toString(),
       ));
     } else if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
-      // Timeout error
-      emit(const AttendanceError(
-        message: 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
-      ));
-    } else if (e.type == DioExceptionType.unknown) {
-      // Network error (no internet connection)
-      emit(const AttendanceError(
-        message: 'خطأ في الشبكة. يرجى التحقق من اتصال الإنترنت.',
-      ));
+      emit(const AttendanceError(message: ErrorMessages.connectionTimeout));
+    } else if (e.type == DioExceptionType.connectionError) {
+      emit(const AttendanceError(message: ErrorMessages.noInternetConnection));
     } else {
-      // Other Dio errors
       emit(AttendanceError(
-        message: e.message ?? 'حدث خطأ غير متوقع',
+        message: ErrorMessages.getDioErrorMessage(e.message),
       ));
     }
   }

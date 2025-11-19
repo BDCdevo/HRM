@@ -206,8 +206,9 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
+      // With reverse: true, position 0 is the bottom (latest messages)
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );

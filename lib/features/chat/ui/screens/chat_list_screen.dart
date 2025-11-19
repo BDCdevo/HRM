@@ -426,8 +426,8 @@ class _ChatListView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return FloatingActionButton(
-      onPressed: () {
-        Navigator.push(
+      onPressed: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => EmployeeSelectionScreen(
@@ -436,6 +436,14 @@ class _ChatListView extends StatelessWidget {
             ),
           ),
         );
+
+        // Refresh conversation list when returning from new chat
+        if (context.mounted) {
+          context.read<ChatCubit>().fetchConversations(
+            companyId: companyId,
+            currentUserId: currentUserId,
+          );
+        }
       },
       backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
       child: const Icon(Icons.chat, color: AppColors.white),

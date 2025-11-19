@@ -5,7 +5,7 @@ import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/logic/cubit/auth_state.dart';
-import '../../../auth/ui/screens/user_type_selection_screen.dart';
+import '../../../auth/ui/screens/login_screen.dart';
 
 /// More Main Screen
 ///
@@ -298,7 +298,7 @@ class MoreMainScreen extends StatelessWidget {
               // Navigate to login
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => const UserTypeSelectionScreen(),
+                  builder: (context) => const LoginScreen(),
                 ),
                 (route) => false,
               );

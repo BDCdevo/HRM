@@ -49,7 +49,7 @@ class ChatMessagesListWidget extends StatelessWidget {
       return _buildEmptyState();
     }
 
-    // Messages list
+    // Messages list (reversed to show latest at bottom like WhatsApp)
     return RefreshIndicator(
       color: isDark ? AppColors.darkAccent : AppColors.accent,
       onRefresh: () async {
@@ -60,34 +60,38 @@ class ChatMessagesListWidget extends StatelessWidget {
       child: ListView.builder(
         controller: scrollController,
         padding: const EdgeInsets.all(8),
+        reverse: true, // Start from bottom (latest messages)
         itemCount: messages.length,
         itemBuilder: (context, index) {
-          final message = messages[index];
+          // Reverse the index to show newest at bottom
+          final reversedIndex = messages.length - 1 - index;
+          final message = messages[reversedIndex];
 
           // Check if we need to show date separator
           bool showDateSeparator = false;
-          if (index == 0) {
+          if (reversedIndex == messages.length - 1) {
+            // First message (oldest)
             showDateSeparator = true;
           } else {
-            final previousMessage = messages[index - 1];
+            final nextMessage = messages[reversedIndex + 1];
             showDateSeparator = _shouldShowDateSeparator(
-              previousMessage.createdAt,
+              nextMessage.createdAt,
               message.createdAt,
             );
           }
 
           return Column(
             children: [
-              // Date separator
-              if (showDateSeparator)
-                _buildDateSeparator(message.createdAt),
-
               // Message bubble
               MessageBubble(
                 message: message,
                 isSentByMe: message.isMine,
                 isGroupChat: isGroupChat,
               ),
+
+              // Date separator (shown after message in reversed list)
+              if (showDateSeparator)
+                _buildDateSeparator(message.createdAt),
             ],
           );
         },

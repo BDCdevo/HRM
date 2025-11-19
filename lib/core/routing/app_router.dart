@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../features/auth/ui/screens/user_type_selection_screen.dart';
 import '../../features/auth/ui/screens/login_screen.dart';
 import '../../features/auth/ui/screens/admin_login_screen.dart';
 import '../../features/auth/ui/screens/register_screen.dart';
@@ -26,7 +25,6 @@ import 'route_transitions.dart';
 class AppRouter {
   // Route Names
   static const String splash = '/';
-  static const String userTypeSelection = '/user-type-selection';
   static const String login = '/login';
   static const String adminLogin = '/admin-login';
   static const String register = '/register';
@@ -52,18 +50,11 @@ class AppRouter {
     switch (settings.name) {
       // Auth Routes
       case splash:
-      case userTypeSelection:
-        return _buildRoute(
-          const UserTypeSelectionScreen(),
-          settings: settings,
-          transition: RouteTransitionType.fade,
-        );
-
       case login:
         return _buildRoute(
           const LoginScreen(),
           settings: settings,
-          transition: RouteTransitionType.slideFromRight,
+          transition: RouteTransitionType.fade,
         );
 
       case adminLogin:

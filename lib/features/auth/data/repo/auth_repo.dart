@@ -43,13 +43,14 @@ class AuthRepo {
       // Parse response
       final loginResponse = LoginResponseModel.fromJson(response.data);
 
-      // Save token to secure storage
+      // Save token and user data to secure storage
       if (loginResponse.data.hasToken) {
         await _storage.write(
           key: 'auth_token',
           value: loginResponse.data.accessToken,
         );
-        print('🔐 Token saved successfully');
+        await saveUserData(loginResponse.data);
+        print('🔐 Token and user data saved successfully');
       }
 
       return loginResponse;
@@ -92,13 +93,14 @@ class AuthRepo {
       // Parse response
       final loginResponse = LoginResponseModel.fromJson(response.data);
 
-      // Save token to secure storage
+      // Save token and user data to secure storage
       if (loginResponse.data.hasToken) {
         await _storage.write(
           key: 'auth_token',
           value: loginResponse.data.accessToken,
         );
-        print('🔐 Token saved successfully');
+        await saveUserData(loginResponse.data);
+        print('🔐 Token and user data saved successfully');
         print('👤 User Type: ${loginResponse.data.userType}');
         print('🎭 Roles: ${loginResponse.data.roles}');
         print('🔐 Permissions: ${loginResponse.data.permissions}');
@@ -143,13 +145,14 @@ class AuthRepo {
       // Parse response
       final loginResponse = LoginResponseModel.fromJson(response.data);
 
-      // Save token to secure storage
+      // Save token and user data to secure storage
       if (loginResponse.data.hasToken) {
         await _storage.write(
           key: 'auth_token',
           value: loginResponse.data.accessToken,
         );
-        print('🔐 Admin token saved successfully');
+        await saveUserData(loginResponse.data);
+        print('🔐 Admin token and user data saved successfully');
       }
 
       return loginResponse;
@@ -198,13 +201,14 @@ class AuthRepo {
       // Parse response
       final registerResponse = LoginResponseModel.fromJson(response.data);
 
-      // Save token to secure storage
+      // Save token and user data to secure storage
       if (registerResponse.data.hasToken) {
         await _storage.write(
           key: 'auth_token',
           value: registerResponse.data.accessToken,
         );
-        print('🔐 Token saved successfully after registration');
+        await saveUserData(registerResponse.data);
+        print('🔐 Token and user data saved successfully after registration');
       }
 
       return registerResponse;
@@ -345,6 +349,84 @@ class AuthRepo {
     return token != null && token.isNotEmpty;
   }
 
+  /// Save User Data
+  ///
+  /// Saves user data to secure storage for session persistence
+  /// Stores user ID, email, name, and company ID
+  Future<void> saveUserData(UserModel user) async {
+    try {
+      await _storage.write(key: 'user_id', value: user.id.toString());
+      await _storage.write(key: 'user_email', value: user.email);
+      await _storage.write(key: 'user_first_name', value: user.firstName);
+      await _storage.write(key: 'user_last_name', value: user.lastName);
+      if (user.phone != null) {
+        await _storage.write(key: 'user_phone', value: user.phone!);
+      }
+      if (user.companyId != null) {
+        await _storage.write(key: 'user_company_id', value: user.companyId.toString());
+      }
+      if (user.roles != null && user.roles!.isNotEmpty) {
+        await _storage.write(key: 'user_roles', value: user.roles!.join(','));
+      }
+      print('💾 User data saved successfully');
+    } catch (e) {
+      print('❌ Error saving user data: $e');
+    }
+  }
+
+  /// Get Stored User Data
+  ///
+  /// Retrieves stored user data from secure storage
+  /// Returns UserModel if data exists, null otherwise
+  Future<UserModel?> getStoredUserData() async {
+    try {
+      final userId = await _storage.read(key: 'user_id');
+      final email = await _storage.read(key: 'user_email');
+      final firstName = await _storage.read(key: 'user_first_name');
+      final lastName = await _storage.read(key: 'user_last_name');
+
+      if (userId == null || email == null || firstName == null || lastName == null) {
+        return null;
+      }
+
+      final phone = await _storage.read(key: 'user_phone');
+      final companyIdStr = await _storage.read(key: 'user_company_id');
+      final rolesStr = await _storage.read(key: 'user_roles');
+
+      return UserModel(
+        id: int.parse(userId),
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        companyId: companyIdStr != null ? int.tryParse(companyIdStr) : null,
+        roles: rolesStr != null ? rolesStr.split(',') : [],
+      );
+    } catch (e) {
+      print('❌ Error reading stored user data: $e');
+      return null;
+    }
+  }
+
+  /// Get Current User Profile
+  ///
+  /// Fetches the authenticated user's profile from the API
+  /// Returns UserModel on success
+  /// Throws DioException on failure
+  Future<UserModel> getProfile() async {
+    try {
+      final response = await _dioClient.get('/profile');
+
+      print('✅ Get Profile Response Status: ${response.statusCode}');
+
+      // Parse user from response
+      return UserModel.fromJson(response.data['data']);
+    } on DioException catch (e) {
+      print('❌ Get Profile Error: ${e.message}');
+      rethrow;
+    }
+  }
+
   /// Clear All Auth Data
   ///
   /// Clears all authentication data from storage
@@ -352,6 +434,13 @@ class AuthRepo {
   Future<void> clearAuthData() async {
     try {
       await _storage.delete(key: 'auth_token');
+      await _storage.delete(key: 'user_id');
+      await _storage.delete(key: 'user_email');
+      await _storage.delete(key: 'user_first_name');
+      await _storage.delete(key: 'user_last_name');
+      await _storage.delete(key: 'user_phone');
+      await _storage.delete(key: 'user_company_id');
+      await _storage.delete(key: 'user_roles');
       print('🔓 All auth data cleared');
     } catch (e) {
       print('❌ Error clearing auth data: $e');

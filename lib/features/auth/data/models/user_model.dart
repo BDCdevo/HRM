@@ -25,6 +25,7 @@ class UserModel extends Equatable {
   final UserType userType;
   final List<String>? roles;
   final List<String>? permissions;
+  final int? companyId; // Company ID for multi-tenancy
 
   const UserModel({
     required this.id,
@@ -37,6 +38,7 @@ class UserModel extends Equatable {
     this.userType = UserType.employee,
     this.roles,
     this.permissions,
+    this.companyId,
   });
 
   /// Full name getter
@@ -144,6 +146,7 @@ class UserModel extends Equatable {
               .map((e) => e.toString().toLowerCase())
               .toList()
           : [], // Default to empty list instead of null
+      companyId: json['company_id'] as int?,
     );
   }
 
@@ -160,6 +163,7 @@ class UserModel extends Equatable {
       'user_type': 'employee', // All users are employees now
       'roles': roles,
       'permissions': permissions,
+      'company_id': companyId,
     };
   }
 
@@ -175,6 +179,7 @@ class UserModel extends Equatable {
     UserType? userType,
     List<String>? roles,
     List<String>? permissions,
+    int? companyId,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -187,6 +192,7 @@ class UserModel extends Equatable {
       userType: userType ?? this.userType,
       roles: roles ?? this.roles,
       permissions: permissions ?? this.permissions,
+      companyId: companyId ?? this.companyId,
     );
   }
 
@@ -202,6 +208,7 @@ class UserModel extends Equatable {
         userType,
         roles,
         permissions,
+        companyId,
       ];
 }
 

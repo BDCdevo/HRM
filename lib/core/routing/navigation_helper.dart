@@ -90,11 +90,11 @@ class NavigationHelper {
     );
   }
 
-  /// Logout and Go to User Type Selection
+  /// Logout and Go to Login Screen
   static Future<void> logout(BuildContext context) {
     return AppRouter.navigateAndRemoveUntil(
       context,
-      AppRouter.userTypeSelection,
+      AppRouter.login,
     );
   }
 

@@ -8,6 +8,7 @@ import 'features/auth/logic/cubit/auth_state.dart';
 import 'core/routing/app_router.dart';
 import 'core/navigation/main_navigation_screen.dart';
 import 'features/auth/ui/screens/login_screen.dart';
+import 'core/widgets/app_loading_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +16,26 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  /// Build Home Screen based on Auth State
+  ///
+  /// Shows splash while checking, then navigates to appropriate screen
+  Widget _buildHomeScreen(AuthState authState) {
+    if (authState is AuthInitial) {
+      // Show splash/loading while checking auth status
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    } else if (authState is AuthAuthenticated) {
+      // User is logged in, go to main app
+      return const MainNavigationScreen();
+    } else {
+      // User is not logged in, show login screen
+      return const LoginScreen();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,18 +59,11 @@ class MyApp extends StatelessWidget {
                 darkTheme: AppTheme.darkTheme,
                 themeMode: themeState.themeMode,
 
-                // Initial Route based on Authentication Status
-                initialRoute: authState is AuthAuthenticated
-                    ? AppRouter.mainNavigation
-                    : AppRouter.login,
-
                 // Route Generator
                 onGenerateRoute: AppRouter.onGenerateRoute,
 
-                // Home Screen (fallback)
-                home: authState is AuthAuthenticated
-                    ? const MainNavigationScreen()
-                    : const LoginScreen(),
+                // Home Screen based on Authentication Status
+                home: _buildHomeScreen(authState),
               );
             },
           );

@@ -62,7 +62,11 @@
       "Bash(.gradlew.bat bundleRelease:*)",
       "Bash(del nul 2)",
       "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\delete_lines.ps1\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\find_large_screens.ps1\")"
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\find_large_screens.ps1\")",
+      "WebFetch(domain:erp1.bdcbiz.com)",
+      "Bash(nc:*)",
+      "Bash(gradlew.bat --stop:*)",
+      "Bash(del \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\features\\auth\\ui\\screens\\user_type_selection_screen.dart\")"
     ],
     "deny": [],
     "ask": []
