@@ -89,6 +89,7 @@ class _ChatRoomView extends StatefulWidget {
 
 class _ChatRoomViewState extends State<_ChatRoomView> {
   final TextEditingController _messageController = TextEditingController();
+  final FocusNode _messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
   final WebSocketService _websocket = WebSocketService.instance;
@@ -200,6 +201,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     _websocket.unsubscribe(channelName);
 
     _messageController.dispose();
+    _messageFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -286,6 +288,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
               // Message Input
               ChatInputBarWidget(
                 messageController: _messageController,
+                messageFocusNode: _messageFocusNode,
                 isSending: state is MessageSending,
                 isRecording: _isRecording,
                 isDark: isDark,
@@ -310,11 +313,20 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
+    // Clear text immediately for better UX
+    _messageController.clear();
+
     context.read<MessagesCubit>().sendMessage(
           conversationId: widget.conversationId,
           companyId: widget.companyId,
           message: message,
         );
+
+    // Keep keyboard open by requesting focus
+    _messageFocusNode.requestFocus();
+
+    // Scroll to bottom after sending
+    _scrollToBottom();
   }
 
   /// Pick Image from Camera

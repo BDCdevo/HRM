@@ -46,25 +46,24 @@ class _LateReasonBottomSheetState extends State<LateReasonBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Handle bar
             Center(
               child: Container(
@@ -176,6 +175,7 @@ class _LateReasonBottomSheetState extends State<LateReasonBottomSheet> {
               ],
             ),
           ],
+          ),
         ),
       ),
     );
@@ -190,15 +190,12 @@ Future<String?> showLateReasonBottomSheet(BuildContext context) async {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: LateReasonBottomSheet(
-        onReasonSubmitted: (selectedReason) {
-          reason = selectedReason;
-        },
-      ),
+    isDismissible: true,
+    enableDrag: true,
+    builder: (context) => LateReasonBottomSheet(
+      onReasonSubmitted: (selectedReason) {
+        reason = selectedReason;
+      },
     ),
   );
 

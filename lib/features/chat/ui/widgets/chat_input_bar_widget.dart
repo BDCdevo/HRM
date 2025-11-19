@@ -8,6 +8,7 @@ import 'voice_recording_widget.dart';
 /// Handles message input, attachments, voice recording
 class ChatInputBarWidget extends StatelessWidget {
   final TextEditingController messageController;
+  final FocusNode? messageFocusNode;
   final bool isSending;
   final bool isRecording;
   final bool isDark;
@@ -22,6 +23,7 @@ class ChatInputBarWidget extends StatelessWidget {
   const ChatInputBarWidget({
     super.key,
     required this.messageController,
+    this.messageFocusNode,
     this.isSending = false,
     this.isRecording = false,
     required this.isDark,
@@ -111,6 +113,7 @@ class ChatInputBarWidget extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: messageController,
+              focusNode: messageFocusNode,
               enabled: !isSending,
               style: TextStyle(
                 color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
@@ -124,7 +127,15 @@ class ChatInputBarWidget extends StatelessWidget {
                       : AppColors.textSecondary.withOpacity(0.6),
                   fontSize: 16,
                 ),
-                border: InputBorder.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 10,
                   horizontal: 4,
