@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
@@ -8,7 +9,7 @@ import 'message_bubble.dart';
 
 /// Chat Messages List Widget
 ///
-/// Displays the list of messages with loading, error, and empty states
+/// Displays the list of messages with sticky date headers
 class ChatMessagesListWidget extends StatelessWidget {
   final MessagesState state;
   final ScrollController scrollController;
@@ -49,54 +50,116 @@ class ChatMessagesListWidget extends StatelessWidget {
       return _buildEmptyState();
     }
 
-    // Messages list (reversed to show latest at bottom like WhatsApp)
+    // Group messages by date
+    final groupedMessages = _groupMessagesByDate(messages);
+
+    // Messages list with sticky headers
     return RefreshIndicator(
       color: isDark ? AppColors.darkAccent : AppColors.accent,
       onRefresh: () async {
         onRefresh();
-        // Wait a bit for refresh to complete
         await Future.delayed(const Duration(milliseconds: 500));
       },
-      child: ListView.builder(
+      child: CustomScrollView(
         controller: scrollController,
-        padding: const EdgeInsets.all(8),
         reverse: true, // Start from bottom (latest messages)
-        itemCount: messages.length,
-        itemBuilder: (context, index) {
-          // Reverse the index to show newest at bottom
-          final reversedIndex = messages.length - 1 - index;
-          final message = messages[reversedIndex];
-
-          // Check if we need to show date separator
-          bool showDateSeparator = false;
-          if (reversedIndex == messages.length - 1) {
-            // First message (oldest)
-            showDateSeparator = true;
-          } else {
-            final nextMessage = messages[reversedIndex + 1];
-            showDateSeparator = _shouldShowDateSeparator(
-              nextMessage.createdAt,
-              message.createdAt,
-            );
-          }
-
-          return Column(
-            children: [
-              // Message bubble
-              MessageBubble(
-                message: message,
-                isSentByMe: message.isMine,
-                isGroupChat: isGroupChat,
-              ),
-
-              // Date separator (shown after message in reversed list)
-              if (showDateSeparator)
-                _buildDateSeparator(message.createdAt),
-            ],
-          );
-        },
+        slivers: _buildSlivers(groupedMessages),
       ),
     );
+  }
+
+  /// Build slivers for CustomScrollView
+  List<Widget> _buildSlivers(Map<String, List<MessageModel>> groupedMessages) {
+    final slivers = <Widget>[];
+
+    // Get dates in reverse order (newest first because of reverse: true)
+    final dates = groupedMessages.keys.toList().reversed.toList();
+
+    for (final date in dates) {
+      final messagesForDate = groupedMessages[date]!;
+
+      // Reverse messages within each date group so they appear oldest to newest
+      final reversedMessages = messagesForDate.reversed.toList();
+
+      // Messages for this date (added FIRST)
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final message = reversedMessages[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: MessageBubble(
+                  message: message,
+                  isSentByMe: message.isMine,
+                  isGroupChat: isGroupChat,
+                ),
+              );
+            },
+            childCount: reversedMessages.length,
+          ),
+        ),
+      );
+
+      // Sticky Header for date (added AFTER messages)
+      // Because of reverse: true, this will appear ABOVE the messages
+      slivers.add(
+        SliverPersistentHeader(
+          pinned: true, // Makes it sticky!
+          delegate: _DateHeaderDelegate(
+            date: date,
+            isDark: isDark,
+          ),
+        ),
+      );
+    }
+
+    // Add padding at the top (will be at bottom due to reverse)
+    slivers.add(
+      const SliverToBoxAdapter(
+        child: SizedBox(height: 8),
+      ),
+    );
+
+    return slivers;
+  }
+
+  /// Group messages by date
+  /// Returns LinkedHashMap to preserve insertion order
+  Map<String, List<MessageModel>> _groupMessagesByDate(List<MessageModel> messages) {
+    final Map<String, List<MessageModel>> grouped = <String, List<MessageModel>>{};
+
+    // Process messages in order (oldest to newest)
+    for (final message in messages) {
+      final dateKey = _getDateKey(message.createdAt);
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(message);
+    }
+
+    return grouped;
+  }
+
+  /// Get date key for grouping
+  String _getDateKey(String dateTimeString) {
+    try {
+      final messageDate = DateTime.parse(dateTimeString).toLocal();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final messageDateOnly = DateTime(messageDate.year, messageDate.month, messageDate.day);
+
+      if (messageDateOnly == today) {
+        return 'Today';
+      } else if (messageDateOnly == yesterday) {
+        return 'Yesterday';
+      } else {
+        return DateFormat('MMM dd, yyyy').format(messageDate);
+      }
+    } catch (e) {
+      return 'Unknown';
+    }
   }
 
   /// Get messages from state
@@ -225,63 +288,87 @@ class ChatMessagesListWidget extends StatelessWidget {
       ),
     );
   }
+}
 
-  /// Build Date Separator
-  Widget _buildDateSeparator(String dateTimeString) {
-    try {
-      final messageDate = DateTime.parse(dateTimeString);
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final yesterday = today.subtract(const Duration(days: 1));
-      final messageDateOnly =
-          DateTime(messageDate.year, messageDate.month, messageDate.day);
+/// Sticky Date Header Delegate
+class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String date;
+  final bool isDark;
 
-      String dateText;
-      if (messageDateOnly == today) {
-        dateText = 'Today';
-      } else if (messageDateOnly == yesterday) {
-        dateText = 'Yesterday';
-      } else {
-        dateText = DateFormat('MMM dd, yyyy').format(messageDate);
-      }
+  _DateHeaderDelegate({
+    required this.date,
+    required this.isDark,
+  });
 
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 16),
+  @override
+  double get minExtent => 44.0; // Minimum height when scrolled
+
+  @override
+  double get maxExtent => 44.0; // Maximum height
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+            ? [
+                const Color(0xFF0B141A).withOpacity(0.95),
+                const Color(0xFF0B141A).withOpacity(0.90),
+              ]
+            : [
+                const Color(0xFFECE5DD).withOpacity(0.95),
+                const Color(0xFFECE5DD).withOpacity(0.90),
+              ],
+        ),
+        boxShadow: overlapsContent ? [
+          BoxShadow(
+            color: isDark
+              ? Colors.black.withOpacity(0.3)
+              : Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ] : [],
+      ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: isDark
               ? const Color(0xFF1F2C34)
               : const Color(0xFFE1F5FE),
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
-          dateText,
+          date,
           style: AppTextStyles.bodySmall.copyWith(
             color: isDark
                 ? AppColors.darkTextSecondary
                 : AppColors.textSecondary,
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
           ),
         ),
-      );
-    } catch (e) {
-      return const SizedBox.shrink();
-    }
+      ),
+    );
   }
 
-  /// Check if we should show date separator
-  bool _shouldShowDateSeparator(String previousDateTime, String currentDateTime) {
-    try {
-      final previous = DateTime.parse(previousDateTime);
-      final current = DateTime.parse(currentDateTime);
-
-      final previousDate = DateTime(previous.year, previous.month, previous.day);
-      final currentDate = DateTime(current.year, current.month, current.day);
-
-      return previousDate != currentDate;
-    } catch (e) {
-      return false;
-    }
+  @override
+  bool shouldRebuild(_DateHeaderDelegate oldDelegate) {
+    return date != oldDelegate.date || isDark != oldDelegate.isDark;
   }
 }

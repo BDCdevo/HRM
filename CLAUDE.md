@@ -146,7 +146,14 @@ flutter pub get
 flutter build apk --release --obfuscate --split-debug-info=build/debug_info
 flutter build appbundle --release --obfuscate --split-debug-info=build/debug_info
 flutter build windows
+
+# Version management (update pubspec.yaml)
+# Current version: 1.1.0+9
+# Format: MAJOR.MINOR.PATCH+BUILD_NUMBER
+# Example: version: 1.2.0+7
 ```
+
+**Version Info**: Current app version is `1.1.0+9` (defined in `pubspec.yaml` line 19). Increment build number for each release.
 
 ### Backend (Laravel)
 
@@ -305,8 +312,64 @@ Full theme guide: `lib/core/styles/THEME_GUIDE.md`
    - Use core widgets: `CustomButton`, `CustomTextField`
    - Follow `AppColors.*` and `AppTextStyles.*`
    - Add route to `AppRouter` if creating new screen
+   - Support dark mode using `AppColorsExtension`
 7. **Test**: Unit tests for cubits/repos, widget tests for complex UI
 8. **Document**: Update API_DOCUMENTATION.md if adding new endpoints
+
+### Common Development Patterns
+
+**Loading States**:
+```dart
+// Use AppLoadingScreen for full-screen loading
+if (state is Loading) {
+  return AppLoadingScreen(
+    animationType: LoadingAnimationType.spinner,
+    message: 'Loading data...',
+  );
+}
+
+// Use CircularProgressIndicator for inline loading
+if (isLoading) return const Center(child: CircularProgressIndicator());
+```
+
+**Error Handling**:
+```dart
+// Show error with SnackBar
+if (state.error != null) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(state.error!),
+      backgroundColor: AppColors.error,
+    ),
+  );
+}
+```
+
+**Date Formatting**:
+```dart
+import 'package:intl/intl.dart';
+
+// Format date
+final formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+// Format time
+final formattedTime = DateFormat('HH:mm').format(DateTime.now());
+
+// Relative time
+import 'package:timeago/timeago.dart' as timeago;
+final relativeTime = timeago.format(dateTime);
+```
+
+**Accessing Auth User**:
+```dart
+// Get current user from AuthCubit
+final authState = context.read<AuthCubit>().state;
+if (authState is AuthAuthenticated) {
+  final user = authState.user;
+  print('User ID: ${user.id}');
+  print('User Email: ${user.email}');
+}
+```
 
 ## Important Architectural Patterns
 
@@ -467,6 +530,19 @@ Use `BlocConsumer` when you need both listening and building from the same cubit
 - **timeago**: Relative time formatting
 - **shared_preferences**: Local key-value storage
 
+**Animations**:
+- **lottie**: Lottie JSON animations for loading screens
+- **flutter_svg**: SVG support for vector graphics
+
+**Audio & Files**:
+- **record**: Audio recording for voice messages
+- **audioplayers**: Audio playback
+- **file_picker**: File selection for attachments
+- **path_provider**: File system paths
+
+**Real-time Communication**:
+- **pusher_channels_flutter**: WebSocket for real-time chat (Laravel Reverb)
+
 ## Testing
 
 ```bash
@@ -569,6 +645,38 @@ The app uses `MainNavigationScreen` as the main container with 4 tabs:
 - Each tab maintains its own navigation stack
 - Company ID is currently hardcoded to `6` (BDC) in `MainNavigationScreen` - TODO: Add to UserModel
 
+## Assets & Resources
+
+### Asset Directories
+
+```
+assets/
+├── images/logo/           # Company logos (BDC logo, etc.)
+├── svgs/                  # SVG icons and illustrations
+├── whatsapp_icons/        # WhatsApp-style chat icons
+└── animations/            # Lottie JSON animations
+    └── loding.json       # Note: Typo in filename (should be "loading.json")
+```
+
+**Important**: The loading animation file is currently named `loding.json` (typo). The app handles this gracefully with fallback.
+
+### Adding New Assets
+
+1. Place files in appropriate directory
+2. Update `pubspec.yaml`:
+   ```yaml
+   flutter:
+     assets:
+       - assets/your_directory/
+   ```
+3. Run `flutter pub get`
+4. Access in code:
+   ```dart
+   Image.asset('assets/images/logo/bdc_logo.png')
+   SvgPicture.asset('assets/svgs/icon.svg')
+   Lottie.asset('assets/animations/loading.json')
+   ```
+
 ## Documentation References
 
 - **API Documentation**: `API_DOCUMENTATION.md` - All backend endpoints and response formats
@@ -582,6 +690,7 @@ The app uses `MainNavigationScreen` as the main container with 4 tabs:
 - **Chat Implementation**: `CHAT_FEATURE_IMPLEMENTATION_REPORT.md` - Complete chat feature documentation
 - **Security Guide**: `SECURITY_QUICK_GUIDE.md` - Security improvements and testing (Arabic)
 - **Attendance Documentation**: `ATTENDANCE_FEATURE_DOCUMENTATION.md` - Multiple sessions implementation
+- **Loading Animations**: `LOADING_ANIMATIONS_GUIDE.md` - Loading animation system guide (Arabic)
 - **Figma Designs**: https://www.figma.com/design/gNAzHVWnkINNfxNmDZX7Nt
 - **Backend Location**: `D:\php_project\filament-hrm` (local), `/var/www/erp1` (production server)
 
@@ -631,6 +740,68 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - **Solution**: Verify `baseUrl` in `lib/core/config/api_config.dart:26` matches your target environment
 - **CRITICAL**: After changing `baseUrl`, you MUST perform a **hot restart** (not hot reload) - press `R` in terminal or use IDE restart button
 - Hot reload will NOT pick up `const` changes in `api_config.dart`
+
+### Lottie Animation Not Showing
+- **Symptom**: Loading screen shows logo instead of Lottie animation
+- **Solution**:
+  1. Verify file exists at `assets/animations/loading.json` (not `loding.json`)
+  2. Check `pubspec.yaml` includes `- assets/animations/`
+  3. Run `flutter pub get`
+  4. This is intentional fallback behavior - no error occurs
+
+### Dark Mode Issues
+- **Symptom**: Colors not changing in dark mode
+- **Solution**: Use `AppColorsExtension` instead of `AppColors` for theme-aware colors
+  ```dart
+  // ✅ Correct (theme-aware)
+  color: Theme.of(context).extension<AppColorsExtension>()!.primary
+
+  // ❌ Wrong (static)
+  color: AppColors.primary
+  ```
+
+## Debugging & Performance
+
+### Logging
+
+**API Requests**: DioClient automatically logs all requests/responses via ApiInterceptor.
+
+**Enable detailed logs**:
+```dart
+// In lib/core/networking/dio_client.dart
+dio.interceptors.add(LogInterceptor(
+  requestBody: true,
+  responseBody: true,
+  error: true,
+));
+```
+
+### Performance Monitoring
+
+**Check build size**:
+```bash
+flutter build apk --analyze-size
+flutter build appbundle --analyze-size
+```
+
+**Profile mode** (for performance testing):
+```bash
+flutter run --profile
+```
+
+**Memory leaks**: Use Flutter DevTools to monitor memory usage and check for BLoC leaks (ensure proper cubit disposal).
+
+### Hot Reload vs Hot Restart
+
+- **Hot Reload** (`r`): Fast, preserves state, but doesn't pick up const changes or new assets
+- **Hot Restart** (`R`): Slower, clears state, picks up all changes including `api_config.dart` baseUrl
+
+**When to use Hot Restart**:
+- After changing `ApiConfig.baseUrl`
+- After modifying `pubspec.yaml`
+- After adding new assets
+- After modifying app entry point (`main.dart`)
+- When hot reload doesn't reflect your changes
 
 ## Attendance Feature: Multiple Sessions
 
@@ -975,7 +1146,95 @@ The app is configured with production-grade security:
 - `isShrinkResources = true` - Removes unused resources
 - `allowBackup = false` - Prevents data extraction
 - Package name: `com.bdcbiz.hrm`
+- Min SDK: 24 (Android 7.0+)
+- Target SDK: 36 (Android 14)
 
-**Important**: Before production release, remove localhost exceptions from `network_security_config.xml`
+### Release Signing
+
+**Keystore Configuration**: The app uses a keystore for signing release builds.
+
+**Location**: `android/key.properties` (gitignored)
+
+**Required properties**:
+```properties
+storePassword=YourStorePassword
+keyPassword=YourKeyPassword
+keyAlias=upload
+storeFile=../app/upload-keystore.jks
+```
+
+**Generating Keystore**:
+```bash
+keytool -genkey -v -storetype JKS -keyalg RSA -keysize 2048 \
+  -validity 10000 -alias upload \
+  -keystore android/app/upload-keystore.jks
+```
+
+**Important Notes**:
+- Keystore file and passwords are NOT committed to git
+- Store keystore securely - required for all future app updates
+- Before production release, remove localhost exceptions from `network_security_config.xml`
 
 See `SECURITY_QUICK_GUIDE.md` for security testing checklist and MobSF testing instructions.
+
+## Loading Animations System
+
+The app includes a unified loading screen system with 4 animation types.
+
+### AppLoadingScreen Widget
+
+**Location**: `lib/core/widgets/app_loading_screen.dart`
+
+**Available Animation Types**:
+- `LoadingAnimationType.logo` - Default, shows company logo with scale/fade animation
+- `LoadingAnimationType.lottie` - Lottie JSON animation (requires `assets/animations/loading.json`)
+- `LoadingAnimationType.spinner` - Rotating gradient circle
+- `LoadingAnimationType.dots` - Three pulsating dots (iOS-style)
+
+**Usage**:
+```dart
+// In loading states
+AppLoadingScreen(
+  animationType: LoadingAnimationType.lottie,
+  message: 'Loading...',
+  showLogo: false,
+  isDark: false,
+)
+```
+
+**Adding Lottie Animations**:
+1. Download free animations from [LottieFiles.com](https://lottiefiles.com)
+2. Save as `assets/animations/loading.json`
+3. Ensure `assets/animations/` is listed in `pubspec.yaml`
+4. Falls back to logo animation if file not found
+
+See `LOADING_ANIMATIONS_GUIDE.md` for detailed guide with recommended animations.
+
+## Dark Mode & Theme System
+
+The app supports dark mode with persistent theme selection.
+
+### ThemeCubit
+
+**Location**: `lib/core/theme/cubit/theme_cubit.dart`
+
+**Usage**:
+```dart
+// Toggle theme
+context.read<ThemeCubit>().toggleTheme();
+
+// Set specific theme
+context.read<ThemeCubit>().setThemeMode(ThemeMode.dark);
+
+// Get current theme
+final isDark = context.read<ThemeCubit>().state.themeMode == ThemeMode.dark;
+```
+
+**Themes**:
+- Light theme: `AppTheme.lightTheme`
+- Dark theme: `AppTheme.darkTheme`
+- Both defined in `lib/core/theme/app_theme.dart`
+
+**Persistence**: Theme preference saved via `shared_preferences` and restored on app restart.
+
+**Color Extensions**: `AppColorsExtension` provides theme-aware colors that automatically adjust for dark mode.

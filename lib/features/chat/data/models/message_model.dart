@@ -93,8 +93,8 @@ class MessageModel {
   /// Format created at time (e.g., "10:30 AM")
   String get formattedTime {
     try {
-      // Parse datetime
-      final dateTime = DateTime.parse(createdAt);
+      // Parse datetime and convert to local timezone
+      final dateTime = DateTime.parse(createdAt).toLocal();
 
       // Convert to 12-hour format
       final hour = dateTime.hour;
@@ -112,7 +112,7 @@ class MessageModel {
   /// Format created at date (e.g., "Yesterday", "12/11/2025")
   String get formattedDate {
     try {
-      final dateTime = DateTime.parse(createdAt);
+      final dateTime = DateTime.parse(createdAt).toLocal();
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);

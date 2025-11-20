@@ -611,8 +611,8 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   /// Check if date separator should be shown
   bool _shouldShowDateSeparator(String previousDateStr, String currentDateStr) {
     try {
-      final previousDate = DateTime.parse(previousDateStr);
-      final currentDate = DateTime.parse(currentDateStr);
+      final previousDate = DateTime.parse(previousDateStr).toLocal();
+      final currentDate = DateTime.parse(currentDateStr).toLocal();
 
       final prevDay = DateTime(
         previousDate.year,
@@ -670,7 +670,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   /// Get date text (Today, Yesterday, or formatted date)
   String _getDateText(String dateStr) {
     try {
-      final messageDate = DateTime.parse(dateStr);
+      final messageDate = DateTime.parse(dateStr).toLocal();
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));

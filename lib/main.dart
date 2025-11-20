@@ -9,6 +9,7 @@ import 'core/routing/app_router.dart';
 import 'core/navigation/main_navigation_screen.dart';
 import 'features/auth/ui/screens/login_screen.dart';
 import 'core/widgets/app_loading_screen.dart';
+import 'core/styles/app_colors.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,20 +21,46 @@ class MyApp extends StatelessWidget {
   /// Build Home Screen based on Auth State
   ///
   /// Shows splash while checking, then navigates to appropriate screen
-  Widget _buildHomeScreen(AuthState authState) {
-    if (authState is AuthInitial) {
-      // Show splash/loading while checking auth status
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else if (authState is AuthAuthenticated) {
+  Widget _buildHomeScreen(AuthState authState, bool isDark) {
+    if (authState is AuthAuthenticated) {
       // User is logged in, go to main app
       return const MainNavigationScreen();
     } else {
-      // User is not logged in, show login screen
-      return const LoginScreen();
+      // Show login screen (whether checking or not logged in)
+      // If checking auth, show Lottie overlay on top
+      return Stack(
+        children: [
+          // Login Screen (always visible in background)
+          const LoginScreen(),
+
+          // Loading Overlay (only when checking authentication)
+          if (authState is AuthInitial || authState is AuthLoading)
+            Container(
+              color: Colors.black.withOpacity(0.6), // خلفية شفافة
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Loading Indicator
+                    SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 4,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDark ? AppColors.primary : AppColors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Message
+
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
     }
   }
 
@@ -41,12 +68,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => AuthCubit()..checkAuthStatus(),
-        ),
-        BlocProvider(
-          create: (context) => ThemeCubit(),
-        ),
+        BlocProvider(create: (context) => AuthCubit()..checkAuthStatus()),
+        BlocProvider(create: (context) => ThemeCubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
@@ -63,7 +86,10 @@ class MyApp extends StatelessWidget {
                 onGenerateRoute: AppRouter.onGenerateRoute,
 
                 // Home Screen based on Authentication Status
-                home: _buildHomeScreen(authState),
+                home: _buildHomeScreen(
+                  authState,
+                  themeState.themeMode == ThemeMode.dark,
+                ),
               );
             },
           );

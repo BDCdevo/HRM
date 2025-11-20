@@ -74,11 +74,13 @@ class ChatCubit extends Cubit<ChatState> {
   /// Create Conversation
   ///
   /// Creates a new conversation with selected users
+  /// Returns existing conversation if it already exists (for private chats)
   Future<void> createConversation({
     required int companyId,
     required List<int> userIds,
     String? type,
     String? name,
+    String? participantName, // Name of the other participant (for UI)
   }) async {
     try {
       emit(const ConversationCreating());
@@ -90,7 +92,7 @@ class ChatCubit extends Cubit<ChatState> {
         name: name,
       );
 
-      emit(ConversationCreated(conversationId));
+      emit(ConversationCreated(conversationId, participantName: participantName));
 
       // Optionally refresh conversations after creating new one
       // Commented out to avoid automatic navigation issues

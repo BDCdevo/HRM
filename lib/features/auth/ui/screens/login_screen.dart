@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/navigation/main_navigation_screen.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/app_loading_screen.dart';
 import '../../logic/cubit/auth_cubit.dart';
 import '../../logic/cubit/auth_state.dart';
 
@@ -187,7 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Email Field
                           TextField(
                             controller: _emailController,
-                            enabled: !isLoading,
                             keyboardType: TextInputType.emailAddress,
                             style: TextStyle(
                               fontSize: 15,
@@ -249,7 +249,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Password Field
                           TextField(
                             controller: _passwordController,
-                            enabled: !isLoading,
                             obscureText: _obscurePassword,
                             style: TextStyle(
                               fontSize: 15,
@@ -323,13 +322,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 20,
                                     child: Checkbox(
                                       value: _rememberMe,
-                                      onChanged: isLoading
-                                          ? null
-                                          : (value) {
-                                              setState(() {
-                                                _rememberMe = value ?? false;
-                                              });
-                                            },
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _rememberMe = value ?? false;
+                                        });
+                                      },
                                       activeColor: isDark ? AppColors.primary : AppColors.primaryDark,
                                       checkColor: AppColors.white,
                                       side: BorderSide(
@@ -354,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               // Forgot Password
                               TextButton(
-                                onPressed: isLoading ? null : () {},
+                                onPressed: () {},
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,
@@ -379,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: double.infinity,
                             height: 52,
                             child: ElevatedButton(
-                              onPressed: isLoading ? null : _handleLogin,
+                              onPressed: _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isDark ? AppColors.primary : AppColors.primaryDark,
                                 foregroundColor: AppColors.white,
@@ -388,24 +385,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                disabledBackgroundColor: isDark ? AppColors.darkBorder : AppColors.borderSoft,
                               ),
-                              child: isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Login',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -415,6 +402,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+
+                // Loading Overlay
+                if (isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.5), // خلفية شفافة
+                    child: Center(
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+
+                      ),
+                    ),
+                  ),
               ],
             ),
           );

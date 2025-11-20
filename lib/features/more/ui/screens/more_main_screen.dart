@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/logic/cubit/auth_state.dart';
 import '../../../auth/ui/screens/login_screen.dart';
+import '../../../profile/ui/screens/profile_screen.dart';
 
 /// More Main Screen
 ///
@@ -167,7 +169,7 @@ class MoreMainScreen extends StatelessWidget {
                       _SectionHeader(title: 'Account', textColor: secondaryTextColor),
                       const SizedBox(height: 12),
                       _MenuItem(
-                        icon: Icons.person,
+                        svgIcon: 'assets/svgs/profile_icon.svg',
                         title: 'My Profile',
                         subtitle: 'View and edit your profile',
                         color: AppColors.secondary,
@@ -175,7 +177,11 @@ class MoreMainScreen extends StatelessWidget {
                         textColor: textColor,
                         secondaryTextColor: secondaryTextColor,
                         onTap: () {
-                          // TODO: Navigate to profile
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 8),
@@ -338,7 +344,8 @@ class _SectionHeader extends StatelessWidget {
 
 /// Menu Item
 class _MenuItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? svgIcon;
   final String title;
   final String subtitle;
   final Color color;
@@ -349,7 +356,8 @@ class _MenuItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const _MenuItem({
-    required this.icon,
+    this.icon,
+    this.svgIcon,
     required this.title,
     required this.subtitle,
     required this.color,
@@ -358,7 +366,7 @@ class _MenuItem extends StatelessWidget {
     required this.secondaryTextColor,
     this.badge,
     required this.onTap,
-  });
+  }) : assert(icon != null || svgIcon != null, 'Either icon or svgIcon must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -388,11 +396,21 @@ class _MenuItem extends StatelessWidget {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 24,
-                ),
+                child: svgIcon != null
+                    ? SvgPicture.asset(
+                        svgIcon!,
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(
+                          color,
+                          BlendMode.srcIn,
+                        ),
+                      )
+                    : Icon(
+                        icon!,
+                        color: color,
+                        size: 24,
+                      ),
               ),
 
               const SizedBox(width: 16),

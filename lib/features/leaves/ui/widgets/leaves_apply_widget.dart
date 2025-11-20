@@ -954,7 +954,7 @@ class _DateSelector extends StatelessWidget {
                 Expanded(
                   child: Text(
                     date != null
-                        ? DateFormat('dd/MM/yyyy', 'ar').format(date!)
+                        ? DateFormat('dd/MM/yyyy').format(date!)
                         : 'اختر التاريخ',
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,

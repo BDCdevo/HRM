@@ -52,8 +52,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<NavBarItem> _navItems = const [
     NavBarItem(
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
+      svgIcon: 'assets/svgs/home_icon.svg',
       label: 'Home',
       color: AppColors.primary,
     ),
@@ -63,8 +62,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       color: Color(0xFF25D366), // WhatsApp green
     ),
     NavBarItem(
-      icon: Icons.event_busy_outlined,
-      activeIcon: Icons.event_busy,
+      svgIcon: 'assets/svgs/leaves_icon.svg',
       label: 'Leaves',
       color: AppColors.primary,
     ),

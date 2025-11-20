@@ -80,9 +80,7 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
         body: BlocBuilder<AttendanceSummaryCubit, AttendanceSummaryState>(
           builder: (context, state) {
             if (state is AttendanceSummaryLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.white),
-              );
+              return _buildSkeletonLoading(isDark, backgroundColor, cardColor);
             }
 
             if (state is AttendanceSummaryError) {
@@ -1019,6 +1017,263 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Build Skeleton Loading
+  Widget _buildSkeletonLoading(bool isDark, Color backgroundColor, Color cardColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Section
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                ? [
+                    AppColors.darkAppBar,
+                    AppColors.darkAppBar.withOpacity(0.85),
+                    AppColors.darkAppBar,
+                  ]
+                : [
+                    AppColors.primary,
+                    AppColors.primary.withOpacity(0.85),
+                    AppColors.primary,
+                  ],
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildShimmer(
+                width: 100,
+                height: 16,
+                isDark: isDark,
+              ),
+              const SizedBox(height: 8),
+              _buildShimmer(
+                width: 200,
+                height: 32,
+                isDark: isDark,
+              ),
+              const SizedBox(height: 4),
+              _buildShimmer(
+                width: 80,
+                height: 32,
+                isDark: isDark,
+                borderRadius: 20,
+              ),
+            ],
+          ),
+        ),
+
+        // Content Section
+        Expanded(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Background
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Skeleton Summary Card
+              Positioned(
+                top: -80,
+                left: 20,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: isDark ? [] : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildShimmer(width: 100, height: 18, isDark: isDark),
+                              const SizedBox(height: 4),
+                              _buildShimmer(width: 150, height: 13, isDark: isDark),
+                            ],
+                          ),
+                          _buildShimmer(width: 80, height: 32, isDark: isDark, borderRadius: 8),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Stats Row
+                      Row(
+                        children: [
+                          Expanded(child: _buildSkeletonStatCard(isDark)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildSkeletonStatCard(isDark)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildSkeletonStatCard(isDark)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Skeleton Employee List
+              Positioned(
+                top: 140,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: 5,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildSkeletonEmployeeCard(isDark, cardColor),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build Skeleton Stat Card
+  Widget _buildSkeletonStatCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isDark
+          ? AppColors.darkInput.withOpacity(0.3)
+          : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildShimmer(width: 24, height: 24, isDark: isDark, isCircle: true),
+          const SizedBox(height: 8),
+          _buildShimmer(width: 40, height: 24, isDark: isDark),
+          const SizedBox(height: 4),
+          _buildShimmer(width: 50, height: 11, isDark: isDark),
+        ],
+      ),
+    );
+  }
+
+  /// Build Skeleton Employee Card
+  Widget _buildSkeletonEmployeeCard(bool isDark, Color cardColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Avatar
+              _buildShimmer(width: 56, height: 56, isDark: isDark, isCircle: true),
+              const SizedBox(width: 12),
+
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildShimmer(width: 120, height: 16, isDark: isDark),
+                    const SizedBox(height: 4),
+                    _buildShimmer(width: 80, height: 13, isDark: isDark),
+                    const SizedBox(height: 2),
+                    _buildShimmer(width: 100, height: 13, isDark: isDark),
+                  ],
+                ),
+              ),
+
+              // Status badge
+              _buildShimmer(width: 70, height: 26, isDark: isDark, borderRadius: 8),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: isDark ? AppColors.darkDivider : Colors.grey.shade200, height: 1),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildShimmer(width: 60, height: 40, isDark: isDark),
+              _buildShimmer(width: 60, height: 40, isDark: isDark),
+              _buildShimmer(width: 60, height: 40, isDark: isDark),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Shimmer Effect
+  Widget _buildShimmer({
+    required double width,
+    required double height,
+    required bool isDark,
+    double borderRadius = 4,
+    bool isCircle = false,
+  }) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.3, end: 1.0),
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeInOut,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              color: isDark
+                ? AppColors.darkInput.withOpacity(0.5)
+                : Colors.grey.shade300,
+              borderRadius: isCircle
+                ? BorderRadius.circular(width / 2)
+                : BorderRadius.circular(borderRadius),
+            ),
+          ),
+        );
+      },
+      onEnd: () {
+        // Reverse animation
+        setState(() {});
+      },
     );
   }
 }

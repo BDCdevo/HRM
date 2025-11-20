@@ -161,12 +161,12 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
           if (state is ConversationCreated) {
-            // Navigate to chat room after creating conversation
+            // Navigate to chat room after creating/finding conversation
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => ChatRoomScreen(
                   conversationId: state.conversationId,
-                  participantName: 'Chat', // Will be updated from conversation data
+                  participantName: state.participantName ?? 'Chat', // Use provided name
                   companyId: widget.companyId,
                   currentUserId: widget.currentUserId,
                   isGroupChat: false, // Private chat
@@ -712,10 +712,16 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
 
   /// Start Conversation
   void _startConversation(int userId, String userName) {
-    // Create conversation
+    // Show loading indicator in AppBar
+    setState(() {
+      // You can add a loading state here if needed
+    });
+
+    // Create conversation (API will return existing one if it exists)
     context.read<ChatCubit>().createConversation(
           companyId: widget.companyId,
           userIds: [userId],
+          participantName: userName, // Pass name to use when navigating
         );
   }
 }

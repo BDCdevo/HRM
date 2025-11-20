@@ -48,6 +48,8 @@ class LeaveRepo {
     required String endDate,
     required String reason,
   }) async {
+    print('🔵 Applying leave: vacation_type_id=$vacationTypeId, start=$startDate, end=$endDate');
+
     final response = await _dioClient.post(
       ApiConfig.applyLeave,
       data: {
@@ -57,6 +59,9 @@ class LeaveRepo {
         'reason': reason,
       },
     );
+
+    print('✅ Apply leave response: ${response.statusCode}');
+    print('📦 Response data: ${response.data}');
 
     return LeaveRequestModel.fromJson(response.data['data']);
   }

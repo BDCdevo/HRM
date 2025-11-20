@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
 import '../styles/app_colors.dart';
 
 /// Unified App Loading Screen
@@ -14,12 +15,14 @@ class AppLoadingScreen extends StatefulWidget {
   final String? message;
   final bool showLogo;
   final bool isDark;
+  final LoadingAnimationType animationType;
 
   const AppLoadingScreen({
     super.key,
     this.message,
     this.showLogo = true,
     this.isDark = false,
+    this.animationType = LoadingAnimationType.logo, // Default: logo
   });
 
   @override
@@ -61,7 +64,13 @@ class _AppLoadingScreenState extends State<AppLoadingScreen>
       ),
     );
 
-    _controller.forward();
+    // Repeat animation for spinner and dots
+    if (widget.animationType == LoadingAnimationType.spinner ||
+        widget.animationType == LoadingAnimationType.dots) {
+      _controller.repeat();
+    } else {
+      _controller.forward();
+    }
   }
 
   @override
@@ -95,56 +104,21 @@ class _AppLoadingScreenState extends State<AppLoadingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated Logo (if enabled)
-              if (widget.showLogo) ...[
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.white.withValues(alpha: 0.3),
-                                blurRadius: 40,
-                                spreadRadius: 8,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(22),
-                          child: SvgPicture.asset(
-                            'assets/images/logo/bdc_logo.svg',
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.primaryDark,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 48),
-              ],
+              // Loading Animation
+              _buildLoadingAnimation(),
 
-              // Loading Indicator
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    widget.isDark ? AppColors.primary : AppColors.white,
+              // Loading Indicator (if using logo)
+              if (widget.animationType == LoadingAnimationType.logo)
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      widget.isDark ? AppColors.primary : AppColors.white,
+                    ),
                   ),
                 ),
-              ),
 
               // Message (if provided)
               if (widget.message != null) ...[
@@ -163,7 +137,7 @@ class _AppLoadingScreenState extends State<AppLoadingScreen>
               ],
 
               // App Name (optional)
-              if (widget.showLogo) ...[
+              if (widget.showLogo && widget.animationType == LoadingAnimationType.logo) ...[
                 const SizedBox(height: 32),
                 Text(
                   'HRM System',
@@ -183,6 +157,185 @@ class _AppLoadingScreenState extends State<AppLoadingScreen>
       ),
     );
   }
+
+  /// Build Loading Animation based on type
+  Widget _buildLoadingAnimation() {
+    switch (widget.animationType) {
+      case LoadingAnimationType.lottie:
+        return _buildLottieAnimation();
+      case LoadingAnimationType.spinner:
+        return _buildSpinnerAnimation();
+      case LoadingAnimationType.dots:
+        return _buildDotsAnimation();
+      case LoadingAnimationType.logo:
+      default:
+        return _buildLogoAnimation();
+    }
+  }
+
+  /// Logo Animation (Original)
+  Widget _buildLogoAnimation() {
+    if (!widget.showLogo) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.white.withValues(alpha: 0.3),
+                        blurRadius: 40,
+                        spreadRadius: 8,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(22),
+                  child: SvgPicture.asset(
+                    'assets/images/logo/bdc_logo.svg',
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.primaryDark,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  /// Lottie Animation
+  Widget _buildLottieAnimation() {
+    return Column(
+      children: [
+        // Try to load Lottie, fallback to logo if not found
+        SizedBox(
+          width: 300,
+          height: 300,
+          child: Lottie.asset(
+            'assets/animations/load_login.json',
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to logo if Lottie not found
+              print('⚠️ Lottie file not found: $error');
+              print('Stack trace: $stackTrace');
+              return Container(
+                width: 100,
+                height: 100,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    widget.isDark ? AppColors.primary : AppColors.white,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  /// Custom Spinner Animation
+  Widget _buildSpinnerAnimation() {
+    return Column(
+      children: [
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.rotate(
+              angle: _controller.value * 2 * 3.14159,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.isDark ? AppColors.primary : AppColors.white,
+                    width: 4,
+                  ),
+                  gradient: LinearGradient(
+                    colors: [
+                      widget.isDark ? AppColors.primary : AppColors.white,
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  /// Dots Animation
+  Widget _buildDotsAnimation() {
+    return Column(
+      children: [
+        SizedBox(
+          width: 100,
+          height: 40,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(3, (index) {
+              return AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final delay = index * 0.2;
+                  final value = (_controller.value + delay) % 1.0;
+                  final scale = 0.5 + (0.5 * (1 - (value - 0.5).abs() * 2));
+
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: widget.isDark
+                            ? AppColors.primary
+                            : AppColors.white,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+}
+
+/// Loading Animation Types
+enum LoadingAnimationType {
+  logo,     // Original logo animation
+  lottie,   // Lottie JSON animation
+  spinner,  // Custom rotating spinner
+  dots,     // Animated dots
 }
 
 /// Simple Loading Overlay

@@ -154,7 +154,7 @@ class ConversationModel {
     if (lastMessage == null) return '';
 
     try {
-      final dateTime = DateTime.parse(lastMessage!.createdAt);
+      final dateTime = DateTime.parse(lastMessage!.createdAt).toLocal();
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);

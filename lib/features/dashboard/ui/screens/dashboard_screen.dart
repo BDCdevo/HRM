@@ -320,7 +320,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _getGreeting(user.firstName),
+                                        _getGreeting(),
                                         style: AppTextStyles.bodySmall.copyWith(
                                           color: AppColors.white.withOpacity(0.7),
                                           fontSize: 12,
@@ -339,30 +339,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
 
                                   // Refresh and WhatsApp Icons
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
-                                        onPressed: () {
-                                          context.read<DashboardCubit>().refresh();
-                                          _attendanceCubit.fetchTodayStatus();
-                                        },
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: AppColors.whatsappGreen, // WhatsApp green
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        padding: const EdgeInsets.all(8),
-                                        child: const Icon(
-                                          Icons.chat,
-                                          color: AppColors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
+                                  IconButton(
+                                    icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
+                                    onPressed: () {
+                                      context.read<DashboardCubit>().refresh();
+                                      _attendanceCubit.fetchTodayStatus();
+                                    },
                                   ),
                                 ],
                               ),
@@ -462,7 +444,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// Get Greeting based on time of day
-  String _getGreeting(String name) {
+  String _getGreeting() {
     final hour = DateTime.now().hour;
     String greeting = 'Good Morning';
     if (hour >= 12 && hour < 17) {
@@ -470,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else if (hour >= 17) {
       greeting = 'Good Evening';
     }
-    return '$greeting ($name)';
+    return '$greeting ';
   }
 
   String _getFormattedDate() {

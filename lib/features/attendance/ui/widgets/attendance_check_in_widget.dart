@@ -42,6 +42,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
   // Timer for live counter in timer view
   Timer? _timerUpdateTimer;
 
+  // Global key for timer card to preserve state
+  final GlobalKey<_SimpleTimerCardState> _timerCardKey = GlobalKey<_SimpleTimerCardState>();
+
   @override
   void initState() {
     super.initState();
@@ -217,7 +220,12 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
 
                         // Page 2: Simple Timer Card (without buttons)
                         hasActiveSession
-                            ? _buildSimpleTimerCard(status: status, isDark: isDark, cardColor: cardColor)
+                            ? _SimpleTimerCard(
+                                key: _timerCardKey, // Use global key to preserve state
+                                status: status,
+                                isDark: isDark,
+                                cardColor: cardColor,
+                              )
                             : Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(24),
@@ -574,14 +582,6 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
     );
   }
 
-  /// Build Simple Timer Card (without buttons) - for Attendance screen
-  Widget _buildSimpleTimerCard({
-    required dynamic status,
-    required bool isDark,
-    required Color cardColor,
-  }) {
-    return _SimpleTimerCard(status: status, isDark: isDark, cardColor: cardColor);
-  }
 
   /// Build Animation or Icon (with error handling)
   Widget _buildAnimationOrIcon({
@@ -649,6 +649,7 @@ class _SimpleTimerCard extends StatefulWidget {
   final Color cardColor;
 
   const _SimpleTimerCard({
+    super.key,
     required this.status,
     required this.isDark,
     required this.cardColor,
@@ -775,65 +776,94 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: widget.cardColor,
+        gradient: widget.isDark
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.darkCard,
+                AppColors.darkInput.withOpacity(0.3),
+              ],
+            )
+          : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.primary.withOpacity(0.03),
+                AppColors.accent.withOpacity(0.05),
+              ],
+            ),
         borderRadius: BorderRadius.circular(24),
-        border: widget.isDark ? Border.all(
-          color: AppColors.darkBorder,
-          width: 1,
-        ) : null,
-        boxShadow: widget.isDark ? [] : [
+        border: Border.all(
+          color: widget.isDark
+            ? AppColors.primary.withOpacity(0.25)
+            : AppColors.primary.withOpacity(0.15),
+          width: 2,
+        ),
+        boxShadow: widget.isDark ? [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 24,
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 20,
             offset: const Offset(0, 8),
-            spreadRadius: -4,
+            spreadRadius: 0,
+          ),
+        ] : [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+            spreadRadius: -2,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppColors.accent.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
             spreadRadius: 0,
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Title
+          // Title only - simple
           Text(
             'Work Duration',
-            style: AppTextStyles.titleLarge.copyWith(
+            style: AppTextStyles.titleMedium.copyWith(
               color: widget.isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 16,
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
-          // Subtitle
-          Text(
-            'Total time tracked today',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: widget.isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-              fontSize: 13,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Counter Display
+          // Counter Display - Simplified
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: widget.isDark
-                ? AppColors.darkInput.withOpacity(0.5)
-                : AppColors.primary.withOpacity(0.05),
+              gradient: widget.isDark
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.darkInput.withOpacity(0.6),
+                      AppColors.darkInput.withOpacity(0.4),
+                    ],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.white,
+                      AppColors.backgroundLight,
+                    ],
+                  ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.primary.withOpacity(widget.isDark ? 0.3 : 0.15),
+                color: AppColors.primary.withOpacity(widget.isDark ? 0.35 : 0.2),
                 width: 1.5,
               ),
             ),
@@ -841,31 +871,33 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTimeBox(hours),
+                _buildTimeBox(hours, 'HR'),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Text(
                     ':',
                     style: AppTextStyles.headlineLarge.copyWith(
                       fontSize: 32,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.primary,
+                      height: 1.0,
                     ),
                   ),
                 ),
-                _buildTimeBox(minutes),
+                _buildTimeBox(minutes, 'MIN'),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Text(
                     ':',
                     style: AppTextStyles.headlineLarge.copyWith(
                       fontSize: 32,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.primary,
+                      height: 1.0,
                     ),
                   ),
                 ),
-                _buildTimeBox(seconds),
+                _buildTimeBox(seconds, 'SEC'),
               ],
             ),
           ),
@@ -874,52 +906,72 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
     );
   }
 
-  /// Build Time Box for Counter
-  Widget _buildTimeBox(String value) {
-    return Container(
-      width: 56,
-      height: 64,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: widget.isDark
-            ? [
-                AppColors.darkCard,
-                AppColors.darkInput,
-              ]
-            : [
-                Colors.white,
-                AppColors.backgroundLight,
-              ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: widget.isDark
-            ? AppColors.darkBorder
-            : AppColors.primary.withOpacity(0.2),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(widget.isDark ? 0.1 : 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+  /// Build Time Box for Counter with label
+  Widget _buildTimeBox(String value, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Number box - smaller
+        Container(
+          width: 50,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.isDark
+                ? [
+                    AppColors.darkCard,
+                    AppColors.darkInput,
+                  ]
+                : [
+                    Colors.white,
+                    AppColors.backgroundLight.withOpacity(0.8),
+                  ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.isDark
+                ? AppColors.primary.withOpacity(0.3)
+                : AppColors.primary.withOpacity(0.25),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(widget.isDark ? 0.15 : 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          value,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
-            fontFeatures: const [FontFeature.tabularFigures()],
-            letterSpacing: -1,
+          child: Center(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                letterSpacing: -1,
+                height: 1.0,
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 4),
+        // Label
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: widget.isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.textSecondary,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }

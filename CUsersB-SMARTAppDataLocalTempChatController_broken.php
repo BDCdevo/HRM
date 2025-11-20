@@ -91,7 +91,7 @@ class ChatController extends Controller
                         ? $conversation->name
                         : $otherUser?->name,
                     'avatar' => null, // Optimize: skip avatar for now
-                    'last_message' => $conversation->latestMessage?->message ?? 'لا توجد رسائل',
+                    'last_message' => ->latestMessage ? (->latestMessage->message ?: (->latestMessage->attachment_type ? 'رسالة ' . ->latestMessage->attachment_type : 'لا توجد رسائل')) : 'لا توجد رسائل',
                     'last_message_at' => $lastSeenText ?: $conversation->last_message_at?->diffForHumans(),
                     'unread_count' => $participant?->unread_count ?? 0,
                     'is_online' => $isOnline,

@@ -49,11 +49,12 @@ class ConversationCreating extends ChatState {
 /// Conversation created successfully
 class ConversationCreated extends ChatState {
   final int conversationId;
+  final String? participantName; // Name of the other participant
 
-  const ConversationCreated(this.conversationId);
+  const ConversationCreated(this.conversationId, {this.participantName});
 
   @override
-  List<Object?> get props => [conversationId];
+  List<Object?> get props => [conversationId, participantName];
 }
 
 /// Error creating conversation
