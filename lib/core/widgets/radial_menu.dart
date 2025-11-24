@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Custom Radial Menu Widget
-/// Creates a semicircle/arc menu with animated buttons
+/// Creates a semicircle/arc menu with animated buttons above navigation bar
 class RadialMenu extends StatefulWidget {
   final List<RadialMenuItem> items;
   final double radius;
@@ -56,64 +56,70 @@ class _RadialMenuState extends State<RadialMenu>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Full screen overlay (only when open)
-        if (_isOpen)
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: GestureDetector(
-              onTap: _toggle,
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
+    return SizedBox(
+      height: _isOpen ? MediaQuery.of(context).size.height : 130,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Full screen overlay (only when open)
+          if (_isOpen)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _toggle,
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                ),
               ),
             ),
-          ),
 
-        // Menu Items in Semicircle (positioned above FAB)
-        if (_isOpen)
+          // Menu Items in Semicircle (positioned above navigation bar)
+          ..._buildMenuItems(),
+
+          // Center FAB (positioned at bottom center)
           Positioned(
             left: 0,
             right: 0,
-            bottom: 70, // Position above the navigation bar
+            bottom: 28, // Position in the notch of navigation bar
             child: Center(
-              child: SizedBox(
-                width: widget.radius * 2.5,
-                height: widget.radius * 1.3,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.bottomCenter,
-                  children: _buildMenuItems(),
+              child: FloatingActionButton(
+                onPressed: _toggle,
+                backgroundColor: widget.backgroundColor,
+                elevation: _isOpen ? 12 : 8,
+                child: AnimatedRotation(
+                  turns: _isOpen ? 0.125 : 0.0,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutBack,
+                  child: Icon(
+                    _isOpen ? widget.activeIcon : widget.icon,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
             ),
           ),
-
-        // Center FAB (embedded in navigation bar)
-        _buildCenterButton(),
-      ],
+        ],
+      ),
     );
   }
 
   List<Widget> _buildMenuItems() {
     final items = <Widget>[];
     final itemCount = widget.items.length;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     for (int i = 0; i < itemCount; i++) {
       // Calculate angle for semicircle (180 degrees)
       // Start from left (180°) to right (0°)
       final angle = math.pi - (math.pi * i / (itemCount - 1));
 
-      items.add(_buildMenuItem(widget.items[i], angle, i));
+      items.add(_buildMenuItem(widget.items[i], angle, i, screenWidth));
     }
 
     return items;
   }
 
-  Widget _buildMenuItem(RadialMenuItem item, double angle, int index) {
+  Widget _buildMenuItem(RadialMenuItem item, double angle, int index, double screenWidth) {
     // Animation for each item with delay
     final animation = CurvedAnimation(
       parent: _controller,
@@ -135,8 +141,8 @@ class _RadialMenuState extends State<RadialMenu>
         final dy = math.sin(angle) * distance;
 
         return Positioned(
-          left: (widget.radius * 2.5) / 2 + dx - 28,
-          bottom: dy, // Position from bottom upward
+          left: (screenWidth / 2) + dx - 28, // Center horizontally, then offset
+          bottom: 90 + dy, // Position above navigation bar (56px nav + 34px FAB)
           child: Transform.scale(
             scale: progress,
             child: Opacity(
@@ -152,24 +158,6 @@ class _RadialMenuState extends State<RadialMenu>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildCenterButton() {
-    return FloatingActionButton(
-      onPressed: _toggle,
-      backgroundColor: widget.backgroundColor,
-      elevation: _isOpen ? 12 : 8,
-      child: AnimatedRotation(
-        turns: _isOpen ? 0.125 : 0.0,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutBack,
-        child: Icon(
-          _isOpen ? widget.activeIcon : widget.icon,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
     );
   }
 }

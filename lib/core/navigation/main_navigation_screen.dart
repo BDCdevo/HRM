@@ -158,12 +158,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
 
         return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _buildScreens(state),
+          body: Stack(
+            children: [
+              // Main content
+              IndexedStack(
+                index: _currentIndex,
+                children: _buildScreens(state),
+              ),
+              // Radial menu overlay
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _buildRadialMenu(context),
+              ),
+            ],
           ),
-          floatingActionButton: _buildRadialMenu(context),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: null, // Remove FAB, we'll handle it in RadialMenu
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
             items: _navItems,
