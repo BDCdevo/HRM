@@ -56,30 +56,47 @@ class _RadialMenuState extends State<RadialMenu>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.radius * 2.5,
-      height: widget.radius * 2.5,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Overlay
-          if (_isOpen)
-            GestureDetector(
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Stack(
+      children: [
+        // Full screen overlay (only when open)
+        if (_isOpen)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: GestureDetector(
               onTap: _toggle,
               child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.transparent,
+                color: Colors.black.withOpacity(0.5),
               ),
             ),
+          ),
 
-          // Menu Items in Semicircle
-          ..._buildMenuItems(),
+        // Menu Items in Semicircle (positioned above FAB)
+        if (_isOpen)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 70, // Position above the navigation bar
+            child: Center(
+              child: SizedBox(
+                width: widget.radius * 2.5,
+                height: widget.radius * 1.3,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.bottomCenter,
+                  children: _buildMenuItems(),
+                ),
+              ),
+            ),
+          ),
 
-          // Center FAB
-          _buildCenterButton(),
-        ],
-      ),
+        // Center FAB (embedded in navigation bar)
+        _buildCenterButton(),
+      ],
     );
   }
 
@@ -115,13 +132,13 @@ class _RadialMenuState extends State<RadialMenu>
         final progress = animation.value;
         final distance = widget.radius * progress;
 
-        // Calculate position on semicircle
+        // Calculate position on semicircle (upward arc)
         final dx = math.cos(angle) * distance;
-        final dy = -math.sin(angle) * distance;
+        final dy = math.sin(angle) * distance;
 
         return Positioned(
           left: (widget.radius * 2.5) / 2 + dx - 28,
-          top: (widget.radius * 2.5) / 2 + dy - 28,
+          bottom: dy, // Position from bottom upward
           child: Transform.scale(
             scale: progress,
             child: Opacity(
@@ -141,22 +158,18 @@ class _RadialMenuState extends State<RadialMenu>
   }
 
   Widget _buildCenterButton() {
-    return Positioned(
-      left: (widget.radius * 2.5) / 2 - 30,
-      top: (widget.radius * 2.5) / 2 - 30,
-      child: FloatingActionButton(
-        onPressed: _toggle,
-        backgroundColor: widget.backgroundColor,
-        elevation: _isOpen ? 12 : 8,
-        child: AnimatedRotation(
-          turns: _isOpen ? 0.125 : 0.0,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutBack,
-          child: Icon(
-            _isOpen ? widget.activeIcon : widget.icon,
-            color: Colors.white,
-            size: 28,
-          ),
+    return FloatingActionButton(
+      onPressed: _toggle,
+      backgroundColor: widget.backgroundColor,
+      elevation: _isOpen ? 12 : 8,
+      child: AnimatedRotation(
+        turns: _isOpen ? 0.125 : 0.0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutBack,
+        child: Icon(
+          _isOpen ? widget.activeIcon : widget.icon,
+          color: Colors.white,
+          size: 28,
         ),
       ),
     );
