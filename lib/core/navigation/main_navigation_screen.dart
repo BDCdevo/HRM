@@ -12,7 +12,6 @@ import '../../features/general_request/ui/screens/general_request_screen.dart';
 import '../../features/certificate/ui/screens/certificate_request_screen.dart';
 import '../../features/training/ui/screens/training_request_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
-import '../widgets/radial_menu.dart';
 import '../styles/app_colors.dart';
 import '../routing/app_router.dart';
 
@@ -32,6 +31,182 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+
+  /// Show requests dialog
+  void _showRequestsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Title
+              const Text(
+                'New Request',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // Leave Request
+              _buildRequestOption(
+                context: context,
+                icon: Icons.event_available,
+                title: 'Leave Request',
+                subtitle: 'Apply for time off',
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LeavesMainScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // General Request
+              _buildRequestOption(
+                context: context,
+                icon: Icons.description,
+                title: 'General Request',
+                subtitle: 'Submit a general request',
+                color: AppColors.primary,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GeneralRequestScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Certificate Request
+              _buildRequestOption(
+                context: context,
+                icon: Icons.card_membership,
+                title: 'Certificate Request',
+                subtitle: 'Request a certificate',
+                color: AppColors.accent,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CertificateRequestScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Training Request
+              _buildRequestOption(
+                context: context,
+                icon: Icons.school,
+                title: 'Training Request',
+                subtitle: 'Request training',
+                color: AppColors.warning,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TrainingRequestScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build request option button
+  Widget _buildRequestOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Arrow
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   List<Widget> _buildScreens(AuthState authState) {
     // Get user data from auth state
@@ -83,70 +258,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  /// Build Radial Menu FAB with Semicircle/Arc Layout
-  Widget _buildRadialMenu(BuildContext context) {
-    return RadialMenu(
-      icon: Icons.add,
-      activeIcon: Icons.close,
-      backgroundColor: AppColors.primary,
-      radius: 100,
-      items: [
-        RadialMenuItem(
-          icon: Icons.event_available,
-          label: 'Leave',
-          backgroundColor: AppColors.success,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LeavesMainScreen(),
-              ),
-            );
-          },
-        ),
-        RadialMenuItem(
-          icon: Icons.description,
-          label: 'Request',
-          backgroundColor: AppColors.primary,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const GeneralRequestScreen(),
-              ),
-            );
-          },
-        ),
-        RadialMenuItem(
-          icon: Icons.card_membership,
-          label: 'Certificate',
-          backgroundColor: AppColors.accent,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CertificateRequestScreen(),
-              ),
-            );
-          },
-        ),
-        RadialMenuItem(
-          icon: Icons.school,
-          label: 'Training',
-          backgroundColor: AppColors.warning,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TrainingRequestScreen(),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
@@ -158,23 +269,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
 
         return Scaffold(
-          body: Stack(
-            children: [
-              // Main content
-              IndexedStack(
-                index: _currentIndex,
-                children: _buildScreens(state),
-              ),
-              // Radial menu overlay
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildRadialMenu(context),
-              ),
-            ],
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _buildScreens(state),
           ),
-          floatingActionButton: null, // Remove FAB, we'll handle it in RadialMenu
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showRequestsDialog(context),
+            backgroundColor: AppColors.primary,
+            elevation: 8,
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
             items: _navItems,

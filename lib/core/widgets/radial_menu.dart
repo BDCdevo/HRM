@@ -1,29 +1,23 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Custom Radial Menu Widget
-/// Creates a semicircle/arc menu with animated buttons above navigation bar
-class RadialMenu extends StatefulWidget {
+/// Radial Menu Overlay Widget
+/// Displays menu items in semicircle arc above navigation bar
+class RadialMenuOverlay extends StatefulWidget {
   final List<RadialMenuItem> items;
   final double radius;
-  final Color backgroundColor;
-  final IconData icon;
-  final IconData activeIcon;
 
-  const RadialMenu({
+  const RadialMenuOverlay({
     super.key,
     required this.items,
     this.radius = 100,
-    this.backgroundColor = Colors.blue,
-    this.icon = Icons.add,
-    this.activeIcon = Icons.close,
   });
 
   @override
-  State<RadialMenu> createState() => _RadialMenuState();
+  State<RadialMenuOverlay> createState() => RadialMenuOverlayState();
 }
 
-class _RadialMenuState extends State<RadialMenu>
+class RadialMenuOverlayState extends State<RadialMenuOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isOpen = false;
@@ -43,7 +37,8 @@ class _RadialMenuState extends State<RadialMenu>
     super.dispose();
   }
 
-  void _toggle() {
+  /// Toggle menu open/close
+  void toggle() {
     setState(() {
       _isOpen = !_isOpen;
       if (_isOpen) {
@@ -54,52 +49,37 @@ class _RadialMenuState extends State<RadialMenu>
     });
   }
 
+  /// Close menu
+  void close() {
+    if (_isOpen) {
+      setState(() {
+        _isOpen = false;
+        _controller.reverse();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: _isOpen ? MediaQuery.of(context).size.height : 130,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Full screen overlay (only when open)
-          if (_isOpen)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _toggle,
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                ),
-              ),
-            ),
+    if (!_isOpen) {
+      return const SizedBox.shrink();
+    }
 
-          // Menu Items in Semicircle (positioned above navigation bar)
-          ..._buildMenuItems(),
-
-          // Center FAB (positioned at bottom center)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 28, // Position in the notch of navigation bar
-            child: Center(
-              child: FloatingActionButton(
-                onPressed: _toggle,
-                backgroundColor: widget.backgroundColor,
-                elevation: _isOpen ? 12 : 8,
-                child: AnimatedRotation(
-                  turns: _isOpen ? 0.125 : 0.0,
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutBack,
-                  child: Icon(
-                    _isOpen ? widget.activeIcon : widget.icon,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-              ),
+    return Stack(
+      children: [
+        // Full screen overlay
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: close,
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Menu Items in Semicircle
+        ..._buildMenuItems(),
+      ],
     );
   }
 
@@ -119,7 +99,12 @@ class _RadialMenuState extends State<RadialMenu>
     return items;
   }
 
-  Widget _buildMenuItem(RadialMenuItem item, double angle, int index, double screenWidth) {
+  Widget _buildMenuItem(
+    RadialMenuItem item,
+    double angle,
+    int index,
+    double screenWidth,
+  ) {
     // Animation for each item with delay
     final animation = CurvedAnimation(
       parent: _controller,
@@ -141,8 +126,8 @@ class _RadialMenuState extends State<RadialMenu>
         final dy = math.sin(angle) * distance;
 
         return Positioned(
-          left: (screenWidth / 2) + dx - 28, // Center horizontally, then offset
-          bottom: 90 + dy, // Position above navigation bar (56px nav + 34px FAB)
+          left: (screenWidth / 2) + dx - 28, // Center horizontally
+          bottom: 100 + dy, // Position above navigation bar + FAB
           child: Transform.scale(
             scale: progress,
             child: Opacity(
@@ -150,7 +135,7 @@ class _RadialMenuState extends State<RadialMenu>
               child: _MenuButton(
                 item: item,
                 onTap: () {
-                  _toggle();
+                  close();
                   item.onTap();
                 },
               ),
