@@ -29,12 +29,18 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.darkAppBar : AppColors.white;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive spacing
+    final horizontalPadding = screenWidth > 600 ? 24.0 : 8.0;
+    final fabSpacing = screenWidth > 600 ? 100.0 : 70.0;
 
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8.0,
       color: surfaceColor,
       elevation: 8,
+      padding: EdgeInsets.zero,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -50,8 +56,9 @@ class CustomBottomNavBar extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              child: Container(
+                height: 56,
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -70,7 +77,7 @@ class CustomBottomNavBar extends StatelessWidget {
                       );
                     }),
                     // Spacer for FAB
-                    const SizedBox(width: 80),
+                    SizedBox(width: fabSpacing),
                     // Last 2 items
                     ...items.skip(2).toList().asMap().entries.map((entry) {
                       final index = entry.key + 2;
@@ -137,9 +144,10 @@ class _NavBarButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon with Badge
             Stack(
@@ -213,23 +221,7 @@ class _NavBarButton extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 2),
-            // Label
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: isSelected ? 11 : 10,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? color
-                    : (isDark
-                        ? AppColors.darkTextSecondary
-                        : Colors.grey.shade600),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            // Hide label - icons only for cleaner look
           ],
         ),
       ),

@@ -103,7 +103,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       isOpenOnStart: false,
       shape: const CircleBorder(),
       // Circular/Radial layout
-      useRotationTransition: true,
       animationDuration: const Duration(milliseconds: 300),
       childrenButtonSize: const Size(56, 56),
       spacing: 12,
