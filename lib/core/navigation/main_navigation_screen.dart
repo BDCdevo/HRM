@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../../features/auth/logic/cubit/auth_cubit.dart';
 import '../../features/auth/logic/cubit/auth_state.dart';
 import '../../features/home/ui/screens/home_main_screen.dart';
@@ -13,6 +12,7 @@ import '../../features/general_request/ui/screens/general_request_screen.dart';
 import '../../features/certificate/ui/screens/certificate_request_screen.dart';
 import '../../features/training/ui/screens/training_request_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../widgets/radial_menu.dart';
 import '../styles/app_colors.dart';
 import '../routing/app_router.dart';
 
@@ -83,64 +83,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  /// Build Speed Dial FAB with Semicircle/Arc Layout
-  Widget _buildSpeedDial(BuildContext context) {
-    return SpeedDial(
+  /// Build Radial Menu FAB with Semicircle/Arc Layout
+  Widget _buildRadialMenu(BuildContext context) {
+    return RadialMenu(
       icon: Icons.add,
       activeIcon: Icons.close,
       backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
-      activeForegroundColor: Colors.white,
-      activeBackgroundColor: AppColors.primary,
-      buttonSize: const Size(60, 60),
-      visible: true,
-      closeManually: false,
-      curve: Curves.easeOutBack,
-      overlayColor: Colors.black,
-      overlayOpacity: 0.5,
-      elevation: 8.0,
-      animationCurve: Curves.easeOutBack,
-      isOpenOnStart: false,
-      shape: const CircleBorder(),
-      // Semicircle/Arc layout - upward only
-      direction: SpeedDialDirection.up,
-      animationDuration: const Duration(milliseconds: 350),
-      childrenButtonSize: const Size(56, 56),
-      spacing: 16,
-      spaceBetweenChildren: 12,
-      renderOverlay: true,
-      // Custom dial root with rotation
-      dialRoot: (ctx, open, toggleChildren) {
-        return FloatingActionButton(
-          onPressed: toggleChildren,
-          backgroundColor: AppColors.primary,
-          elevation: open ? 12 : 8,
-          child: AnimatedRotation(
-            turns: open ? 0.125 : 0.0, // 45 degrees rotation when open
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutBack,
-            child: Icon(
-              open ? Icons.close : Icons.add,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-        );
-      },
-      children: [
-        // Bottom-Left in arc
-        SpeedDialChild(
-          child: const Icon(Icons.event_available, color: Colors.white, size: 24),
-          backgroundColor: AppColors.success,
-          foregroundColor: Colors.white,
+      radius: 100,
+      items: [
+        RadialMenuItem(
+          icon: Icons.event_available,
           label: 'Leave',
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          labelBackgroundColor: Colors.white,
-          elevation: 6,
+          backgroundColor: AppColors.success,
           onTap: () {
             Navigator.push(
               context,
@@ -150,19 +104,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Middle-Left in arc
-        SpeedDialChild(
-          child: const Icon(Icons.description, color: Colors.white, size: 24),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+        RadialMenuItem(
+          icon: Icons.description,
           label: 'Request',
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          labelBackgroundColor: Colors.white,
-          elevation: 6,
+          backgroundColor: AppColors.primary,
           onTap: () {
             Navigator.push(
               context,
@@ -172,19 +117,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Middle-Right in arc
-        SpeedDialChild(
-          child: const Icon(Icons.card_membership, color: Colors.white, size: 24),
-          backgroundColor: AppColors.accent,
-          foregroundColor: Colors.white,
+        RadialMenuItem(
+          icon: Icons.card_membership,
           label: 'Certificate',
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          labelBackgroundColor: Colors.white,
-          elevation: 6,
+          backgroundColor: AppColors.accent,
           onTap: () {
             Navigator.push(
               context,
@@ -194,19 +130,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Bottom-Right in arc
-        SpeedDialChild(
-          child: const Icon(Icons.school, color: Colors.white, size: 24),
-          backgroundColor: AppColors.warning,
-          foregroundColor: Colors.white,
+        RadialMenuItem(
+          icon: Icons.school,
           label: 'Training',
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          labelBackgroundColor: Colors.white,
-          elevation: 6,
+          backgroundColor: AppColors.warning,
           onTap: () {
             Navigator.push(
               context,
@@ -235,7 +162,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             index: _currentIndex,
             children: _buildScreens(state),
           ),
-          floatingActionButton: _buildSpeedDial(context),
+          floatingActionButton: _buildRadialMenu(context),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
