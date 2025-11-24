@@ -83,91 +83,212 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  /// Build Speed Dial FAB with quick actions
+  /// Build Quick Actions FAB
   Widget _buildSpeedDial(BuildContext context) {
-    return SpeedDial(
-      icon: Icons.add,
-      activeIcon: Icons.close,
+    return FloatingActionButton(
+      onPressed: () => _showQuickActionsSheet(context),
       backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
-      activeForegroundColor: Colors.white,
-      activeBackgroundColor: AppColors.primary,
-      buttonSize: const Size(56, 56),
-      visible: true,
-      closeManually: false,
-      curve: Curves.bounceIn,
-      overlayColor: Colors.black,
-      overlayOpacity: 0.5,
-      elevation: 8.0,
-      animationCurve: Curves.elasticInOut,
-      isOpenOnStart: false,
-      shape: const CircleBorder(),
-      children: [
-        SpeedDialChild(
-          child: const Icon(Icons.event_available, color: Colors.white),
-          backgroundColor: AppColors.success,
-          foregroundColor: Colors.white,
-          label: 'Apply for Leave',
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LeavesMainScreen(),
-              ),
-            );
-          },
+      child: const Icon(Icons.add, color: Colors.white),
+    );
+  }
+
+  /// Show Quick Actions Bottom Sheet
+  void _showQuickActionsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.55,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(25),
+            topRight: Radius.circular(25),
+          ),
         ),
-        SpeedDialChild(
-          child: const Icon(Icons.description, color: Colors.white),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          label: 'General Request',
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const GeneralRequestScreen(),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
-            );
-          },
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.card_membership, color: Colors.white),
-          backgroundColor: AppColors.accent,
-          foregroundColor: Colors.white,
-          label: 'Request Certificate',
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CertificateRequestScreen(),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.bolt,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.school, color: Colors.white),
-          backgroundColor: AppColors.warning,
-          foregroundColor: Colors.white,
-          label: 'Request Training',
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TrainingRequestScreen(),
+            ),
+            const Divider(height: 1),
+            // Actions List
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                children: [
+                  _buildActionTile(
+                    context,
+                    icon: Icons.event_available,
+                    iconColor: AppColors.success,
+                    title: 'Apply for Leave',
+                    subtitle: 'Submit a leave request',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LeavesMainScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionTile(
+                    context,
+                    icon: Icons.description,
+                    iconColor: AppColors.primary,
+                    title: 'General Request',
+                    subtitle: 'Submit any general request',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GeneralRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionTile(
+                    context,
+                    icon: Icons.card_membership,
+                    iconColor: AppColors.accent,
+                    title: 'Request Certificate',
+                    subtitle: 'Request employment certificate',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CertificateRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionTile(
+                    context,
+                    icon: Icons.school,
+                    iconColor: AppColors.warning,
+                    title: 'Request Training',
+                    subtitle: 'Submit a training request',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TrainingRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  /// Build Action Tile
+  Widget _buildActionTile(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
