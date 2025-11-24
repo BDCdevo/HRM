@@ -56,8 +56,6 @@ class _RadialMenuState extends State<RadialMenu>
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Stack(
       children: [
         // Full screen overlay (only when open)
