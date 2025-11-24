@@ -6,6 +6,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../logic/cubit/attendance_history_cubit.dart';
 import '../../logic/cubit/attendance_history_state.dart';
 import '../../data/models/attendance_history_model.dart';
+import '../widgets/attendance_skeleton.dart';
 
 /// Attendance History Screen
 ///
@@ -80,9 +81,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           builder: (context, state) {
             // Show loading state
             if (state is AttendanceHistoryLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const AttendanceSkeleton();
             }
 
             // Show error state

@@ -8,6 +8,7 @@ import '../../logic/cubit/employees_cubit.dart';
 import '../../logic/cubit/employees_state.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
+import '../widgets/employees_list_skeleton.dart';
 import 'chat_room_screen.dart';
 import 'group_creation_screen.dart';
 
@@ -338,25 +339,7 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
 
   /// Build Loading State
   Widget _buildLoadingState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: isDark ? AppColors.darkAccent : AppColors.accent,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading employees...',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const EmployeesListSkeleton();
   }
 
   /// Build Error State

@@ -4,7 +4,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
-import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
 import '../../../auth/logic/cubit/auth_state.dart';
 import '../../../auth/ui/screens/login_screen.dart';
@@ -13,7 +13,9 @@ import '../../../attendance/logic/cubit/attendance_state.dart';
 import '../../../notifications/ui/screens/notifications_screen.dart';
 import '../../../notifications/logic/cubit/notifications_cubit.dart';
 import '../../../notifications/logic/cubit/notifications_state.dart';
-import '../../../profile/ui/screens/profile_screen.dart';
+import '../../../profile/logic/cubit/profile_cubit.dart';
+import '../../../profile/logic/cubit/profile_state.dart';
+// import '../../../profile/ui/screens/profile_screen.dart'; // Removed - using More tab for profile
 import '../../logic/cubit/dashboard_cubit.dart';
 import '../../logic/cubit/dashboard_state.dart';
 import '../widgets/check_in_card.dart';
@@ -37,6 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final DashboardCubit _dashboardCubit;
   late final AttendanceCubit _attendanceCubit;
   late final NotificationsCubit _notificationsCubit;
+  late final ProfileCubit _profileCubit;
 
   @override
   void initState() {
@@ -44,12 +47,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _dashboardCubit = DashboardCubit();
     _attendanceCubit = AttendanceCubit();
     _notificationsCubit = NotificationsCubit();
+    _profileCubit = ProfileCubit();
     // Fetch dashboard stats and attendance status when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _dashboardCubit.fetchDashboardStats();
         _attendanceCubit.fetchTodayStatus();
         _notificationsCubit.fetchNotifications();
+        _profileCubit.fetchProfile(); // Fetch profile to get image
       }
     });
   }
@@ -59,6 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _dashboardCubit.close();
     _attendanceCubit.close();
     _notificationsCubit.close();
+    _profileCubit.close();
     super.dispose();
   }
 
@@ -69,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         BlocProvider.value(value: _dashboardCubit),
         BlocProvider.value(value: _attendanceCubit),
         BlocProvider.value(value: _notificationsCubit),
+        BlocProvider.value(value: _profileCubit),
       ],
       child: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -199,97 +206,96 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
 
                   actions: [
-                    // Dark Mode Toggle
-                    IconButton(
-                      icon: Icon(
-                        context.watch<ThemeCubit>().isDarkMode
-                            ? Icons.light_mode
-                            : Icons.dark_mode,
-                        color: AppColors.white,
-                        size: 24,
-                      ),
-                      onPressed: () {
-                        context.read<ThemeCubit>().toggleTheme();
-                      },
-                    ),
-                    // Notification Bell with Dynamic Badge
+                    // Notification Bell with Avatar Background
                     BlocBuilder<NotificationsCubit, NotificationsState>(
                       builder: (context, notifState) {
                         final unreadCount = notifState is NotificationsLoaded
                             ? notifState.unreadCount
                             : 0;
 
-                        return IconButton(
-                          icon: Stack(
-                            children: [
-                              const Icon(Icons.notifications, color: AppColors.white, size: 28),
-                              // Badge for unread notifications (dynamic)
-                              if (unreadCount > 0)
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.error,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 16,
-                                      minHeight: 16,
-                                    ),
-                                    child: Text(
-                                      unreadCount > 99 ? '99+' : unreadCount.toString(),
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.white.withOpacity(0.15),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  const Icon(Icons.notifications, color: AppColors.white, size: 22),
+                                  // Badge for unread notifications (dynamic)
+                                  if (unreadCount > 0)
+                                    Positioned(
+                                      right: -4,
+                                      top: -4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.error,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 18,
+                                          minHeight: 18,
+                                        ),
+                                        child: Text(
+                                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: AppColors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const NotificationsScreen(),
+                                ],
                               ),
-                            );
-                          },
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const NotificationsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         );
                       },
                     ),
-                    // User Profile Photo
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12, left: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ProfileScreen(),
-                            ),
-                          );
-                        },
-                        child: CircleAvatar(
-                          backgroundColor: AppColors.white,
-                          radius: 18,
-                          child: user.image != null && user.image!.url.isNotEmpty
-                              ? ClipOval(
-                                  child: Image.network(
-                                    user.image!.url,
-                                    width: 36,
-                                    height: 36,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(user);
-                                    },
-                                  ),
-                                )
-                              : _buildDefaultAvatar(user),
-                        ),
-                      ),
+                    // User Profile Photo (with profile data)
+                    BlocBuilder<ProfileCubit, ProfileState>(
+                      builder: (context, profileState) {
+                        final profile = profileState is ProfileLoaded
+                            ? profileState.profile
+                            : null;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12, left: 8),
+                          child: CircleAvatar(
+                            backgroundColor: AppColors.white,
+                            radius: 18,
+                            child: profile != null && profile.hasImage
+                                ? ClipOval(
+                                    child: Image.network(
+                                      profile.image!.url,
+                                      width: 36,
+                                      height: 36,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return _buildDefaultAvatar(user);
+                                      },
+                                    ),
+                                  )
+                                : _buildDefaultAvatar(user),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -297,6 +303,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onRefresh: () async {
                     await context.read<DashboardCubit>().refresh();
                     _attendanceCubit.fetchTodayStatus();
+                    _profileCubit.fetchProfile(); // Refresh profile image
                   },
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -328,7 +335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        user.firstName,
+                                        user.fullName,
                                         style: AppTextStyles.headlineMedium.copyWith(
                                           color: AppColors.white,
                                           fontWeight: FontWeight.bold,
@@ -416,7 +423,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// Build Default Avatar
-  Widget _buildDefaultAvatar(user) {
+  Widget _buildDefaultAvatar(UserModel user) {
     return Container(
       width: 36,
       height: 36,
@@ -508,7 +515,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// Build Today's Attendance Card
-  Widget _buildTodayAttendanceCard(BuildContext context, status) {
+  Widget _buildTodayAttendanceCard(BuildContext context, dynamic status) {
     final hasActiveSession = status?.hasActiveSession ?? false;
 
     // If has active session, show counter card

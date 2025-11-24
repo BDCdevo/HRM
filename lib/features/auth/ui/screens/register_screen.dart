@@ -21,16 +21,14 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -40,8 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().register(
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
+            name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
             passwordConfirmation: _confirmPasswordController.text,
@@ -122,40 +119,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 40),
 
-                      // First Name Field
+                      // Full Name Field
                       CustomTextField(
-                        controller: _firstNameController,
-                        label: 'First Name',
-                        hint: 'Enter your first name',
+                        controller: _nameController,
+                        label: 'Full Name',
+                        hint: 'Enter your full name',
                         prefixIcon: const Icon(Icons.person_outline),
                         textInputAction: TextInputAction.next,
                         enabled: !isLoading,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'First name is required';
+                            return 'Full name is required';
                           }
                           if (value.trim().length < 2) {
-                            return 'First name must be at least 2 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Last Name Field
-                      CustomTextField(
-                        controller: _lastNameController,
-                        label: 'Last Name',
-                        hint: 'Enter your last name',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        textInputAction: TextInputAction.next,
-                        enabled: !isLoading,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Last name is required';
-                          }
-                          if (value.trim().length < 2) {
-                            return 'Last name must be at least 2 characters';
+                            return 'Full name must be at least 2 characters';
                           }
                           return null;
                         },

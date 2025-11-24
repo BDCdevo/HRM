@@ -7,6 +7,7 @@ import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../../../leave/logic/cubit/leave_state.dart';
 import '../../../leave/data/models/leave_balance_model.dart';
+import 'leaves_balance_skeleton.dart';
 
 /// Leaves Balance Widget
 ///
@@ -57,18 +58,7 @@ class _LeavesBalanceWidgetState extends State<LeavesBalanceWidget> {
       builder: (context, state) {
         // Show loading skeleton for initial state and loading state
         if (state is LeaveBalanceLoading || state is LeaveInitial) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: List.generate(
-                3,
-                (index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: CardSkeleton(height: 120),
-                ),
-              ),
-            ),
-          );
+          return const LeavesBalanceSkeleton();
         }
 
         if (state is LeaveBalanceLoaded) {

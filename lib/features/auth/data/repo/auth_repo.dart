@@ -176,8 +176,7 @@ class AuthRepo {
   /// Returns LoginResponseModel on success (auto-login after registration)
   /// Throws DioException on failure
   Future<LoginResponseModel> register({
-    required String firstName,
-    required String lastName,
+    required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
@@ -187,8 +186,7 @@ class AuthRepo {
       final response = await _dioClient.post(
         ApiConfig.register,
         data: {
-          'first_name': firstName,
-          'last_name': lastName,
+          'name': name,
           'email': email,
           'password': password,
           'password_confirmation': passwordConfirmation,
@@ -357,8 +355,7 @@ class AuthRepo {
     try {
       await _storage.write(key: 'user_id', value: user.id.toString());
       await _storage.write(key: 'user_email', value: user.email);
-      await _storage.write(key: 'user_first_name', value: user.firstName);
-      await _storage.write(key: 'user_last_name', value: user.lastName);
+      await _storage.write(key: 'user_name', value: user.name);
       if (user.phone != null) {
         await _storage.write(key: 'user_phone', value: user.phone!);
       }
@@ -382,10 +379,9 @@ class AuthRepo {
     try {
       final userId = await _storage.read(key: 'user_id');
       final email = await _storage.read(key: 'user_email');
-      final firstName = await _storage.read(key: 'user_first_name');
-      final lastName = await _storage.read(key: 'user_last_name');
+      final name = await _storage.read(key: 'user_name');
 
-      if (userId == null || email == null || firstName == null || lastName == null) {
+      if (userId == null || email == null || name == null) {
         return null;
       }
 
@@ -396,8 +392,7 @@ class AuthRepo {
       return UserModel(
         id: int.parse(userId),
         email: email,
-        firstName: firstName,
-        lastName: lastName,
+        name: name,
         phone: phone,
         companyId: companyIdStr != null ? int.tryParse(companyIdStr) : null,
         roles: rolesStr != null ? rolesStr.split(',') : [],
@@ -436,8 +431,7 @@ class AuthRepo {
       await _storage.delete(key: 'auth_token');
       await _storage.delete(key: 'user_id');
       await _storage.delete(key: 'user_email');
-      await _storage.delete(key: 'user_first_name');
-      await _storage.delete(key: 'user_last_name');
+      await _storage.delete(key: 'user_name');
       await _storage.delete(key: 'user_phone');
       await _storage.delete(key: 'user_company_id');
       await _storage.delete(key: 'user_roles');

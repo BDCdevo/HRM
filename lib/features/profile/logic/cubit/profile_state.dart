@@ -65,6 +65,20 @@ class PasswordChanged extends ProfileState {
   List<Object?> get props => [message];
 }
 
+/// Profile Image Uploaded State
+class ProfileImageUploaded extends ProfileState {
+  final ProfileModel profile;
+  final String message;
+
+  const ProfileImageUploaded({
+    required this.profile,
+    this.message = 'Profile image uploaded successfully',
+  });
+
+  @override
+  List<Object?> get props => [profile, message];
+}
+
 /// Account Deleted State
 class AccountDeleted extends ProfileState {
   final String message;

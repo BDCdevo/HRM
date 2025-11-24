@@ -93,12 +93,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get theme mode
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocProvider(
       create: (context) => _profileCubit,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.primary,
+          backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -154,10 +157,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.info.withValues(alpha: 0.1),
+                        color: isDark
+                          ? AppColors.darkCard
+                          : AppColors.info.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColors.info.withValues(alpha: 0.3),
+                          color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.info.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -173,7 +180,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             child: Text(
                               'Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.',
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.info,
+                                color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.info,
                               ),
                             ),
                           ),
@@ -188,7 +197,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: _oldPasswordController,
                       label: 'Current Password',
                       hint: 'Enter your current password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.iconSecondary,
+                      ),
                       obscureText: true,
                       showPasswordToggle: true,
                       validator: (value) {
@@ -206,7 +218,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: _newPasswordController,
                       label: 'New Password',
                       hint: 'Enter your new password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.iconSecondary,
+                      ),
                       obscureText: true,
                       showPasswordToggle: true,
                       validator: _validatePassword,
@@ -219,7 +234,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       controller: _confirmPasswordController,
                       label: 'Confirm New Password',
                       hint: 'Re-enter your new password',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.iconSecondary,
+                      ),
                       obscureText: true,
                       showPasswordToggle: true,
                       validator: (value) {

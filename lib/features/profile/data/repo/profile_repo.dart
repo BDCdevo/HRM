@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import '../../../../core/networking/dio_client.dart';
 import '../../../../core/config/api_config.dart';
 import '../models/profile_model.dart';
@@ -89,6 +91,35 @@ class ProfileRepo {
       );
 
       return successResponse.message;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Upload Profile Image
+  ///
+  /// Uploads a new profile image for the authenticated user
+  /// POST /api/v1/profile/upload-image
+  Future<ProfileModel> uploadProfileImage(File imageFile) async {
+    try {
+      // Create form data with the image
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      final response = await _dioClient.post(
+        ApiConfig.uploadProfileImage,
+        data: formData,
+      );
+
+      final profileResponse = ProfileResponseModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+
+      return profileResponse.data;
     } catch (e) {
       rethrow;
     }

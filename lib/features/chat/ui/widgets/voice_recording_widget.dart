@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_text_styles.dart';
 
 /// Voice Recording Widget - WhatsApp Style
 ///
@@ -138,9 +139,8 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
                   // Timer
                   Text(
                     _formatDuration(_recordDuration),
-                    style: TextStyle(
+                    style: AppTextStyles.voiceTimer.copyWith(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
                       color: isDark
                           ? AppColors.darkTextPrimary
                           : AppColors.textPrimary,
@@ -161,11 +161,11 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
                       ),
                       Text(
                         'Slide to cancel',
-                        style: TextStyle(
+                        style: AppTextStyles.bodySmall.copyWith(
                           fontSize: 13,
                           color: isDark
-                              ? const Color(0xFF8696A0)
-                              : const Color(0xFF54656F),
+                              ? AppColors.whatsappGrayLight
+                              : AppColors.whatsappGrayMedium,
                         ),
                       ),
                     ],

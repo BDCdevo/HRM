@@ -108,8 +108,7 @@ class AuthCubit extends Cubit<AuthState> {
   ///
   /// Creates a new user account
   Future<void> register({
-    required String firstName,
-    required String lastName,
+    required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
@@ -121,8 +120,7 @@ class AuthCubit extends Cubit<AuthState> {
       print('📝 Attempting registration for: $email');
 
       final registerResponse = await _authRepo.register(
-        firstName: firstName,
-        lastName: lastName,
+        name: name,
         email: email,
         password: password,
         passwordConfirmation: passwordConfirmation,

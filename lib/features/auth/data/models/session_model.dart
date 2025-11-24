@@ -29,7 +29,7 @@ class SessionModel {
   final String? logoutTime;
 
   @JsonKey(name: 'session_duration')
-  final int? sessionDuration; // بالثواني
+  final int? sessionDuration; // in seconds
 
   final String status; // active, logged_out, expired, forced_logout
 
@@ -107,7 +107,7 @@ class SessionModel {
   /// Get formatted session duration
   String get durationFormatted {
     if (sessionDuration == null || sessionDuration == 0) {
-      return status == 'active' ? 'نشط' : '--';
+      return status == 'active' ? 'Active' : '--';
     }
 
     final hours = sessionDuration! ~/ 3600;

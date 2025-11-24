@@ -27,6 +27,17 @@ class ProfileModel extends Equatable {
   final double earnings;
   final double availableBalance;
 
+  // Employee-specific fields
+  final String? phone;
+  final String? address;
+  final String? gender;
+  final String? dateOfBirth;
+  final String? position;
+  final String? department;
+  final int? departmentId;
+  final int? positionId;
+  final String? nationalId;
+
   const ProfileModel({
     required this.id,
     required this.firstName,
@@ -48,6 +59,15 @@ class ProfileModel extends Equatable {
     this.sessionCount = 0,
     this.earnings = 0.0,
     this.availableBalance = 0.0,
+    this.phone,
+    this.address,
+    this.gender,
+    this.dateOfBirth,
+    this.position,
+    this.department,
+    this.departmentId,
+    this.positionId,
+    this.nationalId,
   });
 
   /// Full name getter
@@ -86,6 +106,15 @@ class ProfileModel extends Equatable {
       sessionCount: json['session_count'] as int? ?? 0,
       earnings: (json['earnings'] as num?)?.toDouble() ?? 0.0,
       availableBalance: (json['available_balance'] as num?)?.toDouble() ?? 0.0,
+      phone: json['phone'] as String?,
+      address: json['address'] as String?,
+      gender: json['gender'] as String?,
+      dateOfBirth: json['date_of_birth'] as String?,
+      position: json['position'] as String?,
+      department: json['department'] as String?,
+      departmentId: json['department_id'] as int?,
+      positionId: json['position_id'] as int?,
+      nationalId: json['national_id'] as String?,
     );
   }
 
@@ -112,6 +141,15 @@ class ProfileModel extends Equatable {
       'session_count': sessionCount,
       'earnings': earnings,
       'available_balance': availableBalance,
+      'phone': phone,
+      'address': address,
+      'gender': gender,
+      'date_of_birth': dateOfBirth,
+      'position': position,
+      'department': department,
+      'department_id': departmentId,
+      'position_id': positionId,
+      'national_id': nationalId,
     };
   }
 
@@ -137,6 +175,15 @@ class ProfileModel extends Equatable {
     int? sessionCount,
     double? earnings,
     double? availableBalance,
+    String? phone,
+    String? address,
+    String? gender,
+    String? dateOfBirth,
+    String? position,
+    String? department,
+    int? departmentId,
+    int? positionId,
+    String? nationalId,
   }) {
     return ProfileModel(
       id: id ?? this.id,
@@ -159,6 +206,15 @@ class ProfileModel extends Equatable {
       sessionCount: sessionCount ?? this.sessionCount,
       earnings: earnings ?? this.earnings,
       availableBalance: availableBalance ?? this.availableBalance,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      position: position ?? this.position,
+      department: department ?? this.department,
+      departmentId: departmentId ?? this.departmentId,
+      positionId: positionId ?? this.positionId,
+      nationalId: nationalId ?? this.nationalId,
     );
   }
 
@@ -184,5 +240,14 @@ class ProfileModel extends Equatable {
         sessionCount,
         earnings,
         availableBalance,
+        phone,
+        address,
+        gender,
+        dateOfBirth,
+        position,
+        department,
+        departmentId,
+        positionId,
+        nationalId,
       ];
 }

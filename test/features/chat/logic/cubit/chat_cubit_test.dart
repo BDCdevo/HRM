@@ -15,7 +15,11 @@ void main() {
 
   setUp(() {
     mockRepository = MockChatRepository();
-    chatCubit = ChatCubit(mockRepository);
+    chatCubit = ChatCubit(
+      repository: mockRepository,
+      companyId: 6,
+      currentUserId: 1,
+    );
   });
 
   tearDown(() {
@@ -39,8 +43,10 @@ void main() {
         ),
       ];
 
-      when(mockRepository.getConversations(any))
-          .thenAnswer((_) async => mockConversations);
+      when(mockRepository.getConversations(
+        companyId: anyNamed('companyId'),
+        currentUserId: anyNamed('currentUserId'),
+      )).thenAnswer((_) async => mockConversations);
 
       // Assert
       expect(
@@ -52,14 +58,16 @@ void main() {
       );
 
       // Act
-      await chatCubit.fetchConversations(6);
+      await chatCubit.fetchConversations();
     });
 
     test('fetchConversations emits [ChatLoading, ChatError] when fails',
         () async {
       // Arrange
-      when(mockRepository.getConversations(any))
-          .thenThrow(Exception('Network error'));
+      when(mockRepository.getConversations(
+        companyId: anyNamed('companyId'),
+        currentUserId: anyNamed('currentUserId'),
+      )).thenThrow(Exception('Network error'));
 
       // Assert
       expect(
@@ -71,7 +79,7 @@ void main() {
       );
 
       // Act
-      await chatCubit.fetchConversations(6);
+      await chatCubit.fetchConversations();
     });
 
     test('createConversation emits [ConversationCreating, ConversationCreated] when successful',
@@ -92,7 +100,7 @@ void main() {
       );
 
       // Act
-      await chatCubit.createConversation(companyId: 6, userIds: [10]);
+      await chatCubit.createConversation(userIds: [10]);
     });
 
     test('reset sets state back to ChatInitial', () {

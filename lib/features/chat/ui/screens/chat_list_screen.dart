@@ -7,6 +7,8 @@ import '../../data/repo/chat_repository.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
 import '../widgets/conversation_card.dart';
+import '../widgets/recent_contacts_section.dart';
+import '../widgets/chat_list_skeleton.dart';
 import 'employee_selection_screen.dart';
 import 'chat_room_screen.dart';
 
@@ -53,7 +55,7 @@ class _ChatListView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF1C1E2B) : const Color(0xFFF5F5F5), // Adaptive background
       appBar: _buildAppBar(context, isDark),
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
@@ -111,56 +113,23 @@ class _ChatListView extends StatelessWidget {
   /// Build App Bar
   PreferredSizeWidget _buildAppBar(BuildContext context, bool isDark) {
     return AppBar(
-      backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
+      backgroundColor: isDark ? const Color(0xFF1C1E2B) : AppColors.primary,
       elevation: 0,
       title: Text(
-        'Chats',
+        'Messages',
         style: AppTextStyles.titleLarge.copyWith(
           color: AppColors.white,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
+          fontSize: 28,
         ),
       ),
       actions: [
         // Search button
         IconButton(
-          icon: const Icon(Icons.search, color: AppColors.white),
+          icon: const Icon(Icons.search, color: AppColors.white, size: 26),
           onPressed: () {
             // TODO: Navigate to search screen
           },
-        ),
-        // More options
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: AppColors.white),
-          onSelected: (value) {
-            if (value == 'refresh') {
-              context.read<ChatCubit>().refreshConversations(
-                companyId: companyId,
-                currentUserId: currentUserId,
-              );
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'refresh',
-              child: Row(
-                children: [
-                  Icon(Icons.refresh),
-                  SizedBox(width: 8),
-                  Text('Refresh'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'new_group',
-              child: Row(
-                children: [
-                  Icon(Icons.group_add),
-                  SizedBox(width: 8),
-                  Text('New group'),
-                ],
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -168,25 +137,7 @@ class _ChatListView extends StatelessWidget {
 
   /// Build Loading State
   Widget _buildLoadingState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: isDark ? AppColors.darkAccent : AppColors.accent,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading conversations...',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const ChatListSkeleton();
   }
 
   /// Build Error State
@@ -341,69 +292,162 @@ class _ChatListView extends StatelessWidget {
     bool isRefreshing = false,
   }) {
     return RefreshIndicator(
-      color: isDark ? AppColors.darkAccent : AppColors.accent,
+      color: AppColors.accent,
+      backgroundColor: isDark ? const Color(0xFF2A2D3E) : Colors.white,
       onRefresh: () async {
         await context.read<ChatCubit>().refreshConversations(
           companyId: companyId,
           currentUserId: currentUserId,
         );
       },
-      child: ListView.builder(
-        itemCount: state.conversations.length,
-        itemBuilder: (context, index) {
-          final conversation = state.conversations[index];
-          return ConversationCard(
-            conversation: conversation,
-            currentUserId: currentUserId,
-            index: index,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatRoomScreen(
-                    conversationId: conversation.id,
-                    participantName: conversation.participantName,
-                    participantAvatar: conversation.participantAvatar,
-                    companyId: companyId,
-                    currentUserId: currentUserId,
-                    isGroupChat: conversation.isGroup,
-                  ),
-                ),
-              );
-
-              // Refresh conversation list when returning
-              if (context.mounted) {
-                context.read<ChatCubit>().fetchConversations(
-                  companyId: companyId,
-                  currentUserId: currentUserId,
+      child: CustomScrollView(
+        slivers: [
+          // Recent Contacts Section
+          SliverToBoxAdapter(
+            child: RecentContactsSection(
+              companyId: companyId,
+              currentUserId: currentUserId,
+              onContactTap: (userId, userName, userAvatar) async {
+                // Create or navigate to conversation with selected user
+                await _createOrNavigateToConversation(
+                  context,
+                  userId,
+                  userName,
+                  userAvatar,
                 );
-              }
-            },
-            onArchive: () {
-              _showSnackBar(
-                context,
-                '📦 Conversation archived',
-                isDark,
-              );
-            },
-            onDelete: () {
-              _showSnackBar(
-                context,
-                '🗑️ Conversation deleted',
-                isDark,
-              );
-            },
-            onPin: () {
-              _showSnackBar(
-                context,
-                '📌 Conversation pinned',
-                isDark,
-              );
-            },
-          );
-        },
+              },
+            ),
+          ),
+
+          // Conversations List
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final conversation = state.conversations[index];
+                return ConversationCard(
+                  conversation: conversation,
+                  currentUserId: currentUserId,
+                  index: index,
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatRoomScreen(
+                          conversationId: conversation.id,
+                          participantName: conversation.participantName,
+                          participantAvatar: conversation.participantAvatar,
+                          companyId: companyId,
+                          currentUserId: currentUserId,
+                          isGroupChat: conversation.isGroup,
+                        ),
+                      ),
+                    );
+
+                    // Refresh conversation list when returning
+                    if (context.mounted) {
+                      context.read<ChatCubit>().fetchConversations(
+                        companyId: companyId,
+                        currentUserId: currentUserId,
+                      );
+                    }
+                  },
+                  onArchive: () {
+                    _showSnackBar(
+                      context,
+                      '📦 Conversation archived',
+                      isDark,
+                    );
+                  },
+                  onDelete: () {
+                    _showSnackBar(
+                      context,
+                      '🗑️ Conversation deleted',
+                      isDark,
+                    );
+                  },
+                  onPin: () {
+                    _showSnackBar(
+                      context,
+                      '📌 Conversation pinned',
+                      isDark,
+                    );
+                  },
+                );
+              },
+              childCount: state.conversations.length,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  /// Create or Navigate to Conversation
+  Future<void> _createOrNavigateToConversation(
+    BuildContext context,
+    int userId,
+    String userName,
+    String? userAvatar,
+  ) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.accent),
+        ),
+      );
+
+      // Create conversation
+      final chatRepo = ChatRepository();
+      final conversationId = await chatRepo.createConversation(
+        companyId: companyId,
+        userIds: [userId],
+        type: 'private',
+      );
+
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Navigate to chat room
+      if (context.mounted) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatRoomScreen(
+              conversationId: conversationId,
+              participantName: userName,
+              participantAvatar: userAvatar,
+              companyId: companyId,
+              currentUserId: currentUserId,
+              isGroupChat: false,
+            ),
+          ),
+        );
+
+        // Refresh conversation list
+        if (context.mounted) {
+          context.read<ChatCubit>().fetchConversations(
+            companyId: companyId,
+            currentUserId: currentUserId,
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Show error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   /// Show SnackBar

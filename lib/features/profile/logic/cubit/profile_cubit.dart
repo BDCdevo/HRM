@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import '../../data/repo/profile_repo.dart';
@@ -99,6 +100,32 @@ class ProfileCubit extends Cubit<ProfileState> {
       final message = await _profileRepo.deleteAccount();
 
       emit(AccountDeleted(message: message));
+    } on DioException catch (e) {
+      _handleDioException(e);
+    } catch (e) {
+      emit(ProfileError(
+        message: 'An unexpected error occurred: ${e.toString()}',
+      ));
+    }
+  }
+
+  /// Upload Profile Image
+  ///
+  /// Uploads a new profile image
+  /// Emits:
+  /// - [ProfileLoading] while uploading
+  /// - [ProfileImageUploaded] on success
+  /// - [ProfileError] on failure
+  Future<void> uploadProfileImage(File imageFile) async {
+    try {
+      emit(const ProfileLoading());
+
+      final profile = await _profileRepo.uploadProfileImage(imageFile);
+
+      emit(ProfileImageUploaded(profile: profile));
+
+      // Refresh profile to get latest data
+      await fetchProfile();
     } on DioException catch (e) {
       _handleDioException(e);
     } catch (e) {

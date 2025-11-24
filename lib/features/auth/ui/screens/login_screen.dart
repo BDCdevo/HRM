@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/navigation/main_navigation_screen.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../../core/widgets/app_loading_screen.dart';
 import '../../logic/cubit/auth_cubit.dart';
@@ -81,22 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
           return SafeArea(
             child: Stack(
               children: [
-                // Theme Toggle Button
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IconButton(
-                    icon: Icon(
-                      isDark ? Icons.light_mode : Icons.dark_mode,
-                      color: AppColors.white,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      context.read<ThemeCubit>().toggleTheme();
-                    },
-                  ),
-                ),
-
                 // Main Content
                 Center(
                   child: SingleChildScrollView(
@@ -157,17 +142,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Title
                           Text(
                             'Welcome Back',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
+                            style: AppTextStyles.headlineLarge.copyWith(
                               color: textColor,
                             ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             'Sign in to continue to HRM',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTextStyles.bodyMedium.copyWith(
                               color: secondaryTextColor,
                             ),
                           ),
@@ -177,8 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Email Label
                           Text(
                             'Email',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTextStyles.inputLabel.copyWith(
                               fontWeight: FontWeight.w600,
                               color: secondaryTextColor,
                             ),
@@ -189,13 +170,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            style: TextStyle(
-                              fontSize: 15,
+                            style: AppTextStyles.inputText.copyWith(
                               color: textColor,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Enter your email',
-                              hintStyle: TextStyle(
+                              hintStyle: AppTextStyles.inputHint.copyWith(
                                 color: secondaryTextColor.withOpacity(0.5),
                               ),
                               prefixIcon: Icon(
@@ -238,8 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Password Label
                           Text(
                             'Password',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTextStyles.inputLabel.copyWith(
                               fontWeight: FontWeight.w600,
                               color: secondaryTextColor,
                             ),
@@ -250,13 +229,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
-                            style: TextStyle(
-                              fontSize: 15,
+                            style: AppTextStyles.inputText.copyWith(
                               color: textColor,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Enter your password',
-                              hintStyle: TextStyle(
+                              hintStyle: AppTextStyles.inputHint.copyWith(
                                 color: secondaryTextColor.withOpacity(0.5),
                               ),
                               prefixIcon: Icon(
@@ -341,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     'Remember Me',
-                                    style: TextStyle(
+                                    style: AppTextStyles.bodySmall.copyWith(
                                       fontSize: 13,
                                       color: secondaryTextColor,
                                     ),
@@ -359,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 child: Text(
                                   'Forgot Password?',
-                                  style: TextStyle(
+                                  style: AppTextStyles.labelMedium.copyWith(
                                     fontSize: 13,
                                     color: isDark ? AppColors.primary : AppColors.primaryDark,
                                     fontWeight: FontWeight.w600,
@@ -386,12 +364,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Login',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: AppTextStyles.button,
                               ),
                             ),
                           ),

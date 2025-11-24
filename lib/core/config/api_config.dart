@@ -46,6 +46,7 @@ class ApiConfig {
   /// Profile Endpoints
   static const String profile = '/profile';
   static const String updateProfile = '/profile';
+  static const String uploadProfileImage = '/profile/upload-image';
   static const String changePassword = '/profile/change-password';
   static const String deleteAccount = '/profile';
 
@@ -89,6 +90,11 @@ class ApiConfig {
 
   /// Reports Endpoints
   static const String monthlyReport = '/reports/monthly';
+
+  /// Request Management Endpoints
+  static const String requests = '/requests';
+  static const String requestStatistics = '/requests/statistics';
+  static String requestDetails(int id) => '/requests/$id';
 
   /// Utility Endpoints
   static const String upload = '/upload';

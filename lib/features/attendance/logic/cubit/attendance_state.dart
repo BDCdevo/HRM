@@ -84,12 +84,11 @@ class AttendanceError extends AttendanceState {
 
   /// Get user-friendly error message
   String get displayMessage {
-    // If message is already in Arabic or contains distance info, return as-is
-    if (message.contains('أنت بعيد') ||
-        message.contains('المسافة') ||
-        message.contains('انتهت مهلة') ||
-        message.contains('خطأ في الشبكة') ||
-        RegExp(r'[\u0600-\u06FF]').hasMatch(message)) {
+    // If message contains distance info, return as-is
+    if (message.contains('You are far') ||
+        message.contains('Current distance') ||
+        message.contains('Request timeout') ||
+        message.contains('Network error')) {
       return message;
     }
 

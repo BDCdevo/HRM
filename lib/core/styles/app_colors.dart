@@ -72,6 +72,16 @@ class AppColors {
   /// WhatsApp Green - For chat/messaging
   static const Color whatsappGreen = Color(0xFF25D366);
 
+  /// WhatsApp Gray Colors - For chat UI (Light mode)
+  static const Color whatsappGrayDark = Color(0xFF667781);
+  static const Color whatsappGrayMedium = Color(0xFF54656F);
+  static const Color whatsappGrayLight = Color(0xFF8696A0);
+  static const Color whatsappBlack = Color(0xFF111B21);
+
+  /// WhatsApp Message Bubble Colors
+  static const Color whatsappSentBubble = Color(0xFFD9FDD3); // Light green for sent messages
+  static const Color whatsappReceivedBubble = Color(0xFFFFFFFF); // White for received messages
+
   /// Services Colors - Warm neutral tones
   static const Color servicesGray = Color(0xFF6B7280);
   static const Color servicesLightGray = Color(0xFF9CA3AF);
@@ -201,35 +211,35 @@ class AppColors {
   static const Color transparent = Colors.transparent;
 
   // ============================================
-  // DARK MODE - Modern Black Theme (Updated Design)
+  // DARK MODE - Modern Blue-Gray Theme
   // ============================================
 
-  /// Dark mode - Main background (Pure dark black)
-  static const Color darkBackground = Color(0xFF1A1A1A);
+  /// Dark mode - Main background (Deep blue-gray)
+  static const Color darkBackground = Color(0xFF1B202D);
 
-  /// Dark mode - Card/Surface (Dark gray)
-  static const Color darkCard = Color(0xFF2D2D2D);
+  /// Dark mode - Card/Surface (Lighter blue-gray)
+  static const Color darkCard = Color(0xFF292F3F);
 
-  /// Dark mode - AppBar & Navigation Bar (Darker black)
-  static const Color darkAppBar = Color(0xFF1F1F1F);
+  /// Dark mode - AppBar & Navigation Bar (Same as cards)
+  static const Color darkAppBar = Color(0xFF292F3F);
 
-  /// Dark mode - Input fields (Dark gray)
-  static const Color darkInput = Color(0xFF2D2D2D);
+  /// Dark mode - Input fields (Same as cards)
+  static const Color darkInput = Color(0xFF292F3F);
 
-  /// Dark mode - Borders (Lighter gray for better visibility)
-  static const Color darkBorder = Color(0xFF4B5563);
+  /// Dark mode - Borders (Subtle lighter blue-gray)
+  static const Color darkBorder = Color(0xFF3D4350);
 
-  /// Dark mode - Dividers (Lighter gray for better visibility)
-  static const Color darkDivider = Color(0xFF4B5563);
+  /// Dark mode - Dividers (Subtle lighter blue-gray)
+  static const Color darkDivider = Color(0xFF3D4350);
 
-  /// Dark mode - Primary text (Pure white)
+  /// Dark mode - Primary text (Pure white for maximum contrast)
   static const Color darkTextPrimary = Color(0xFFFFFFFF);
 
-  /// Dark mode - Secondary text (Brighter gray for enhanced contrast)
-  static const Color darkTextSecondary = Color(0xFFD1D5DB);
+  /// Dark mode - Secondary text (Very bright gray for enhanced readability)
+  static const Color darkTextSecondary = Color(0xFFE5E7EB);
 
-  /// Dark mode - Tertiary text (Medium-light gray for better visibility)
-  static const Color darkTextTertiary = Color(0xFFA0A0A0);
+  /// Dark mode - Tertiary text (Bright gray for better visibility)
+  static const Color darkTextTertiary = Color(0xFFD1D5DB);
 
   /// Dark mode - Hint text (Light gray for improved visibility)
   static const Color darkTextHint = Color(0xFF9CA3AF);
@@ -238,10 +248,10 @@ class AppColors {
   static const Color darkIcon = Color(0xFFFFFFFF);
 
   /// Dark mode - Skeleton/Shimmer base
-  static const Color darkSkeleton = Color(0xFF2D2D2D);
+  static const Color darkSkeleton = Color(0xFF1F2937);
 
   /// Dark mode - Skeleton/Shimmer highlight
-  static const Color darkSkeletonHighlight = Color(0xFF3D3D3D);
+  static const Color darkSkeletonHighlight = Color(0xFF374151);
 
   /// Dark mode - Unselected navigation items
   static const Color darkNavUnselected = Color(0xFF808080);
@@ -256,7 +266,19 @@ class AppColors {
   static const Color darkSuccess = Color(0xFF4CAF50);
 
   /// Dark mode - Card elevated (Slightly lighter for hover/selected states)
-  static const Color darkCardElevated = Color(0xFF363636);
+  static const Color darkCardElevated = Color(0xFF323847);
+
+  // ============================================
+  // DARK MODE - WhatsApp Colors
+  // ============================================
+
+  /// Dark mode - WhatsApp message bubbles
+  static const Color darkWhatsappSentBubble = Color(0xFF005C4B); // Dark green for sent
+  static const Color darkWhatsappReceivedBubble = Color(0xFF1F2C33); // Dark gray for received
+
+  /// Dark mode - WhatsApp text colors
+  static const Color darkWhatsappGray = Color(0xFF8696A0);
+  static const Color darkWhatsappText = Color(0xFFE9EDEF);
 
   // ============================================
   // Chart Colors (Blue Theme)

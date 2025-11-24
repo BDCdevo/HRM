@@ -160,10 +160,10 @@ class AttendanceCubit extends Cubit<AttendanceState> {
 
           if (distanceMeters != null && allowedRadius != null) {
             // Enhanced error message with distance info
-            errorMessage = 'أنت بعيد عن موقع الفرع\n'
-                'المسافة الحالية: ${distanceMeters}م\n'
-                'المسافة المسموحة: ${allowedRadius}م\n'
-                'يرجى الاقتراب من الفرع للتسجيل';
+            errorMessage = 'You are far from the branch location\n'
+                'Current distance: ${distanceMeters}m\n'
+                'Allowed distance: ${allowedRadius}m\n'
+                'Please get closer to the branch to check in';
           } else {
             errorMessage = ErrorMessages.outsideBranchArea;
           }

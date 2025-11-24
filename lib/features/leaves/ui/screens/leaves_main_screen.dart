@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
@@ -55,21 +56,6 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
               floating: false,
               pinned: true,
               backgroundColor: appBarColor,
-              actions: [
-                // Dark Mode Toggle
-                IconButton(
-                  icon: Icon(
-                    context.watch<ThemeCubit>().isDarkMode
-                        ? Icons.light_mode
-                        : Icons.dark_mode,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
-                  onPressed: () {
-                    context.read<ThemeCubit>().toggleTheme();
-                  },
-                ),
-              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(
@@ -107,10 +93,14 @@ class _LeavesMainScreenState extends State<LeavesMainScreen>
                                     width: 2,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.event_busy,
-                                  color: AppColors.white,
-                                  size: 28,
+                                child: SvgPicture.asset(
+                                  'assets/svgs/leaves_icon.svg',
+                                  width: 28,
+                                  height: 28,
+                                  colorFilter: const ColorFilter.mode(
+                                    AppColors.white,
+                                    BlendMode.srcIn,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),

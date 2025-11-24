@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
@@ -6,6 +5,7 @@ import '../../../../core/styles/app_text_styles.dart';
 import '../../data/models/message_model.dart';
 import '../../logic/cubit/messages_state.dart';
 import 'message_bubble.dart';
+import 'chat_messages_skeleton.dart';
 
 /// Chat Messages List Widget
 ///
@@ -87,13 +87,31 @@ class ChatMessagesListWidget extends StatelessWidget {
           delegate: SliverChildBuilderDelegate(
             (context, index) {
               final message = reversedMessages[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: MessageBubble(
-                  message: message,
-                  isSentByMe: message.isMine,
-                  isGroupChat: isGroupChat,
-                ),
+              final isLastMessage = index == reversedMessages.length - 1;
+
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    child: MessageBubble(
+                      message: message,
+                      isSentByMe: message.isMine,
+                      isGroupChat: isGroupChat,
+                    ),
+                  ),
+                  // Add divider between messages (except last one)
+                  if (!isLastMessage)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      child: Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: isDark
+                          ? AppColors.darkBorder.withOpacity(0.3)
+                          : AppColors.border.withOpacity(0.5),
+                      ),
+                    ),
+                ],
               );
             },
             childCount: reversedMessages.length,
@@ -174,25 +192,7 @@ class ChatMessagesListWidget extends StatelessWidget {
 
   /// Build Loading State
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: isDark ? AppColors.darkAccent : AppColors.accent,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading messages...',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const ChatMessagesSkeleton();
   }
 
   /// Build Error State

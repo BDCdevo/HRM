@@ -3,7 +3,7 @@ import '../../features/auth/ui/screens/login_screen.dart';
 import '../../features/auth/ui/screens/admin_login_screen.dart';
 import '../../features/auth/ui/screens/register_screen.dart';
 import '../navigation/main_navigation_screen.dart';
-import '../../features/profile/ui/screens/profile_screen.dart';
+// import '../../features/profile/ui/screens/profile_screen.dart'; // Removed - now using More screen
 import '../../features/profile/ui/screens/edit_profile_screen.dart';
 import '../../features/profile/ui/screens/change_password_screen.dart';
 import '../../features/notifications/ui/screens/notifications_screen.dart';
@@ -16,6 +16,7 @@ import '../../features/leave/ui/screens/leave_balance_screen.dart';
 import '../../features/attendance/ui/screens/attendance_history_screen.dart';
 import '../../features/about/ui/screens/about_screen.dart';
 import '../../features/chat/ui/screens/chat_test_screen.dart';
+import '../../features/requests/ui/screens/requests_main_screen.dart';
 import 'route_transitions.dart';
 
 /// App Router
@@ -42,6 +43,7 @@ class AppRouter {
   static const String leaveBalance = '/leave-balance';
   static const String attendanceHistory = '/attendance-history';
   static const String chatTest = '/chat-test';
+  static const String requests = '/requests';
 
   /// Generate Route
   ///
@@ -81,8 +83,9 @@ class AppRouter {
 
       // Profile Routes
       case profile:
+        // Redirect to Edit Profile (ProfileScreen is now part of More tab)
         return _buildRoute(
-          const ProfileScreen(),
+          const EditProfileScreen(),
           settings: settings,
           transition: RouteTransitionType.slideFromRight,
         );
@@ -171,6 +174,14 @@ class AppRouter {
       case chatTest:
         return _buildRoute(
           const ChatTestScreen(),
+          settings: settings,
+          transition: RouteTransitionType.slideFromRight,
+        );
+
+      // Requests Route
+      case requests:
+        return _buildRoute(
+          const RequestsMainScreen(),
           settings: settings,
           transition: RouteTransitionType.slideFromRight,
         );

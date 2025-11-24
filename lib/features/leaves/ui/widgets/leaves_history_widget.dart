@@ -7,6 +7,7 @@ import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../../../leave/logic/cubit/leave_state.dart';
 import '../../../leave/data/models/leave_request_model.dart';
+import 'leaves_skeleton.dart';
 
 /// Leaves History Widget
 ///
@@ -82,11 +83,7 @@ class _LeavesHistoryWidgetState extends State<LeavesHistoryWidget> {
       builder: (context, state) {
         // Show loading skeleton for initial state and loading state
         if (state is LeaveHistoryLoading || state is LeaveInitial) {
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: 5,
-            itemBuilder: (context, index) => const ListItemSkeleton(),
-          );
+          return const LeavesSkeleton();
         }
 
         if (state is LeaveHistoryLoaded || state is LeaveHistoryLoadingMore || state is LeaveHistoryRefreshing) {

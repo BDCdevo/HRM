@@ -84,7 +84,22 @@
       "Bash(\"C:\\Users\\B-SMART\\.config\\herd\\bin\\php.bat\" -l C:/Users/B-SMART/AppData/Local/Temp/ChatController_corrected.php)",
       "Bash(C:/Users/B-SMART/AppData/Local/Temp/ChatController_current.php)",
       "Bash(\"C:\\Users\\B-SMART\\.config\\herd\\bin\\php.bat\" -l C:/Users/B-SMART/AppData/Local/Temp/HolidayController.php)",
-      "Bash(C:/Users/B-SMART/AppData/Local/Temp/api_routes.php)"
+      "Bash(C:/Users/B-SMART/AppData/Local/Temp/api_routes.php)",
+      "Bash(C:/Users/B-SMART/AppData/Local/Temp/hrm_api.php)",
+      "Bash(C:/Users/B-SMART/AppData/Local/Temp/HolidayController_current.php)",
+      "Bash(\"C:\\Users\\B-SMART\\.config\\herd\\bin\\php.bat\" C:/Users/B-SMART/AppData/Local/Temp/fix_holiday_controller.php)",
+      "Bash(\"C:\\Users\\B-SMART\\.config\\herd\\bin\\php.bat\" -l C:/Users/B-SMART/AppData/Local/Temp/HolidayController_fixed.php)",
+      "Bash(if exist \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\features\\profile\\ui\\screens\\profile_screen.dart\" mv \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\features\\profile\\ui\\screens\\profile_screen.dart\" \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\features\\profile\\ui\\screens\\profile_screen.dart.old\")",
+      "Bash(dart run build_runner build:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(\"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\ERROR_HANDLING_GUIDE.md\")",
+      "Bash(if not exist \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\ERROR_HANDLING_GUIDE.md\" echo. 2)",
+      "Bash(del \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\BACKEND_REQUEST_ENDPOINT_TODO.md\")",
+      "Bash(python:*)",
+      "Bash(flutter devices:*)",
+      "Bash(/tmp/ChatController_current.php)",
+      "Bash(del \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\ChatController_current.php\")"
     ],
     "deny": [],
     "ask": []

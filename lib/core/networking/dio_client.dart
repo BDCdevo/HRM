@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import 'api_interceptor.dart';
 
@@ -24,18 +25,26 @@ class DioClient {
     // Add API Interceptor for Token Management
     dio.interceptors.add(ApiInterceptor());
 
-    // Add Logging Interceptor (Development Only)
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        error: true,
-        logPrint: (obj) => print('🌐 DIO: $obj'),
-      ),
-    );
+    // Add Logging Interceptor (Debug Mode Only)
+    // IMPORTANT: This interceptor is ONLY active in debug mode
+    // It will NOT print anything in production/release builds
+    if (kDebugMode) {
+      dio.interceptors.add(
+        LogInterceptor(
+          request: true,
+          requestHeader: false, // Don't log headers (contains token)
+          requestBody: false,   // Don't log request body (may contain sensitive data)
+          responseHeader: false, // Don't log response headers
+          responseBody: true,   // Only log response body for debugging
+          error: true,
+          logPrint: (obj) {
+            if (kDebugMode) {
+              debugPrint('🌐 DIO: $obj');
+            }
+          },
+        ),
+      );
+    }
   }
 
   /// Get singleton instance

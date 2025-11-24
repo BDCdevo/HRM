@@ -16,8 +16,7 @@ enum UserType {
 /// Matches the API response from Laravel backend
 class UserModel extends Equatable {
   final int id;
-  final String firstName;
-  final String lastName;
+  final String name;
   final String email;
   final String? phone;
   final String? accessToken;
@@ -29,8 +28,7 @@ class UserModel extends Equatable {
 
   const UserModel({
     required this.id,
-    required this.firstName,
-    required this.lastName,
+    required this.name,
     required this.email,
     this.phone,
     this.accessToken,
@@ -41,14 +39,20 @@ class UserModel extends Equatable {
     this.companyId,
   });
 
-  /// Full name getter
-  String get fullName {
-    // For admin users, name might be in a single 'name' field
-    if (firstName.isEmpty && lastName.isEmpty) {
-      return email.split('@').first;
-    }
-    return '$firstName $lastName'.trim();
+  /// First name getter (for backward compatibility)
+  String get firstName {
+    final parts = name.split(' ');
+    return parts.isNotEmpty ? parts.first : name;
   }
+
+  /// Last name getter (for backward compatibility)
+  String get lastName {
+    final parts = name.split(' ');
+    return parts.length > 1 ? parts.sublist(1).join(' ') : '';
+  }
+
+  /// Full name getter
+  String get fullName => name;
 
   /// Has token getter
   bool get hasToken => accessToken != null && accessToken!.isNotEmpty;
@@ -104,29 +108,9 @@ class UserModel extends Equatable {
 
   /// From JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    // Handle both employee and admin API responses
-    final name = json['name'] as String?;
-    final firstName = json['first_name'] as String?;
-    final lastName = json['last_name'] as String?;
-
-    // If name is provided but first/last aren't, split the name
-    String finalFirstName = firstName ?? '';
-    String finalLastName = lastName ?? '';
-
-    if (name != null && firstName == null && lastName == null) {
-      final nameParts = name.split(' ');
-      if (nameParts.isNotEmpty) {
-        finalFirstName = nameParts.first;
-        if (nameParts.length > 1) {
-          finalLastName = nameParts.sublist(1).join(' ');
-        }
-      }
-    }
-
     return UserModel(
       id: json['id'] as int,
-      firstName: finalFirstName,
-      lastName: finalLastName,
+      name: json['name'] as String? ?? '',
       email: json['email'] as String,
       phone: json['phone'] as String?,
       accessToken: json['access_token'] as String?,
@@ -154,8 +138,7 @@ class UserModel extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'first_name': firstName,
-      'last_name': lastName,
+      'name': name,
       'email': email,
       'phone': phone,
       'access_token': accessToken,
@@ -170,8 +153,7 @@ class UserModel extends Equatable {
   /// Copy With
   UserModel copyWith({
     int? id,
-    String? firstName,
-    String? lastName,
+    String? name,
     String? email,
     String? phone,
     String? accessToken,
@@ -183,8 +165,7 @@ class UserModel extends Equatable {
   }) {
     return UserModel(
       id: id ?? this.id,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
+      name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
       accessToken: accessToken ?? this.accessToken,
@@ -199,8 +180,7 @@ class UserModel extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        firstName,
-        lastName,
+        name,
         email,
         phone,
         accessToken,

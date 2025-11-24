@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/app_text_styles.dart';
 import 'voice_recording_widget.dart';
 
 /// Chat Input Bar Widget - WhatsApp Style
@@ -115,17 +116,15 @@ class ChatInputBarWidget extends StatelessWidget {
               controller: messageController,
               focusNode: messageFocusNode,
               enabled: !isSending,
-              style: TextStyle(
+              style: AppTextStyles.inputText.copyWith(
                 color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: 'Message',
-                hintStyle: TextStyle(
+                hintStyle: AppTextStyles.inputHint.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary.withOpacity(0.6)
                       : AppColors.textSecondary.withOpacity(0.6),
-                  fontSize: 16,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),

@@ -6,6 +6,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../logic/cubit/notifications_cubit.dart';
 import '../../logic/cubit/notifications_state.dart';
 import '../../data/models/notification_model.dart';
+import '../widgets/notifications_skeleton.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 /// Notifications Screen
@@ -98,9 +99,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           builder: (context, state) {
             // Show loading state
             if (state is NotificationsLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const NotificationsSkeleton();
             }
 
             // Show error state

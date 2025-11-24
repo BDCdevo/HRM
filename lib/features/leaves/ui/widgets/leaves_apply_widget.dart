@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
@@ -11,6 +10,7 @@ import '../../../../core/widgets/success_animation.dart';
 import '../../../leave/logic/cubit/leave_cubit.dart';
 import '../../../leave/logic/cubit/leave_state.dart';
 import '../../../leave/data/models/vacation_type_model.dart';
+import 'leave_types_skeleton.dart';
 
 /// Leaves Apply Widget
 ///
@@ -136,23 +136,11 @@ class _LeavesApplyWidgetState extends State<LeavesApplyWidget> {
                   ),
                   child: Column(
                     children: [
-                      // Leaves Animation
-                      SizedBox(
-                        width: double.infinity,
-                        height: 120,
-                        child: Lottie.asset(
-                          'assets/svgs/leaves.json',
-                          fit: BoxFit.contain,
-                          repeat: true,
-                          animate: true,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.event_available,
-                              color: AppColors.white,
-                              size: 60,
-                            );
-                          },
-                        ),
+                      // Simple Header
+                      const Icon(
+                        Icons.event_available,
+                        color: AppColors.white,
+                        size: 60,
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -166,7 +154,7 @@ class _LeavesApplyWidgetState extends State<LeavesApplyWidget> {
                       Text(
                         'اختر نوع الإجازة وحدد التواريخ',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -177,35 +165,7 @@ class _LeavesApplyWidgetState extends State<LeavesApplyWidget> {
 
                 // Loading indicator
                 if (state is VacationTypesLoading)
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: isDark ? [] : [
-                          BoxShadow(
-                            color: AppColors.shadowLight,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(),
-                          const SizedBox(height: 16),
-                          Text(
-                            'جاري تحميل أنواع الإجازات...',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  const LeaveTypesSkeleton(),
 
                 // Error message for vacation types
                 if (hasError && vacationTypes.isEmpty)

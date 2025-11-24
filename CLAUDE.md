@@ -106,6 +106,7 @@ lib/core/
 - `dashboard` - Dashboard statistics with service cards
 - `attendance` - Check-in/out with location tracking, history, calendar, multiple sessions
 - `leave` / `leaves` - Leave requests, balance, history (note: separate features for logic vs UI)
+- `holidays` - Company holidays calendar and management
 - `chat` - WhatsApp-style messaging with real-time chat, file attachments, employee selection
 - `profile` - User profile, edit, change password
 - `notifications` - Notification list and management
@@ -148,12 +149,12 @@ flutter build appbundle --release --obfuscate --split-debug-info=build/debug_inf
 flutter build windows
 
 # Version management (update pubspec.yaml)
-# Current version: 1.1.0+9
+# Current version: 1.1.0+10
 # Format: MAJOR.MINOR.PATCH+BUILD_NUMBER
 # Example: version: 1.2.0+7
 ```
 
-**Version Info**: Current app version is `1.1.0+9` (defined in `pubspec.yaml` line 19). Increment build number for each release.
+**Version Info**: Current app version is `1.1.0+10` (defined in `pubspec.yaml` line 19). Increment build number for each release.
 
 ### Backend (Laravel)
 
@@ -275,23 +276,62 @@ Always check `response.statusCode` and parse `response.data['data']` for success
 
 All colors defined in `lib/core/styles/app_colors.dart`:
 
-- **Primary**: `#2D3142` (dark navy)
-- **Accent**: `#EF8354` (coral/orange)
-- **Success**: `#10B981`, **Error**: `#EF4444`, **Warning**: `#F59E0B`
+- **Primary**: `#6B7FA8` (warm neutral blue)
+- **Accent**: `#7FA89A` (warm teal)
+- **Success**: `#6B9B7F`, **Error**: `#B37373`, **Warning**: `#BF9B6F`
+- **WhatsApp Colors**: `whatsappGrayDark`, `whatsappGrayMedium`, `whatsappGrayLight`
 - Use `AppColors.*` constants, NOT hardcoded hex values
+
+### Text Styles
+
+All text styles defined in `lib/core/styles/app_text_styles.dart`:
+
+**Available styles** (60+ styles):
+- **Display**: `displayLarge`, `displayMedium`, `displaySmall`
+- **Headline**: `headlineLarge`, `headlineMedium`, `headlineSmall`
+- **Title**: `titleLarge`, `titleMedium`, `titleSmall`
+- **Body**: `bodyLarge`, `bodyMedium`, `bodySmall`
+- **Label**: `labelLarge`, `labelMedium`, `labelSmall`
+- **Button**: `button`, `buttonSmall`
+- **Input**: `inputText`, `inputLabel`, `inputHint`, `inputError`, `inputHelper`
+- **Form**: `formTitle`, `formDescription`
+- **Chat**: `messageText`, `messageTime`, `conversationTitle`, `conversationSubtitle`, `voiceTimer`
+- **Greeting**: `greeting`, `userName`, `welcomeTitle`, `welcomeSubtitle`
+- **Stats**: `statNumberLarge`, `statNumberMedium`, `statLabel`
+- **Timer**: `timerLarge`, `timerMedium`, `timerSmall`
+- **Badge/Chip**: `badgeText`, `chipText`
+- **Menu/List**: `menuItem`, `listTitle`, `listSubtitle`
+- **Calendar**: `calendarDay`, `calendarHeader`, `dateLabel`
+- **Special**: `link`, `caption`, `overline`
 
 ### Usage
 
 ```dart
-// ✅ Correct
+// ✅ Correct - Use AppTextStyles
+Text(
+  'Welcome Back',
+  style: AppTextStyles.welcomeTitle.copyWith(
+    color: textColor,
+  ),
+)
+
+// ✅ Correct - Use AppColors
 Container(color: AppColors.primary)
 CustomButton(text: 'Save', type: ButtonType.primary, onPressed: () {})
 
-// ❌ Wrong
+// ❌ Wrong - Never use TextStyle directly
+Text(
+  'Welcome',
+  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+)
+
+// ❌ Wrong - Never use hardcoded colors
 Container(color: Color(0xFF2D3142))
 ```
 
-Full theme guide: `lib/core/styles/THEME_GUIDE.md`
+**Full guides**:
+- Theme guide: `lib/core/styles/THEME_GUIDE.md`
+- **Text Styles guide**: `TEXT_STYLES_GUIDE.md` - Complete guide with all styles and examples
 
 ## Feature Development Workflow
 
@@ -691,6 +731,8 @@ assets/
 - **Security Guide**: `SECURITY_QUICK_GUIDE.md` - Security improvements and testing (Arabic)
 - **Attendance Documentation**: `ATTENDANCE_FEATURE_DOCUMENTATION.md` - Multiple sessions implementation
 - **Loading Animations**: `LOADING_ANIMATIONS_GUIDE.md` - Loading animation system guide (Arabic)
+- **Profile Image Upload**: `PROFILE_IMAGE_UPLOAD_COMPLETE.md` - Profile image upload implementation (English)
+- **Profile Image Upload (Arabic)**: `PROFILE_IMAGE_ARABIC_GUIDE.md` - دليل رفع الصورة الشخصية
 - **Figma Designs**: https://www.figma.com/design/gNAzHVWnkINNfxNmDZX7Nt
 - **Backend Location**: `D:\php_project\filament-hrm` (local), `/var/www/erp1` (production server)
 
@@ -1209,6 +1251,133 @@ AppLoadingScreen(
 4. Falls back to logo animation if file not found
 
 See `LOADING_ANIMATIONS_GUIDE.md` for detailed guide with recommended animations.
+
+## Error Handling System
+
+The app includes a comprehensive error handling system with beautiful UIs and consistent error management.
+
+### Error Types
+
+The system supports 7 error types:
+- **NetworkError**: No internet, timeout, server unreachable
+- **AuthError**: Invalid credentials, session expired, unauthorized
+- **ValidationError**: Form validation errors with field-level support
+- **ServerError**: 500, 503, maintenance errors
+- **BusinessError**: Not found, already exists, insufficient balance
+- **PermissionError**: Location, camera, storage permissions
+- **GeofenceError**: Outside boundary, no branch assigned
+
+### Error Display Options
+
+**ErrorHandler** provides 4 display types:
+```dart
+ErrorHandler.handle(
+  context: context,
+  error: error,
+  displayType: ErrorDisplayType.snackbar,  // Bottom snackbar (default)
+  // displayType: ErrorDisplayType.dialog,  // Alert dialog
+  // displayType: ErrorDisplayType.toast,   // Lightweight toast
+  onRetry: () => retryOperation(),
+);
+```
+
+### Error Widgets
+
+- **ErrorScreen**: Full-screen error (for critical errors)
+- **ErrorDialog**: Alert dialog with retry
+- **EmptyStateWidget**: For empty lists/data
+- **InlineErrorWidget**: For forms
+- **CompactErrorWidget**: For list items
+
+### Usage Pattern
+
+```dart
+// In Cubit
+try {
+  final data = await _repository.getData();
+  emit(state.copyWith(data: data));
+} on DioException catch (e) {
+  emit(state.copyWith(error: fromDioException(e)));
+} catch (e) {
+  emit(state.copyWith(error: UnknownError.unexpected(e)));
+}
+
+// In Screen
+BlocConsumer<MyCubit, MyState>(
+  listener: (context, state) {
+    if (state.error != null) {
+      ErrorHandler.handle(
+        context: context,
+        error: state.error!,
+        onRetry: () => context.read<MyCubit>().retry(),
+      );
+    }
+  },
+  builder: (context, state) {
+    if (state.isLoading) return CircularProgressIndicator();
+    if (state.error != null && state.data == null) {
+      return ErrorScreen(error: state.error!, onRetry: () => retry());
+    }
+    if (state.data == null || state.data!.isEmpty) {
+      return EmptyStateWidget(title: 'No data', icon: Icons.inbox);
+    }
+    return ListView(...);  // Show data
+  },
+)
+```
+
+**Documentation**:
+- **Quick Start**: `ERROR_HANDLING_QUICK_START.md` - Get started quickly
+- **Full Guide**: `ERROR_HANDLING_GUIDE.md` - Comprehensive guide with examples
+
+**Important**: Always use `fromDioException()` to convert network errors to AppError for consistent handling.
+
+## Internet Connectivity Handling
+
+The app handles internet connectivity **without** external packages like `connectivity_plus`.
+
+### Why No Package?
+
+- ✅ Dio automatically detects network errors
+- ✅ Error system converts to clear Arabic messages
+- ✅ Lighter and more reliable
+- ✅ No battery drain from constant monitoring
+
+### Automatic Handling (Recommended)
+
+```dart
+// In Cubit - automatically handled
+try {
+  final data = await _repository.getData();
+  emit(state.copyWith(data: data));
+} on DioException catch (e) {
+  // Auto-converts to NetworkError.noInternet() if no internet
+  emit(state.copyWith(error: fromDioException(e)));
+}
+```
+
+### Manual Check (Optional)
+
+For special cases (before heavy operations):
+
+```dart
+import '../core/services/connectivity_helper.dart';
+
+// Check before upload/download
+final hasInternet = await ConnectivityHelper.hasInternetConnection();
+
+if (!hasInternet) {
+  ErrorHandler.handle(
+    context: context,
+    error: NetworkError.noInternet(),
+  );
+  return;
+}
+```
+
+**Documentation**: `CONNECTIVITY_GUIDE.md` - Complete connectivity handling guide
+
+**File**: `lib/core/services/connectivity_helper.dart` - Optional manual connectivity check
 
 ## Dark Mode & Theme System
 

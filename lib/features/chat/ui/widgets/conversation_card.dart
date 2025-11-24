@@ -83,14 +83,13 @@ class _ConversationCardState extends State<ConversationCard>
           child: InkWell(
             onTap: widget.onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : AppColors.white,
+                color: isDark ? const Color(0xFF2A2D3E) : Colors.white,
                 border: Border(
                   bottom: BorderSide(
-                    color: (isDark ? AppColors.darkBorder : AppColors.border)
-                        .withOpacity(0.2),
-                    width: 0.5,
+                    color: isDark ? const Color(0xFF1C1E2B) : const Color(0xFFE5E7EB),
+                    width: 1,
                   ),
                 ),
               ),
@@ -113,12 +112,9 @@ class _ConversationCardState extends State<ConversationCard>
                               child: Text(
                                 widget.conversation.participantName,
                                 style: AppTextStyles.titleMedium.copyWith(
-                                  color:
-                                      isDark ? AppColors.darkTextPrimary : null,
-                                  fontWeight:
-                                      widget.conversation.hasUnreadMessages
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
+                                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -128,18 +124,9 @@ class _ConversationCardState extends State<ConversationCard>
                             Text(
                               widget.conversation.formattedTime,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: widget.conversation.hasUnreadMessages
-                                    ? (isDark
-                                        ? AppColors.darkAccent
-                                        : AppColors.accent)
-                                    : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.textSecondary),
-                                fontSize: 12,
-                                fontWeight:
-                                    widget.conversation.hasUnreadMessages
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+                                color: isDark ? const Color(0xFF8F92A1) : const Color(0xFF6B7280),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
@@ -179,17 +166,11 @@ class _ConversationCardState extends State<ConversationCard>
                                     child: Text(
                                       widget.conversation.lastMessagePreview,
                                       style: AppTextStyles.bodyMedium.copyWith(
-                                        color: widget.conversation.hasUnreadMessages
-                                            ? (isDark
-                                                ? AppColors.darkTextPrimary
-                                                : AppColors.textPrimary)
-                                            : (isDark
-                                                ? AppColors.darkTextSecondary
-                                                : AppColors.textSecondary),
-                                        fontWeight:
-                                            widget.conversation.hasUnreadMessages
-                                                ? FontWeight.w500
-                                                : FontWeight.normal,
+                                        color: isDark
+                                            ? const Color(0xFF8F92A1)
+                                            : const Color(0xFF6B7280),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -224,7 +205,7 @@ class _ConversationCardState extends State<ConversationCard>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.red.withOpacity(0.8),
+            Colors.red.withValues(alpha: 0.8),
             Colors.red,
           ],
         ),

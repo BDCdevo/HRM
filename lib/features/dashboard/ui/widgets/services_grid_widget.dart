@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../attendance/ui/screens/attendance_main_screen.dart';
+import '../../../leaves/ui/screens/leaves_main_screen.dart';
+import '../../../holidays/ui/screens/holidays_screen.dart';
+import '../../../requests/ui/screens/requests_main_screen.dart';
 
 /// Services Grid Widget
 ///
@@ -23,12 +26,18 @@ class ServicesGridWidget extends StatelessWidget {
         // Section Header
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: Text(
-            'Quick Services',
-            style: AppTextStyles.headlineSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+          child: Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Text(
+                'Quick Services',
+                style: AppTextStyles.headlineSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                ),
+              );
+            }
           ),
         ),
 
@@ -54,18 +63,22 @@ class ServicesGridWidget extends StatelessWidget {
             ),
             _ServiceCard(
               icon: Icons.event_busy,
-              label: 'Track Leave',
+              label: 'Leaves',
               onTap: () {
-                Navigator.pushNamed(context, '/leaves');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LeavesMainScreen(),
+                  ),
+                );
               },
             ),
             _ServiceCard(
-              icon: Icons.receipt_long,
-              label: 'Claims',
+              icon: Icons.assignment,
+              label: 'Requests',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Claims feature coming soon!'),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const RequestsMainScreen(),
                   ),
                 );
               },
@@ -85,9 +98,9 @@ class ServicesGridWidget extends StatelessWidget {
               icon: Icons.flight_takeoff,
               label: 'Holidays',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Holidays feature coming soon!'),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const HolidaysScreen(),
                   ),
                 );
               },
@@ -172,18 +185,18 @@ class _ServiceCardState extends State<_ServiceCard>
         scale: _scaleAnimation,
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: isDark ? AppColors.darkCard : Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
-                  ? AppColors.white.withOpacity(0.08)
+                  ? AppColors.darkBorder
                   : AppColors.black.withOpacity(0.06),
-              width: 1,
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.black.withOpacity(isDark ? 0.3 : 0.04),
-                blurRadius: 8,
+                color: AppColors.black.withOpacity(isDark ? 0.4 : 0.04),
+                blurRadius: isDark ? 12 : 8,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -198,16 +211,25 @@ class _ServiceCardState extends State<_ServiceCard>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Icon
-                    Icon(
-                      widget.icon,
-                      color: isDark
-                          ? AppColors.white.withOpacity(0.9)
-                          : AppColors.primary,
-                      size: 32,
+                    // Icon with background
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkPrimary.withOpacity(0.2)
+                            : AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        widget.icon,
+                        color: isDark
+                            ? AppColors.darkPrimary
+                            : AppColors.primary,
+                        size: 28,
+                      ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     // Label
                     Text(
@@ -217,7 +239,7 @@ class _ServiceCardState extends State<_ServiceCard>
                             ? AppColors.darkTextPrimary
                             : AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
-                        fontSize: 11,
+                        fontSize: 12,
                         height: 1.2,
                       ),
                       textAlign: TextAlign.center,

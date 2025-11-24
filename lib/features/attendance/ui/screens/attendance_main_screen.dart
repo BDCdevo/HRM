@@ -54,21 +54,6 @@ class _AttendanceMainScreenState extends State<AttendanceMainScreen>
               pinned: true,
               backgroundColor: appBarColor,
               elevation: 0,
-              actions: [
-                // Dark Mode Toggle
-                IconButton(
-                  icon: Icon(
-                    context.watch<ThemeCubit>().isDarkMode
-                        ? Icons.light_mode
-                        : Icons.dark_mode,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
-                  onPressed: () {
-                    context.read<ThemeCubit>().toggleTheme();
-                  },
-                ),
-              ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/logic/cubit/auth_cubit.dart';
 import '../../features/auth/logic/cubit/auth_state.dart';
 import '../../features/home/ui/screens/home_main_screen.dart';
 import '../../features/chat/ui/screens/chat_list_screen.dart';
-import '../../features/leaves/ui/screens/leaves_main_screen.dart';
+import '../../features/requests/ui/screens/requests_main_screen.dart';
 import '../../features/more/ui/screens/more_main_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../styles/app_colors.dart';
@@ -14,7 +15,7 @@ import '../styles/app_colors.dart';
 /// Modern bottom navigation bar with main app sections:
 /// - Home (Dashboard & Quick Actions)
 /// - Chat (Employee Messaging)
-/// - Leaves (Apply, History, Balance)
+/// - Requests (All request types: Leaves, Attendance, etc.)
 /// - More (Reports, Profile, Settings)
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -32,8 +33,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final userId = user?.id ?? 0;
 
     // Debug logging
-    print('🔍 MainNavigationScreen - userId from auth: $userId');
-    print('🔍 MainNavigationScreen - user email: ${user?.email}');
+    if (kDebugMode) {
+      debugPrint('🔍 MainNavigationScreen - userId from auth: $userId');
+      debugPrint('🔍 MainNavigationScreen - user email: ${user?.email}');
+    }
 
     // Company ID is always 6 (BDC) - hardcoded since UserModel doesn't contain company_id
     // TODO: Add company_id to UserModel in future versions
@@ -45,7 +48,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         companyId: companyId,
         currentUserId: userId,
       ),
-      const LeavesMainScreen(),
+      const RequestsMainScreen(),
       const MoreMainScreen(),
     ];
   }
@@ -57,19 +60,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       color: AppColors.primary,
     ),
     NavBarItem(
-      svgIcon: 'assets/whatsapp_icons/whatsapp.svg',
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
       label: 'Chat',
-      color: Color(0xFF25D366), // WhatsApp green
-    ),
-    NavBarItem(
-      svgIcon: 'assets/svgs/leaves_icon.svg',
-      label: 'Leaves',
       color: AppColors.primary,
     ),
     NavBarItem(
-      icon: Icons.more_horiz,
-      activeIcon: Icons.more_horiz,
-      label: 'More',
+      svgIcon: 'assets/svgs/leaves_icon.svg',
+      label: 'Requests',
+      color: AppColors.primary,
+    ),
+    NavBarItem(
+      svgIcon: 'assets/svgs/profile_icon.svg',
+      label: 'Profile',
       color: AppColors.primary,
     ),
   ];

@@ -5,6 +5,9 @@
 /// via the links provided below.
 ///
 /// Design System: Cutframe.in Wireframe Kit (Community)
+
+import 'package:flutter/foundation.dart';
+
 class FigmaConfig {
   // Figma Project Base URL
   static const String baseProject =
@@ -67,7 +70,9 @@ class FigmaConfig {
     if (url != null) {
       // For web/desktop: window.open(url)
       // For mobile: use url_launcher package
-      print('Opening Figma: $url');
+      if (kDebugMode) {
+        debugPrint('Opening Figma: $url');
+      }
     }
   }
 }

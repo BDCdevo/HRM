@@ -76,6 +76,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    // Get theme mode
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,7 +86,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: AppTextStyles.inputLabel,
+            style: AppTextStyles.inputLabel.copyWith(
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -105,24 +110,28 @@ class _CustomTextFieldState extends State<CustomTextField> {
             inputFormatters: widget.inputFormatters,
             focusNode: widget.focusNode,
             autofocus: widget.autofocus,
-            style: AppTextStyles.inputText,
+            style: AppTextStyles.inputText.copyWith(
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: widget.hint,
-              hintStyle: AppTextStyles.inputHint,
+              hintStyle: AppTextStyles.inputHint.copyWith(
+                color: isDark ? AppColors.darkTextHint : AppColors.textSecondary,
+              ),
               prefixIcon: widget.prefixIcon,
               suffixIcon: _buildSuffixIcon(),
               filled: true,
               fillColor: widget.enabled
-                  ? AppColors.white
-                  : AppColors.backgroundLight,
+                  ? (isDark ? AppColors.darkInput : AppColors.white)
+                  : (isDark ? AppColors.darkCard : AppColors.backgroundLight),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 16,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.border,
                   width: 1.5,
                 ),
               ),
@@ -131,7 +140,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 borderSide: BorderSide(
                   color: widget.error != null
                       ? AppColors.error
-                      : AppColors.border,
+                      : (isDark ? AppColors.darkBorder : AppColors.border),
                   width: 1.5,
                 ),
               ),
@@ -140,7 +149,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 borderSide: BorderSide(
                   color: widget.error != null
                       ? AppColors.error
-                      : AppColors.primary,
+                      : (isDark ? AppColors.darkPrimary : AppColors.primary),
                   width: 2,
                 ),
               ),
@@ -160,8 +169,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
               ),
               disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.borderLight,
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.darkBorder.withOpacity(0.5) : AppColors.borderLight,
                   width: 1.5,
                 ),
               ),
@@ -193,11 +202,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 
   Widget? _buildSuffixIcon() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.showPasswordToggle && widget.obscureText) {
       return IconButton(
         icon: Icon(
           _obscureText ? Icons.visibility_off : Icons.visibility,
-          color: AppColors.iconSecondary,
+          color: isDark ? AppColors.darkTextSecondary : AppColors.iconSecondary,
         ),
         onPressed: _togglePasswordVisibility,
       );

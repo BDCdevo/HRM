@@ -282,14 +282,18 @@ class AppTheme {
         // ============================================
         // Bottom Navigation Bar Theme
         // ============================================
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppColors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.iconSecondary,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+          selectedLabelStyle: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: AppTextStyles.labelSmall.copyWith(
+            fontWeight: FontWeight.w400,
+          ),
         ),
 
         // ============================================

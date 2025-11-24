@@ -185,13 +185,13 @@ class TodayAttendanceStatsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: isDark ? color.withOpacity(0.25) : color.withOpacity(0.12),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             count.toString(),
             style: AppTextStyles.headlineLarge.copyWith(
-              color: color,
+              color: isDark ? AppColors.darkTextPrimary : color,
               fontWeight: FontWeight.bold,
               fontSize: 28,
             ),

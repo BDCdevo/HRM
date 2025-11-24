@@ -4,6 +4,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../logic/cubit/work_schedule_cubit.dart';
 import '../../logic/cubit/work_schedule_state.dart';
+import '../widgets/work_schedule_skeleton.dart';
 
 /// Work Schedule Screen
 ///
@@ -54,7 +55,7 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
         bloc: _workScheduleCubit,
         builder: (context, state) {
           if (state is WorkScheduleLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const WorkScheduleSkeleton();
           }
 
           if (state is WorkScheduleError) {

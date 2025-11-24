@@ -173,20 +173,20 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
   /// Start polling for new messages (fallback for WebSocket)
   void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       // Check if widget is still mounted before refreshing
       if (!mounted) {
         timer.cancel();
         return;
       }
 
-      // Refresh messages every 3 seconds (keeps showing current messages)
+      // Refresh messages every 5 seconds (optimized for better performance)
       context.read<MessagesCubit>().refreshMessages(
         conversationId: widget.conversationId,
         companyId: widget.companyId,
       );
     });
-    print('✅ Polling started (checking for new messages every 3 seconds)');
+    print('✅ Polling started (checking for new messages every 5 seconds)');
   }
 
   @override
@@ -269,19 +269,50 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         builder: (context, state) {
           return Column(
             children: [
-              // Messages List
+              // Messages List with Gradient Overlay
               Expanded(
-                child: ChatMessagesListWidget(
-                  state: state,
-                  scrollController: _scrollController,
-                  isDark: isDark,
-                  conversationId: widget.conversationId,
-                  companyId: widget.companyId,
-                  isGroupChat: widget.isGroupChat,
-                  onRefresh: () => context.read<MessagesCubit>().refreshMessages(
-                    conversationId: widget.conversationId,
-                    companyId: widget.companyId,
-                  ),
+                child: Stack(
+                  children: [
+                    // Messages List
+                    ChatMessagesListWidget(
+                      state: state,
+                      scrollController: _scrollController,
+                      isDark: isDark,
+                      conversationId: widget.conversationId,
+                      companyId: widget.companyId,
+                      isGroupChat: widget.isGroupChat,
+                      onRefresh: () => context.read<MessagesCubit>().refreshMessages(
+                        conversationId: widget.conversationId,
+                        companyId: widget.companyId,
+                      ),
+                    ),
+
+                    // Top Gradient Overlay
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                isDark
+                                    ? const Color(0xFF0B141A) // Dark background
+                                    : const Color(0xFFECE5DD), // Light background
+                                isDark
+                                    ? const Color(0xFF0B141A).withValues(alpha: 0.0)
+                                    : const Color(0xFFECE5DD).withValues(alpha: 0.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
