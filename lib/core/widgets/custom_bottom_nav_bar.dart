@@ -30,59 +30,63 @@ class CustomBottomNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.darkAppBar : AppColors.white;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            surfaceColor.withOpacity(0.95),
-            surfaceColor,
-          ],
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8.0,
+      color: surfaceColor,
+      elevation: 8,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              surfaceColor.withOpacity(0.95),
+              surfaceColor,
+            ],
+          ),
         ),
-        border: isDark
-            ? null
-            : Border(
-                top: BorderSide(
-                  color: Colors.grey.shade300,
-                  width: 1,
-                ),
-              ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(isDark ? 0.2 : 0.08),
-            blurRadius: isDark ? 30 : 20,
-            offset: const Offset(0, -8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-            blurRadius: isDark ? 15 : 10,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: items.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final isSelected = currentIndex == index;
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    // First 2 items
+                    ...items.take(2).toList().asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final isSelected = currentIndex == index;
 
-                  return Expanded(
-                    child: _NavBarButton(
-                      item: item,
-                      isSelected: isSelected,
-                      onTap: () => onTap(index),
-                    ),
-                  );
-                }).toList(),
+                      return Expanded(
+                        child: _NavBarButton(
+                          item: item,
+                          isSelected: isSelected,
+                          onTap: () => onTap(index),
+                        ),
+                      );
+                    }),
+                    // Spacer for FAB
+                    const SizedBox(width: 80),
+                    // Last 2 items
+                    ...items.skip(2).toList().asMap().entries.map((entry) {
+                      final index = entry.key + 2;
+                      final item = entry.value;
+                      final isSelected = currentIndex == index;
+
+                      return Expanded(
+                        child: _NavBarButton(
+                          item: item,
+                          isSelected: isSelected,
+                          onTap: () => onTap(index),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
           ),
