@@ -83,7 +83,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  /// Build Speed Dial FAB with Circular Layout
+  /// Build Speed Dial FAB with Semicircle/Arc Layout
   Widget _buildSpeedDial(BuildContext context) {
     return SpeedDial(
       icon: Icons.add,
@@ -95,48 +95,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       buttonSize: const Size(60, 60),
       visible: true,
       closeManually: false,
-      curve: Curves.easeInOut,
+      curve: Curves.easeOutBack,
       overlayColor: Colors.black,
       overlayOpacity: 0.5,
       elevation: 8.0,
-      animationCurve: Curves.elasticInOut,
+      animationCurve: Curves.easeOutBack,
       isOpenOnStart: false,
       shape: const CircleBorder(),
-      // Circular/Radial layout
-      animationDuration: const Duration(milliseconds: 300),
+      // Semicircle/Arc layout - upward only
+      direction: SpeedDialDirection.up,
+      animationDuration: const Duration(milliseconds: 350),
       childrenButtonSize: const Size(56, 56),
-      spacing: 12,
-      spaceBetweenChildren: 8,
+      spacing: 16,
+      spaceBetweenChildren: 12,
       renderOverlay: true,
-      // Custom dial root for circular arrangement
+      // Custom dial root with rotation
       dialRoot: (ctx, open, toggleChildren) {
         return FloatingActionButton(
           onPressed: toggleChildren,
           backgroundColor: AppColors.primary,
-          elevation: 8,
+          elevation: open ? 12 : 8,
           child: AnimatedRotation(
             turns: open ? 0.125 : 0.0, // 45 degrees rotation when open
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutBack,
             child: Icon(
               open ? Icons.close : Icons.add,
               color: Colors.white,
+              size: 28,
             ),
           ),
         );
       },
       children: [
-        // Top-Left (315 degrees)
+        // Bottom-Left in arc
         SpeedDialChild(
-          child: const Icon(Icons.event_available, color: Colors.white),
+          child: const Icon(Icons.event_available, color: Colors.white, size: 24),
           backgroundColor: AppColors.success,
           foregroundColor: Colors.white,
           label: 'Leave',
           labelStyle: const TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
           labelBackgroundColor: Colors.white,
+          elevation: 6,
           onTap: () {
             Navigator.push(
               context,
@@ -146,18 +150,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Top-Right (45 degrees)
+        // Middle-Left in arc
         SpeedDialChild(
-          child: const Icon(Icons.description, color: Colors.white),
+          child: const Icon(Icons.description, color: Colors.white, size: 24),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           label: 'Request',
           labelStyle: const TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
           labelBackgroundColor: Colors.white,
+          elevation: 6,
           onTap: () {
             Navigator.push(
               context,
@@ -167,18 +172,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Left (270 degrees)
+        // Middle-Right in arc
         SpeedDialChild(
-          child: const Icon(Icons.card_membership, color: Colors.white),
+          child: const Icon(Icons.card_membership, color: Colors.white, size: 24),
           backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
           label: 'Certificate',
           labelStyle: const TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
           labelBackgroundColor: Colors.white,
+          elevation: 6,
           onTap: () {
             Navigator.push(
               context,
@@ -188,18 +194,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
-        // Right (90 degrees)
+        // Bottom-Right in arc
         SpeedDialChild(
-          child: const Icon(Icons.school, color: Colors.white),
+          child: const Icon(Icons.school, color: Colors.white, size: 24),
           backgroundColor: AppColors.warning,
           foregroundColor: Colors.white,
           label: 'Training',
           labelStyle: const TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
           labelBackgroundColor: Colors.white,
+          elevation: 6,
           onTap: () {
             Navigator.push(
               context,
