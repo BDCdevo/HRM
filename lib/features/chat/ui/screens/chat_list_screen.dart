@@ -322,7 +322,10 @@ class _ChatListView extends StatelessWidget {
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final conversation = state.conversations[index];
-              return ConversationCard(
+              final isFirst = index == 0;
+
+              // Wrap first conversation card with rounded top border
+              Widget conversationWidget = ConversationCard(
                 conversation: conversation,
                 currentUserId: currentUserId,
                 index: index,
@@ -360,6 +363,19 @@ class _ChatListView extends StatelessWidget {
                   _showSnackBar(context, '📌 Conversation pinned', isDark);
                 },
               );
+
+              // Add rounded top border to first conversation
+              if (isFirst) {
+                return ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                  child: conversationWidget,
+                );
+              }
+
+              return conversationWidget;
             }, childCount: state.conversations.length),
           ),
         ],
