@@ -83,7 +83,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
-  /// Build Speed Dial FAB
+  /// Build Speed Dial FAB with Circular Layout
   Widget _buildSpeedDial(BuildContext context) {
     return SpeedDial(
       icon: Icons.add,
@@ -102,20 +102,38 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       animationCurve: Curves.elasticInOut,
       isOpenOnStart: false,
       shape: const CircleBorder(),
-      // Arc shape for children
-      direction: SpeedDialDirection.up,
+      // Circular/Radial layout
+      useRotationTransition: true,
+      animationDuration: const Duration(milliseconds: 300),
       childrenButtonSize: const Size(56, 56),
       spacing: 12,
-      spaceBetweenChildren: 12,
+      spaceBetweenChildren: 8,
       renderOverlay: true,
+      // Custom dial root for circular arrangement
+      dialRoot: (ctx, open, toggleChildren) {
+        return FloatingActionButton(
+          onPressed: toggleChildren,
+          backgroundColor: AppColors.primary,
+          elevation: 8,
+          child: AnimatedRotation(
+            turns: open ? 0.125 : 0.0, // 45 degrees rotation when open
+            duration: const Duration(milliseconds: 300),
+            child: Icon(
+              open ? Icons.close : Icons.add,
+              color: Colors.white,
+            ),
+          ),
+        );
+      },
       children: [
+        // Top-Left (315 degrees)
         SpeedDialChild(
           child: const Icon(Icons.event_available, color: Colors.white),
           backgroundColor: AppColors.success,
           foregroundColor: Colors.white,
-          label: 'Apply for Leave',
+          label: 'Leave',
           labelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -129,13 +147,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
+        // Top-Right (45 degrees)
         SpeedDialChild(
           child: const Icon(Icons.description, color: Colors.white),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          label: 'General Request',
+          label: 'Request',
           labelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -149,13 +168,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
+        // Left (270 degrees)
         SpeedDialChild(
           child: const Icon(Icons.card_membership, color: Colors.white),
           backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
-          label: 'Request Certificate',
+          label: 'Certificate',
           labelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -169,13 +189,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           },
         ),
+        // Right (90 degrees)
         SpeedDialChild(
           child: const Icon(Icons.school, color: Colors.white),
           backgroundColor: AppColors.warning,
           foregroundColor: Colors.white,
-          label: 'Request Training',
+          label: 'Training',
           labelStyle: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
