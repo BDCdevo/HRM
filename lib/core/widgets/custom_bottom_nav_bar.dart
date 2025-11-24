@@ -46,6 +46,10 @@ class CustomBottomNavBar extends StatelessWidget {
         // Navigation Bar with notch
         Container(
           decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
@@ -59,7 +63,13 @@ class CustomBottomNavBar extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
               child: Container(
-                color: surfaceColor.withOpacity(0.95),
+                decoration: BoxDecoration(
+                  color: surfaceColor.withOpacity(0.95),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
                 child: SafeArea(
                   child: Container(
                     height: navHeight,
@@ -236,7 +246,7 @@ class _NavBarButton extends StatelessWidget {
                     color: isSelected
                         ? color.withOpacity(isDark ? 0.3 : 0.22)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: item.svgIcon != null
                       ? SvgPicture.asset(
