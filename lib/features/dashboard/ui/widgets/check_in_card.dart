@@ -16,10 +16,7 @@ import 'package:lottie/lottie.dart';
 class CheckInCard extends StatelessWidget {
   final AttendanceStatusModel? status;
 
-  const CheckInCard({
-    super.key,
-    this.status,
-  });
+  const CheckInCard({super.key, this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +57,9 @@ class CheckInCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
             ),
             child: hasActiveSession
-                ? Icon(
-                    Icons.logout_rounded,
-                    size: 64,
-                    color: AppColors.accent,
-                  )
+                ? Icon(Icons.logout_rounded, size: 64, color: AppColors.accent)
                 : Lottie.asset(
-                    'assets/svgs/Welcome.json',
+                    'assets/animations/welcome.json',
                     width: double.infinity,
                     // height: 160,
                     fit: BoxFit.contain,
@@ -84,8 +77,9 @@ class CheckInCard extends StatelessWidget {
                   ? () => _handleCheckOut(context)
                   : () => _handleCheckIn(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    hasActiveSession ? AppColors.accent : AppColors.primary,
+                backgroundColor: hasActiveSession
+                    ? AppColors.accent
+                    : AppColors.primary,
                 foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 elevation: 0,
@@ -160,7 +154,9 @@ class CheckInCard extends StatelessWidget {
           print('🔍 Work Plan Name: ${status!.workPlan!.name}');
           print('🔍 Work Plan Start Time: ${status!.workPlan!.startTime}');
           print('🔍 Work Plan End Time: ${status!.workPlan!.endTime}');
-          print('🔍 Work Plan Permission Minutes: ${status!.workPlan!.permissionMinutes}');
+          print(
+            '🔍 Work Plan Permission Minutes: ${status!.workPlan!.permissionMinutes}',
+          );
         }
       }
       print('🔍 ==========================================');
@@ -193,7 +189,9 @@ class CheckInCard extends StatelessWidget {
           return;
         }
       } else if (!isFirstSession) {
-        print('⏰ Not first session (already checked in today) - proceeding without bottom sheet');
+        print(
+          '⏰ Not first session (already checked in today) - proceeding without bottom sheet',
+        );
       } else if (!isLate) {
         print('⏰ Employee is NOT late - proceeding without bottom sheet');
       }
@@ -207,10 +205,10 @@ class CheckInCard extends StatelessWidget {
 
       // Perform check-in with location and late reason
       await context.read<AttendanceCubit>().checkIn(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            lateReason: lateReason,
-          );
+        latitude: position.latitude,
+        longitude: position.longitude,
+        lateReason: lateReason,
+      );
 
       print('✅ CheckIn method called');
     } catch (e) {
@@ -315,8 +313,9 @@ class CheckInCard extends StatelessWidget {
           print('⏰ ❌ Failed to parse 12-hour format: $e');
           // Try lowercase
           try {
-            final parsedTime =
-                DateFormat('hh:mm a').parse(startTimeStr.toUpperCase());
+            final parsedTime = DateFormat(
+              'hh:mm a',
+            ).parse(startTimeStr.toUpperCase());
             workStartTime = DateTime(
               now.year,
               now.month,
@@ -356,9 +355,11 @@ class CheckInCard extends StatelessWidget {
       }
 
       print(
-          '⏰ Work Start Time (parsed): ${DateFormat('yyyy-MM-dd HH:mm:ss').format(workStartTime)}');
+        '⏰ Work Start Time (parsed): ${DateFormat('yyyy-MM-dd HH:mm:ss').format(workStartTime)}',
+      );
       print(
-          '⏰ Work Start Time (formatted): ${DateFormat('hh:mm a').format(workStartTime)}');
+        '⏰ Work Start Time (formatted): ${DateFormat('hh:mm a').format(workStartTime)}',
+      );
 
       // Calculate minutes difference
       final int minutesDifference = now.difference(workStartTime).inMinutes;
@@ -377,7 +378,9 @@ class CheckInCard extends StatelessWidget {
         print('   - Grace Period: $gracePeriod minutes');
         print('   - Is Late (after applying grace period)? $isLate');
         if (isLate) {
-          print('   - Minutes Late (after grace): ${minutesDifference - gracePeriod} minutes');
+          print(
+            '   - Minutes Late (after grace): ${minutesDifference - gracePeriod} minutes',
+          );
         } else {
           print('   - Within Grace Period ✓');
         }

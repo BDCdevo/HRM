@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 
@@ -113,13 +114,17 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   Icon(
                     isGroupChat ? Icons.info : Icons.person,
                     size: 20,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
                   ),
                   const SizedBox(width: 12),
                   Text(
                     isGroupChat ? 'Group info' : 'View profile',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -132,13 +137,17 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   Icon(
                     Icons.notifications_off,
                     size: 20,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Mute notifications',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -151,13 +160,17 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   Icon(
                     Icons.delete_outline,
                     size: 20,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Clear chat',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -171,30 +184,87 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 
   /// Build Avatar Widget
   Widget _buildAvatar() {
+    // For groups: show group icon
+    if (isGroupChat) {
+      return Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.white.withOpacity(0.2),
+        ),
+        child: const Icon(Icons.group, color: AppColors.white, size: 20),
+      );
+    }
+
+    // For private chats: show user avatar
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.white.withOpacity(0.2),
+        color: _getAvatarColor(participantName),
+        border: Border.all(color: AppColors.white.withOpacity(0.3), width: 1.5),
       ),
-      child: Center(
-        child: isGroupChat
-            ? const Icon(
-                Icons.group,
-                color: AppColors.white,
-                size: 20,
-              )
-            : Text(
-                participantName.isNotEmpty
-                    ? participantName[0].toUpperCase()
-                    : '?',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w600,
+      child: participantAvatar != null && participantAvatar!.isNotEmpty
+          ? ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: participantAvatar!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.white,
+                    ),
+                  ),
                 ),
+                errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
               ),
+            )
+          : _buildAvatarPlaceholder(),
+    );
+  }
+
+  /// Build Avatar Placeholder (Initials)
+  Widget _buildAvatarPlaceholder() {
+    final initials = participantName
+        .split(' ')
+        .take(2)
+        .map((word) => word.isNotEmpty ? word[0].toUpperCase() : '')
+        .join();
+
+    return Center(
+      child: Text(
+        initials.isEmpty ? '?' : initials,
+        style: AppTextStyles.titleSmall.copyWith(
+          color: AppColors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
+  }
+
+  /// Get Avatar Color based on name (consistent with message bubbles)
+  Color _getAvatarColor(String name) {
+    final colors = [
+      const Color(0xFF00A884), // WhatsApp Green
+      const Color(0xFF0088CC), // Telegram Blue
+      const Color(0xFF7B68EE), // Medium Purple
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFFFF6F00), // Orange
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFF44336), // Red
+      const Color(0xFF607D8B), // Blue Grey
+      const Color(0xFF795548), // Brown
+      const Color(0xFF009688), // Teal
+    ];
+
+    final hash = name.hashCode.abs();
+    return colors[hash % colors.length];
   }
 }

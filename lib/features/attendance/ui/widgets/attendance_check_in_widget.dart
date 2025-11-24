@@ -25,10 +25,12 @@ class AttendanceCheckInWidget extends StatefulWidget {
   AttendanceCheckInWidget({super.key});
 
   @override
-  State<AttendanceCheckInWidget> createState() => _AttendanceCheckInWidgetState();
+  State<AttendanceCheckInWidget> createState() =>
+      _AttendanceCheckInWidgetState();
 }
 
-class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with WidgetsBindingObserver {
+class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget>
+    with WidgetsBindingObserver {
   // Keep track of the last status loaded
   AttendanceStatusModel? _lastStatus;
 
@@ -43,7 +45,8 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
   Timer? _timerUpdateTimer;
 
   // Global key for timer card to preserve state
-  final GlobalKey<_SimpleTimerCardState> _timerCardKey = GlobalKey<_SimpleTimerCardState>();
+  final GlobalKey<_SimpleTimerCardState> _timerCardKey =
+      GlobalKey<_SimpleTimerCardState>();
 
   @override
   void initState() {
@@ -106,8 +109,12 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
     // Theme colors
     final isDark = context.watch<ThemeCubit>().isDarkMode;
     final cardColor = isDark ? AppColors.darkCard : AppColors.surface;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.textPrimary;
+    final secondaryTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
 
     // Get current date and time
     final now = DateTime.now();
@@ -122,7 +129,8 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
           showSuccessDialog(
             context,
             title: 'Check-In Successful!',
-            message: 'Checked in at ${state.attendance.checkInTime ?? currentTime}',
+            message:
+                'Checked in at ${state.attendance.checkInTime ?? currentTime}',
             onComplete: () {
               // Refresh status and sessions after dialog closes
               context.read<AttendanceCubit>().fetchTodayStatus();
@@ -134,7 +142,8 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
           showSuccessDialog(
             context,
             title: 'Check-Out Successful!',
-            message: 'Checked out at ${state.attendance.checkOutTime ?? currentTime}',
+            message:
+                'Checked out at ${state.attendance.checkOutTime ?? currentTime}',
             onComplete: () {
               // Refresh status and sessions after dialog closes
               context.read<AttendanceCubit>().fetchTodayStatus();
@@ -155,42 +164,57 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
         // Save the last status when loaded
         if (state is AttendanceStatusLoaded) {
           _lastStatus = state.status;
-          print('✅ Status loaded: hasActiveSession=${state.status.hasActiveSession}');
+          print(
+            '✅ Status loaded: hasActiveSession=${state.status.hasActiveSession}',
+          );
           print('✅ Has Late Reason: ${state.status.hasLateReason}');
-          print('✅ Work Plan in status: ${state.status.workPlan != null ? "YES" : "NO"}');
+          print(
+            '✅ Work Plan in status: ${state.status.workPlan != null ? "YES" : "NO"}',
+          );
           if (state.status.workPlan != null) {
             print('✅ Work Plan Details:');
             print('   - Name: ${state.status.workPlan!.name}');
             print('   - Start Time: ${state.status.workPlan!.startTime}');
             print('   - End Time: ${state.status.workPlan!.endTime}');
             print('   - Schedule: ${state.status.workPlan!.schedule}');
-            print('   - Permission Minutes: ${state.status.workPlan!.permissionMinutes}');
+            print(
+              '   - Permission Minutes: ${state.status.workPlan!.permissionMinutes}',
+            );
           }
         }
 
         // Use last status if available, otherwise try to extract from current state
-        final status = _lastStatus ?? (state is AttendanceStatusLoaded ? state.status : null);
+        final status =
+            _lastStatus ??
+            (state is AttendanceStatusLoaded ? state.status : null);
 
         // Extract data from status
         final bool hasActiveSession = status?.hasActiveSession ?? false;
         final bool isCheckedIn = status?.hasCheckedIn ?? false;
         final bool isCheckedOut = status?.hasCheckedOut ?? false;
-        final String? checkInTime = status?.dailySummary?.checkInTime ?? status?.checkInTime;
-        final String? checkOutTime = status?.dailySummary?.checkOutTime ?? status?.checkOutTime;
+        final String? checkInTime =
+            status?.dailySummary?.checkInTime ?? status?.checkInTime;
+        final String? checkOutTime =
+            status?.dailySummary?.checkOutTime ?? status?.checkOutTime;
         // FIXED: Use totalHours which sums all sessions, not just current session
         final double workingHours = status?.totalHours ?? 0.0;
-        final int lateMinutes = status?.dailySummary?.lateMinutes ?? status?.lateMinutes ?? 0;
+        final int lateMinutes =
+            status?.dailySummary?.lateMinutes ?? status?.lateMinutes ?? 0;
         final bool isLoading = state is AttendanceLoading;
 
         print('🎨 UI Building:');
         print('   State Type: ${state.runtimeType}');
         print('   _lastStatus exists: ${_lastStatus != null}');
         if (_lastStatus != null) {
-          print('   _lastStatus.hasActiveSession: ${_lastStatus!.hasActiveSession}');
+          print(
+            '   _lastStatus.hasActiveSession: ${_lastStatus!.hasActiveSession}',
+          );
         }
         print('   Computed hasActiveSession: $hasActiveSession');
         print('   Computed isCheckedIn: $isCheckedIn');
-        print('   Button will show: ${hasActiveSession ? "Check Out" : "Check In"}');
+        print(
+          '   Button will show: ${hasActiveSession ? "Check Out" : "Check In"}',
+        );
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -221,7 +245,8 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                         // Page 2: Simple Timer Card (without buttons)
                         hasActiveSession
                             ? _SimpleTimerCard(
-                                key: _timerCardKey, // Use global key to preserve state
+                                key:
+                                    _timerCardKey, // Use global key to preserve state
                                 status: status,
                                 isDark: isDark,
                                 cardColor: cardColor,
@@ -232,24 +257,32 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                                 decoration: BoxDecoration(
                                   color: cardColor,
                                   borderRadius: BorderRadius.circular(24),
-                                  border: isDark ? Border.all(
-                                    color: AppColors.darkBorder,
-                                    width: 1,
-                                  ) : null,
-                                  boxShadow: isDark ? [] : [
-                                    BoxShadow(
-                                      color: AppColors.black.withOpacity(0.1),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 8),
-                                      spreadRadius: -4,
-                                    ),
-                                    BoxShadow(
-                                      color: AppColors.black.withOpacity(0.06),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                      spreadRadius: 0,
-                                    ),
-                                  ],
+                                  border: isDark
+                                      ? Border.all(
+                                          color: AppColors.darkBorder,
+                                          width: 1,
+                                        )
+                                      : null,
+                                  boxShadow: isDark
+                                      ? []
+                                      : [
+                                          BoxShadow(
+                                            color: AppColors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 24,
+                                            offset: const Offset(0, 8),
+                                            spreadRadius: -4,
+                                          ),
+                                          BoxShadow(
+                                            color: AppColors.black.withOpacity(
+                                              0.06,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -257,7 +290,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                                     Icon(
                                       Icons.timer_off_outlined,
                                       size: 64,
-                                      color: isDark ? AppColors.darkTextTertiary : AppColors.textSecondary,
+                                      color: isDark
+                                          ? AppColors.darkTextTertiary
+                                          : AppColors.textSecondary,
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
@@ -295,7 +330,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? AppColors.primary
-                              : (isDark ? AppColors.darkBorder : AppColors.border),
+                              : (isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.border),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -306,9 +343,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
 
                   // Swipe hint
                   Text(
-                    _currentPage == 0
-                        ? 'Swipe for timer →'
-                        : '← Swipe back',
+                    _currentPage == 0 ? 'Swipe for timer →' : '← Swipe back',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: secondaryTextColor,
                     ),
@@ -323,9 +358,12 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                 text: isLoading
                     ? 'Processing...'
                     : hasActiveSession
-                        ? 'Check Out'
-                        : 'Check In',
-                onPressed: isLoading || _lastStatus == null // ✅ Disable if status not loaded
+                    ? 'Check Out'
+                    : 'Check In',
+                onPressed:
+                    isLoading ||
+                        _lastStatus ==
+                            null // ✅ Disable if status not loaded
                     ? null
                     : () async {
                         print('🔴 BUTTON PRESSED!');
@@ -334,7 +372,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                         print('🔴 isLoading: $isLoading');
 
                         if (hasActiveSession) {
-                          print('🔴 Taking CHECK OUT path - Active session found');
+                          print(
+                            '🔴 Taking CHECK OUT path - Active session found',
+                          );
                           // Check out (end current session)
                           context.read<AttendanceCubit>().checkOut();
                         } else {
@@ -344,7 +384,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                           print('🔴 Returned from _handleCheckIn');
                         }
                       },
-                type: hasActiveSession ? ButtonType.error : ButtonType.secondary,
+                type: hasActiveSession
+                    ? ButtonType.error
+                    : ButtonType.secondary,
                 size: ButtonSize.large,
                 icon: isLoading
                     ? const SizedBox(
@@ -431,7 +473,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                       icon: Icons.schedule,
                       label: 'Late Minutes',
                       value: '$lateMinutes min',
-                      color: lateMinutes > 0 ? AppColors.warning : AppColors.success,
+                      color: lateMinutes > 0
+                          ? AppColors.warning
+                          : AppColors.success,
                       isDark: isDark,
                       cardColor: cardColor,
                       textColor: textColor,
@@ -455,11 +499,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: AppColors.info,
-                      size: 24,
-                    ),
+                    Icon(Icons.info_outline, color: AppColors.info, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -511,8 +551,6 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
     );
   }
 
-
-
   /// Build Animation Card (Slide 2 - Dashboard style with work_now.json)
   Widget _buildAnimationCard({
     required bool hasActiveSession,
@@ -525,24 +563,25 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: isDark ? Border.all(
-          color: AppColors.darkBorder,
-          width: 1,
-        ) : null,
-        boxShadow: isDark ? [] : [
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-            spreadRadius: -4,
-          ),
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
+        border: isDark
+            ? Border.all(color: AppColors.darkBorder, width: 1)
+            : null,
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: AppColors.black.withOpacity(0.1),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                  spreadRadius: -4,
+                ),
+                BoxShadow(
+                  color: AppColors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -553,12 +592,12 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
             height: 160,
             child: hasActiveSession
                 ? _buildAnimationOrIcon(
-                    assetPath: 'assets/svgs/work_now.json',
+                    assetPath: 'assets/animations/work_now.json',
                     fallbackIcon: Icons.work_outline,
                     iconColor: AppColors.success,
                   )
                 : _buildAnimationOrIcon(
-                    assetPath: 'assets/svgs/Welcome.json',
+                    assetPath: 'assets/animations/welcome.json',
                     fallbackIcon: Icons.waving_hand,
                     iconColor: AppColors.primary,
                   ),
@@ -568,9 +607,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
 
           // Message
           Text(
-            hasActiveSession
-                ? '🚀 You\'re working now!'
-                : '👋 Ready to begin?',
+            hasActiveSession ? '🚀 You\'re working now!' : '👋 Ready to begin?',
             style: AppTextStyles.titleMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
@@ -581,7 +618,6 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
       ),
     );
   }
-
 
   /// Build Animation or Icon (with error handling)
   Widget _buildAnimationOrIcon({
@@ -601,11 +637,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
       }),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: iconColor,
-            ),
-          );
+          return Center(child: CircularProgressIndicator(color: iconColor));
         }
 
         // If asset exists and loaded successfully, show Lottie
@@ -619,24 +651,14 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget> with 
             errorBuilder: (context, error, stackTrace) {
               // If Lottie fails to parse, show icon
               return Center(
-                child: Icon(
-                  fallbackIcon,
-                  size: 80,
-                  color: iconColor,
-                ),
+                child: Icon(fallbackIcon, size: 80, color: iconColor),
               );
             },
           );
         }
 
         // If asset doesn't exist or failed to load, show icon
-        return Center(
-          child: Icon(
-            fallbackIcon,
-            size: 80,
-            color: iconColor,
-          ),
-        );
+        return Center(child: Icon(fallbackIcon, size: 80, color: iconColor));
       },
     );
   }
@@ -681,7 +703,9 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
       final hadActiveSession = oldWidget.status?.hasActiveSession ?? false;
 
       if (hasActiveSession != hadActiveSession) {
-        print('⏰ [TIMER] Active session status changed: $hadActiveSession -> $hasActiveSession');
+        print(
+          '⏰ [TIMER] Active session status changed: $hadActiveSession -> $hasActiveSession',
+        );
         _startTimer(); // Will start or stop based on hasActiveSession
       }
     }
@@ -699,7 +723,9 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
-      print('⏰ [TIMER] Calculating elapsed time for TODAY: ${today.toString().split(' ')[0]}');
+      print(
+        '⏰ [TIMER] Calculating elapsed time for TODAY: ${today.toString().split(' ')[0]}',
+      );
 
       // CRITICAL: Check if there's an active session first
       final hasActiveSession = widget.status?.hasActiveSession ?? false;
@@ -722,8 +748,14 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
           final parts = totalDurationStr.split(':');
           final hours = int.parse(parts[0]);
           final minutes = int.parse(parts[1]);
-          final seconds = parts.length > 2 ? int.parse(parts[2].split('.')[0]) : 0;
-          totalElapsed = Duration(hours: hours, minutes: minutes, seconds: seconds);
+          final seconds = parts.length > 2
+              ? int.parse(parts[2].split('.')[0])
+              : 0;
+          totalElapsed = Duration(
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds,
+          );
           print('⏰ [TIMER] Using API duration directly: $totalElapsed');
         }
       }
@@ -779,50 +811,52 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: widget.isDark
-          ? LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.darkCard,
-                AppColors.darkInput.withOpacity(0.3),
-              ],
-            )
-          : LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary.withOpacity(0.03),
-                AppColors.accent.withOpacity(0.05),
-              ],
-            ),
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.darkCard,
+                  AppColors.darkInput.withOpacity(0.3),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withOpacity(0.03),
+                  AppColors.accent.withOpacity(0.05),
+                ],
+              ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: widget.isDark
-            ? AppColors.primary.withOpacity(0.25)
-            : AppColors.primary.withOpacity(0.15),
+              ? AppColors.primary.withOpacity(0.25)
+              : AppColors.primary.withOpacity(0.15),
           width: 2,
         ),
-        boxShadow: widget.isDark ? [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-        ] : [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-            spreadRadius: -2,
-          ),
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-            spreadRadius: 0,
-          ),
-        ],
+        boxShadow: widget.isDark
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 0,
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.08),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10),
+                  spreadRadius: -2,
+                ),
+                BoxShadow(
+                  color: AppColors.accent.withOpacity(0.05),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 0,
+                ),
+              ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -832,7 +866,9 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
           Text(
             'Work Duration',
             style: AppTextStyles.titleMedium.copyWith(
-              color: widget.isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+              color: widget.isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -845,25 +881,24 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               gradient: widget.isDark
-                ? LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.darkInput.withOpacity(0.6),
-                      AppColors.darkInput.withOpacity(0.4),
-                    ],
-                  )
-                : LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.white,
-                      AppColors.backgroundLight,
-                    ],
-                  ),
+                  ? LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.darkInput.withOpacity(0.6),
+                        AppColors.darkInput.withOpacity(0.4),
+                      ],
+                    )
+                  : LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.white, AppColors.backgroundLight],
+                    ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.primary.withOpacity(widget.isDark ? 0.35 : 0.2),
+                color: AppColors.primary.withOpacity(
+                  widget.isDark ? 0.35 : 0.2,
+                ),
                 width: 1.5,
               ),
             ),
@@ -920,25 +955,21 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: widget.isDark
-                ? [
-                    AppColors.darkCard,
-                    AppColors.darkInput,
-                  ]
-                : [
-                    Colors.white,
-                    AppColors.backgroundLight.withOpacity(0.8),
-                  ],
+                  ? [AppColors.darkCard, AppColors.darkInput]
+                  : [Colors.white, AppColors.backgroundLight.withOpacity(0.8)],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.isDark
-                ? AppColors.primary.withOpacity(0.3)
-                : AppColors.primary.withOpacity(0.25),
+                  ? AppColors.primary.withOpacity(0.3)
+                  : AppColors.primary.withOpacity(0.25),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(widget.isDark ? 0.15 : 0.1),
+                color: AppColors.primary.withOpacity(
+                  widget.isDark ? 0.15 : 0.1,
+                ),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -966,8 +997,8 @@ class _SimpleTimerCardState extends State<_SimpleTimerCard> {
             fontSize: 10,
             fontWeight: FontWeight.w600,
             color: widget.isDark
-              ? AppColors.darkTextSecondary
-              : AppColors.textSecondary,
+                ? AppColors.darkTextSecondary
+                : AppColors.textSecondary,
             letterSpacing: 0.3,
           ),
         ),
@@ -1005,7 +1036,9 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
     final AttendanceStatusModel savedStatus = _lastStatus!;
     print('💾 Saved status at start: YES');
     print('💾 Saved status - hasLateReason: ${savedStatus.hasLateReason}');
-    print('💾 Saved status - workPlan: ${savedStatus.workPlan != null ? savedStatus.workPlan!.name : "NULL"}');
+    print(
+      '💾 Saved status - workPlan: ${savedStatus.workPlan != null ? savedStatus.workPlan!.name : "NULL"}',
+    );
 
     try {
       // Show loading dialog
@@ -1055,7 +1088,9 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
           print('🔍 Work Plan Name: ${savedStatus.workPlan!.name}');
           print('🔍 Work Plan Start Time: ${savedStatus.workPlan!.startTime}');
           print('🔍 Work Plan End Time: ${savedStatus.workPlan!.endTime}');
-          print('🔍 Work Plan Permission Minutes: ${savedStatus.workPlan!.permissionMinutes}');
+          print(
+            '🔍 Work Plan Permission Minutes: ${savedStatus.workPlan!.permissionMinutes}',
+          );
         }
         print('🔍 savedStatus.hasLateReason: ${savedStatus.hasLateReason}');
       }
@@ -1089,7 +1124,9 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
           return;
         }
       } else if (!isFirstSession) {
-        print('⏰ Not first session (already checked in today) - proceeding without bottom sheet');
+        print(
+          '⏰ Not first session (already checked in today) - proceeding without bottom sheet',
+        );
       } else if (!isLate) {
         print('⏰ Employee is NOT late - proceeding without bottom sheet');
       }
@@ -1157,7 +1194,9 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
   ///
   /// Returns true if employee is checking in after work start time + grace period
   bool _checkIfLate(AttendanceStatusModel? status) {
-    print('🕐 ========== CHECKING IF LATE (CLIENT-SIDE CALCULATION) ==========');
+    print(
+      '🕐 ========== CHECKING IF LATE (CLIENT-SIDE CALCULATION) ==========',
+    );
 
     if (status == null) {
       print('⏰ ❌ Status is null - cannot determine if late');
@@ -1179,8 +1218,12 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
     print('   - Late Detection Enabled: ${workPlan.lateDetectionEnabled}');
 
     // Calculate actual grace period used (24h when late detection is OFF)
-    final actualGracePeriod = workPlan.lateDetectionEnabled ? workPlan.permissionMinutes : 1440;
-    print('   - Permission Minutes (Grace Period): $actualGracePeriod minutes (${(actualGracePeriod / 60).toStringAsFixed(1)}h)');
+    final actualGracePeriod = workPlan.lateDetectionEnabled
+        ? workPlan.permissionMinutes
+        : 1440;
+    print(
+      '   - Permission Minutes (Grace Period): $actualGracePeriod minutes (${(actualGracePeriod / 60).toStringAsFixed(1)}h)',
+    );
 
     // Check if late detection is disabled
     if (!workPlan.lateDetectionEnabled) {
@@ -1224,14 +1267,24 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
       final allowedStartMinutes = startMinutes + gracePeriod;
 
       print('⏰ Time Calculation:');
-      print('   - Current Time: ${currentTime.hour}:${currentTime.minute.toString().padLeft(2, '0')} (${currentMinutes} minutes since midnight)');
-      print('   - Work Start Time: ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')} (${startMinutes} minutes since midnight)');
-      print('   - Grace Period: $gracePeriod minutes (${(gracePeriod / 60).toStringAsFixed(1)}h) ${!workPlan.lateDetectionEnabled ? '← 24h because Late Detection is OFF' : ''}');
-      print('   - Allowed Start Time: ${_minutesToTimeString(allowedStartMinutes)} (${allowedStartMinutes} minutes since midnight)');
+      print(
+        '   - Current Time: ${currentTime.hour}:${currentTime.minute.toString().padLeft(2, '0')} (${currentMinutes} minutes since midnight)',
+      );
+      print(
+        '   - Work Start Time: ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')} (${startMinutes} minutes since midnight)',
+      );
+      print(
+        '   - Grace Period: $gracePeriod minutes (${(gracePeriod / 60).toStringAsFixed(1)}h) ${!workPlan.lateDetectionEnabled ? '← 24h because Late Detection is OFF' : ''}',
+      );
+      print(
+        '   - Allowed Start Time: ${_minutesToTimeString(allowedStartMinutes)} (${allowedStartMinutes} minutes since midnight)',
+      );
 
       // Employee is late if current time > start time + grace period
       final bool isLate = currentMinutes > allowedStartMinutes;
-      final int minutesLate = isLate ? (currentMinutes - allowedStartMinutes) : 0;
+      final int minutesLate = isLate
+          ? (currentMinutes - allowedStartMinutes)
+          : 0;
 
       print('⏰ Comparison Result:');
       print('   - Current: $currentMinutes > Allowed: $allowedStartMinutes?');
@@ -1239,12 +1292,18 @@ extension AttendanceCheckInActions on _AttendanceCheckInWidgetState {
 
       if (isLate) {
         print('   - Minutes Late (after grace period): $minutesLate minutes');
-        print('   - Hours Late: ${(minutesLate / 60).toStringAsFixed(1)} hours');
+        print(
+          '   - Hours Late: ${(minutesLate / 60).toStringAsFixed(1)} hours',
+        );
       } else if (currentMinutes > startMinutes) {
         final minutesWithinGrace = currentMinutes - startMinutes;
-        print('   - Within Grace Period ✓ (late by $minutesWithinGrace min but < $gracePeriod grace)');
+        print(
+          '   - Within Grace Period ✓ (late by $minutesWithinGrace min but < $gracePeriod grace)',
+        );
       } else {
-        print('   - On Time ✓ (arrived before ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')})');
+        print(
+          '   - On Time ✓ (arrived before ${workStartTime.hour}:${workStartTime.minute.toString().padLeft(2, '0')})',
+        );
       }
 
       print('🕐 =========================================================');
@@ -1321,28 +1380,24 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: isDark ? [] : [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: AppColors.shadowLight,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 12),
           Text(
             label,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: secondaryTextColor,
-            ),
+            style: AppTextStyles.labelSmall.copyWith(color: secondaryTextColor),
           ),
           const SizedBox(height: 4),
           Text(

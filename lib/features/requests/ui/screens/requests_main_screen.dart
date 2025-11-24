@@ -17,7 +17,9 @@ class RequestsMainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.background;
+    final backgroundColor = isDark
+        ? AppColors.darkBackground
+        : AppColors.background;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -49,23 +51,19 @@ class RequestsMainScreen extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: isDark
-                      ? [
-                          AppColors.darkCard,
-                          AppColors.darkCardElevated,
-                        ]
-                      : [
-                          AppColors.primary,
-                          AppColors.primaryLight,
-                        ],
+                        ? [AppColors.darkCard, AppColors.darkCardElevated]
+                        : [AppColors.primary, AppColors.primaryLight],
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: isDark ? [] : [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  boxShadow: isDark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                 ),
                 child: Column(
                   children: [
@@ -74,7 +72,7 @@ class RequestsMainScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 180,
                       child: Lottie.asset(
-                        'assets/svgs/leaves.json',
+                        'assets/animations/leaves.json',
                         fit: BoxFit.contain,
                         repeat: true,
                         animate: true,
@@ -159,7 +157,8 @@ class RequestsMainScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const CertificateRequestScreen(),
+                          builder: (context) =>
+                              const CertificateRequestScreen(),
                         ),
                       );
                     },
@@ -222,16 +221,10 @@ class RequestsMainScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(
-              Icons.schedule,
-              color: AppColors.warning,
-              size: 28,
-            ),
+            Icon(Icons.schedule, color: AppColors.warning, size: 28),
             const SizedBox(width: 12),
             const Text('قريباً'),
           ],
@@ -243,10 +236,7 @@ class RequestsMainScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'حسناً',
-              style: TextStyle(color: AppColors.primary),
-            ),
+            child: Text('حسناً', style: TextStyle(color: AppColors.primary)),
           ),
         ],
       ),
@@ -288,9 +278,10 @@ class _RequestTypeCardState extends State<_RequestTypeCard>
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

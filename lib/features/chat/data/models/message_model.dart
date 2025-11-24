@@ -67,12 +67,17 @@ class MessageModel {
   /// Factory for API response
   /// API returns: {id, body, user_id, user_name, user_avatar, created_at, is_mine, attachment_type, attachment_name, attachment_url, attachment_size, read_at}
   factory MessageModel.fromApiJson(Map<String, dynamic> json) {
+    final avatar = json['user_avatar'] as String?;
+
+    // DEBUG: Print avatar URL
+    print('🖼️ Message Avatar for ${json['user_name']}: ${avatar ?? "NULL"}');
+
     return MessageModel(
       id: json['id'] as int,
       conversationId: 0, // Not provided, set to 0
       senderId: json['user_id'] as int,
       senderName: json['user_name'] as String? ?? 'Unknown',
-      senderAvatar: json['user_avatar'] as String?,
+      senderAvatar: avatar,
       message: json['body'] as String? ?? '',
       messageType: json['attachment_type'] as String? ?? 'text',
       attachmentUrl: json['attachment_url'] as String?,

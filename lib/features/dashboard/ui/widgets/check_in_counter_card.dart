@@ -15,10 +15,7 @@ import '../../../attendance/logic/cubit/attendance_cubit.dart';
 class CheckInCounterCard extends StatefulWidget {
   final dynamic status;
 
-  const CheckInCounterCard({
-    super.key,
-    required this.status,
-  });
+  const CheckInCounterCard({super.key, required this.status});
 
   @override
   State<CheckInCounterCard> createState() => _CheckInCounterCardState();
@@ -66,10 +63,16 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
           final parts = totalDurationStr.split(':');
           final hours = int.parse(parts[0]);
           final minutes = int.parse(parts[1]);
-          final seconds = parts.length > 2 ? int.parse(parts[2].split('.')[0]) : 0;
+          final seconds = parts.length > 2
+              ? int.parse(parts[2].split('.')[0])
+              : 0;
 
           // This totalDuration includes ALL sessions (completed + active at API call time)
-          totalElapsed = Duration(hours: hours, minutes: minutes, seconds: seconds);
+          totalElapsed = Duration(
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds,
+          );
           print('✅ Parsed total duration: $totalElapsed');
         }
       }
@@ -77,10 +80,13 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
       // Step 2: If there's an active session, calculate its real-time duration
       if (widget.status?.currentSession != null) {
         final checkInTimeStr = widget.status!.currentSession!.checkInTime;
-        final currentSessionDurationStr = widget.status!.currentSession!.duration;
+        final currentSessionDurationStr =
+            widget.status!.currentSession!.duration;
 
         print('📍 Active session check-in time: $checkInTimeStr');
-        print('📍 Active session duration from API: $currentSessionDurationStr');
+        print(
+          '📍 Active session duration from API: $currentSessionDurationStr',
+        );
 
         if (checkInTimeStr != null && checkInTimeStr.contains(':')) {
           final now = DateTime.now();
@@ -89,9 +95,18 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
           final parts = checkInTimeStr.split(':');
           final hour = int.parse(parts[0]);
           final minute = int.parse(parts[1]);
-          final second = parts.length > 2 ? int.parse(parts[2].split('.')[0]) : 0;
+          final second = parts.length > 2
+              ? int.parse(parts[2].split('.')[0])
+              : 0;
 
-          DateTime checkInTime = DateTime(now.year, now.month, now.day, hour, minute, second);
+          DateTime checkInTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            hour,
+            minute,
+            second,
+          );
 
           // If check-in time is in the future, it was yesterday
           if (checkInTime.isAfter(now)) {
@@ -103,12 +118,19 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
 
           // Parse current session duration from API
           Duration apiSessionDuration = Duration.zero;
-          if (currentSessionDurationStr != null && currentSessionDurationStr.contains(':')) {
+          if (currentSessionDurationStr != null &&
+              currentSessionDurationStr.contains(':')) {
             final parts = currentSessionDurationStr.split(':');
             final hours = int.parse(parts[0]);
             final minutes = int.parse(parts[1]);
-            final seconds = parts.length > 2 ? int.parse(parts[2].split('.')[0]) : 0;
-            apiSessionDuration = Duration(hours: hours, minutes: minutes, seconds: seconds);
+            final seconds = parts.length > 2
+                ? int.parse(parts[2].split('.')[0])
+                : 0;
+            apiSessionDuration = Duration(
+              hours: hours,
+              minutes: minutes,
+              seconds: seconds,
+            );
           }
 
           // Calculate completed sessions duration (total - active session from API)
@@ -122,7 +144,9 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
           print('✅ Total elapsed (completed + active): $totalElapsed');
         }
       } else {
-        print('ℹ️ No active session, using total duration from API: $totalElapsed');
+        print(
+          'ℹ️ No active session, using total duration from API: $totalElapsed',
+        );
       }
 
       _elapsed = totalElapsed;
@@ -203,7 +227,9 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Check Point - Coming Soon')),
+                      const SnackBar(
+                        content: Text('Check Point - Coming Soon'),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.location_on_outlined, size: 16),
@@ -297,7 +323,7 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
   /// Build Working Animation
   Widget _buildWorkingAnimation() {
     return Lottie.asset(
-      'assets/svgs/working_online.json',
+      'assets/animations/working_online.json',
       width: double.infinity,
       fit: BoxFit.contain,
       repeat: true,
@@ -305,14 +331,9 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
       errorBuilder: (context, error, stackTrace) {
         // If animation fails to load, show icon
         return Center(
-          child: Icon(
-            Icons.work_outline,
-            size: 80,
-            color: AppColors.success,
-          ),
+          child: Icon(Icons.work_outline, size: 80, color: AppColors.success),
         );
       },
     );
   }
 }
-

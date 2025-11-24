@@ -99,7 +99,9 @@
       "Bash(python:*)",
       "Bash(flutter devices:*)",
       "Bash(/tmp/ChatController_current.php)",
-      "Bash(del \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\ChatController_current.php\")"
+      "Bash(del \"C:\\Users\\B-SMART\\AppData\\Local\\Temp\\ChatController_current.php\")",
+      "Bash(cmd /c dir \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\assets\\svgs\\*welcome*\" /b)",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\assets\\svgs && ren Welcome.json welcome.json\")"
     ],
     "deny": [],
     "ask": []

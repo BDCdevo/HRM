@@ -28,15 +28,10 @@ class ChatListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ChatCubit(ChatRepository())
-        ..fetchConversations(
-          companyId: companyId,
-          currentUserId: currentUserId,
-        ),
-      child: _ChatListView(
-        companyId: companyId,
-        currentUserId: currentUserId,
-      ),
+      create: (context) => ChatCubit(
+        ChatRepository(),
+      )..fetchConversations(companyId: companyId, currentUserId: currentUserId),
+      child: _ChatListView(companyId: companyId, currentUserId: currentUserId),
     );
   }
 }
@@ -45,17 +40,16 @@ class _ChatListView extends StatelessWidget {
   final int companyId;
   final int currentUserId;
 
-  const _ChatListView({
-    required this.companyId,
-    required this.currentUserId,
-  });
+  const _ChatListView({required this.companyId, required this.currentUserId});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1C1E2B) : const Color(0xFFF5F5F5), // Adaptive background
+      backgroundColor: isDark
+          ? const Color(0xFF1C1E2B)
+          : const Color(0xFFF5F5F5), // Adaptive background
       appBar: _buildAppBar(context, isDark),
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
@@ -150,16 +144,14 @@ class _ChatListView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               'Failed to load conversations',
               style: AppTextStyles.titleMedium.copyWith(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -184,9 +176,14 @@ class _ChatListView extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
+                backgroundColor: isDark
+                    ? AppColors.darkAccent
+                    : AppColors.accent,
                 foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -207,7 +204,7 @@ class _ChatListView extends StatelessWidget {
               width: 250,
               height: 250,
               child: Lottie.asset(
-                'assets/svgs/Welcome.json',
+                'assets/animations/welcome.json',
                 fit: BoxFit.contain,
                 repeat: true,
               ),
@@ -266,7 +263,9 @@ class _ChatListView extends StatelessWidget {
               icon: const Icon(Icons.chat_bubble_outline),
               label: const Text('Start New Chat'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
+                backgroundColor: isDark
+                    ? AppColors.darkAccent
+                    : AppColors.accent,
                 foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
@@ -321,61 +320,47 @@ class _ChatListView extends StatelessWidget {
 
           // Conversations List
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final conversation = state.conversations[index];
-                return ConversationCard(
-                  conversation: conversation,
-                  currentUserId: currentUserId,
-                  index: index,
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatRoomScreen(
-                          conversationId: conversation.id,
-                          participantName: conversation.participantName,
-                          participantAvatar: conversation.participantAvatar,
-                          companyId: companyId,
-                          currentUserId: currentUserId,
-                          isGroupChat: conversation.isGroup,
-                        ),
-                      ),
-                    );
-
-                    // Refresh conversation list when returning
-                    if (context.mounted) {
-                      context.read<ChatCubit>().fetchConversations(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final conversation = state.conversations[index];
+              return ConversationCard(
+                conversation: conversation,
+                currentUserId: currentUserId,
+                index: index,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatRoomScreen(
+                        conversationId: conversation.id,
+                        participantName: conversation.participantName,
+                        participantAvatar: conversation.participantAvatar,
                         companyId: companyId,
                         currentUserId: currentUserId,
-                      );
-                    }
-                  },
-                  onArchive: () {
-                    _showSnackBar(
-                      context,
-                      '📦 Conversation archived',
-                      isDark,
+                        isGroupChat: conversation.isGroup,
+                        participantId: conversation.participantId,
+                      ),
+                    ),
+                  );
+
+                  // Refresh conversation list when returning
+                  if (context.mounted) {
+                    context.read<ChatCubit>().fetchConversations(
+                      companyId: companyId,
+                      currentUserId: currentUserId,
                     );
-                  },
-                  onDelete: () {
-                    _showSnackBar(
-                      context,
-                      '🗑️ Conversation deleted',
-                      isDark,
-                    );
-                  },
-                  onPin: () {
-                    _showSnackBar(
-                      context,
-                      '📌 Conversation pinned',
-                      isDark,
-                    );
-                  },
-                );
-              },
-              childCount: state.conversations.length,
-            ),
+                  }
+                },
+                onArchive: () {
+                  _showSnackBar(context, '📦 Conversation archived', isDark);
+                },
+                onDelete: () {
+                  _showSnackBar(context, '🗑️ Conversation deleted', isDark);
+                },
+                onPin: () {
+                  _showSnackBar(context, '📌 Conversation pinned', isDark);
+                },
+              );
+            }, childCount: state.conversations.length),
           ),
         ],
       ),
@@ -422,6 +407,7 @@ class _ChatListView extends StatelessWidget {
               companyId: companyId,
               currentUserId: currentUserId,
               isGroupChat: false,
+              participantId: userId,
             ),
           ),
         );
@@ -457,9 +443,7 @@ class _ChatListView extends StatelessWidget {
         content: Text(message),
         backgroundColor: isDark ? AppColors.darkCard : AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
       ),
     );

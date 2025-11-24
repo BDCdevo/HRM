@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../../features/auth/logic/cubit/auth_cubit.dart';
 import '../../features/auth/logic/cubit/auth_state.dart';
 import '../../features/home/ui/screens/home_main_screen.dart';
 import '../../features/chat/ui/screens/chat_list_screen.dart';
 import '../../features/requests/ui/screens/requests_main_screen.dart';
 import '../../features/more/ui/screens/more_main_screen.dart';
+import '../../features/leaves/ui/screens/leaves_main_screen.dart';
+import '../../features/general_request/ui/screens/general_request_screen.dart';
+import '../../features/certificate/ui/screens/certificate_request_screen.dart';
+import '../../features/training/ui/screens/training_request_screen.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../styles/app_colors.dart';
+import '../routing/app_router.dart';
 
 /// Main Navigation Screen
 ///
@@ -77,6 +83,94 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
   ];
 
+  /// Build Speed Dial FAB with quick actions
+  Widget _buildSpeedDial(BuildContext context) {
+    return SpeedDial(
+      icon: Icons.add,
+      activeIcon: Icons.close,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      activeForegroundColor: Colors.white,
+      activeBackgroundColor: AppColors.primary,
+      buttonSize: const Size(56, 56),
+      visible: true,
+      closeManually: false,
+      curve: Curves.bounceIn,
+      overlayColor: Colors.black,
+      overlayOpacity: 0.5,
+      elevation: 8.0,
+      animationCurve: Curves.elasticInOut,
+      isOpenOnStart: false,
+      shape: const CircleBorder(),
+      children: [
+        SpeedDialChild(
+          child: const Icon(Icons.event_available, color: Colors.white),
+          backgroundColor: AppColors.success,
+          foregroundColor: Colors.white,
+          label: 'Apply for Leave',
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          labelBackgroundColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LeavesMainScreen(),
+              ),
+            );
+          },
+        ),
+        SpeedDialChild(
+          child: const Icon(Icons.description, color: Colors.white),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          label: 'General Request',
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          labelBackgroundColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const GeneralRequestScreen(),
+              ),
+            );
+          },
+        ),
+        SpeedDialChild(
+          child: const Icon(Icons.card_membership, color: Colors.white),
+          backgroundColor: AppColors.accent,
+          foregroundColor: Colors.white,
+          label: 'Request Certificate',
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          labelBackgroundColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CertificateRequestScreen(),
+              ),
+            );
+          },
+        ),
+        SpeedDialChild(
+          child: const Icon(Icons.school, color: Colors.white),
+          backgroundColor: AppColors.warning,
+          foregroundColor: Colors.white,
+          label: 'Request Training',
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          labelBackgroundColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TrainingRequestScreen(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
@@ -92,6 +186,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             index: _currentIndex,
             children: _buildScreens(state),
           ),
+          floatingActionButton: _buildSpeedDial(context),
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
             items: _navItems,

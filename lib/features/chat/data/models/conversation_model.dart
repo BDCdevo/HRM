@@ -99,6 +99,9 @@ class ConversationModel {
                            'Unknown';
           participantAvatar = otherParticipant['avatar'] as String?;
           participantDepartment = otherParticipant['department'] as String?;
+
+          // DEBUG: Print avatar URL
+          print('🖼️ Avatar for ${participantName}: ${participantAvatar ?? "NULL"}');
         }
       }
 

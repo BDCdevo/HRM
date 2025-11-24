@@ -23,6 +23,7 @@ import '../widgets/chat_app_bar_widget.dart';
 import '../widgets/chat_messages_list_widget.dart';
 import '../widgets/chat_input_bar_widget.dart';
 import 'group_info_screen.dart';
+import 'chat_user_profile_screen.dart';
 
 /// Chat Room Screen - WhatsApp Style
 ///
@@ -34,6 +35,7 @@ class ChatRoomScreen extends StatelessWidget {
   final int companyId;
   final int currentUserId;
   final bool isGroupChat;
+  final int? participantId; // Other user's ID (for profile)
 
   const ChatRoomScreen({
     super.key,
@@ -43,6 +45,7 @@ class ChatRoomScreen extends StatelessWidget {
     required this.companyId,
     required this.currentUserId,
     this.isGroupChat = false,
+    this.participantId,
   });
 
   @override
@@ -61,6 +64,7 @@ class ChatRoomScreen extends StatelessWidget {
         companyId: companyId,
         currentUserId: currentUserId,
         isGroupChat: isGroupChat,
+        participantId: participantId,
       ),
     );
   }
@@ -73,6 +77,7 @@ class _ChatRoomView extends StatefulWidget {
   final int companyId;
   final int currentUserId;
   final bool isGroupChat;
+  final int? participantId;
 
   const _ChatRoomView({
     required this.conversationId,
@@ -81,6 +86,7 @@ class _ChatRoomView extends StatefulWidget {
     required this.companyId,
     required this.currentUserId,
     this.isGroupChat = false,
+    this.participantId,
   });
 
   @override
@@ -611,11 +617,25 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
   /// Open Employee Profile
   void _openEmployeeProfile() {
-    // TODO: Navigate to employee profile screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening ${widget.participantName}\'s profile...'),
-        duration: const Duration(seconds: 2),
+    if (widget.participantId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User profile not available'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Navigate to user profile screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatUserProfileScreen(
+          userId: widget.participantId!,
+          userName: widget.participantName,
+          userAvatar: widget.participantAvatar,
+        ),
       ),
     );
   }

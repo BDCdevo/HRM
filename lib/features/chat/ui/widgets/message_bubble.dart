@@ -33,104 +33,213 @@ class MessageBubble extends StatelessWidget {
           top: 2,
           bottom: 2,
         ),
-        child: Column(
-          crossAxisAlignment: isSentByMe
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Sender name (for group chats only, received messages only)
-            if (isGroupChat && !isSentByMe)
-              Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 4),
-                child: Text(
-                  message.senderName,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: _getColorForUser(message.senderId),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+            // Avatar for received messages (left side)
+            if (!isSentByMe) ...[
+              _buildAvatar(isDark),
+              const SizedBox(width: 8),
+            ],
 
-            // Message bubble
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSentByMe
-                    ? (isDark
-                          ? AppColors.primary.withOpacity(0.85) // Primary color in dark mode
-                          : AppColors.primary.withOpacity(0.15)) // Light primary in light mode
-                    : (isDark
-                          ? AppColors.darkCard // Dark card color for received
-                          : AppColors.surface), // Surface color for light mode
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(12),
-                  topRight: const Radius.circular(12),
-                  bottomLeft: isSentByMe
-                      ? const Radius.circular(12)
-                      : const Radius.circular(2),
-                  bottomRight: isSentByMe
-                      ? const Radius.circular(2)
-                      : const Radius.circular(12),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-                border: Border.all(
-                  color: isDark
-                      ? AppColors.darkBorder.withOpacity(0.5)
-                      : AppColors.border.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
+            // Message content
+            Flexible(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: isSentByMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
-                  // Message content
-                  _buildMessageContent(isDark),
-
-                  const SizedBox(height: 4),
-
-                  // Time and status
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        message.formattedTime,
+                  // Sender name (for group chats only, received messages only)
+                  if (isGroupChat && !isSentByMe)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, bottom: 4),
+                      child: Text(
+                        message.senderName,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: isSentByMe
-                              ? (isDark
-                                    ? Colors.white.withOpacity(0.7)
-                                    : const Color(0xFF667781)) // WhatsApp grey
-                              : (isDark
-                                    ? Colors.white.withOpacity(0.6)
-                                    : const Color(0xFF667781)),
-                          fontSize: 11,
+                          color: _getColorForUser(message.senderId),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (isSentByMe) ...[
-                        const SizedBox(width: 4),
-                        _buildMessageStatus(),
+                    ),
+
+                  // Message bubble
+                  Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSentByMe
+                          ? (isDark
+                                ? AppColors.primary.withOpacity(
+                                    0.85,
+                                  ) // Primary color in dark mode
+                                : AppColors.primary.withOpacity(
+                                    0.15,
+                                  )) // Light primary in light mode
+                          : (isDark
+                                ? AppColors
+                                      .darkCard // Dark card color for received
+                                : AppColors
+                                      .surface), // Surface color for light mode
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(12),
+                        topRight: const Radius.circular(12),
+                        bottomLeft: isSentByMe
+                            ? const Radius.circular(12)
+                            : const Radius.circular(2),
+                        bottomRight: isSentByMe
+                            ? const Radius.circular(2)
+                            : const Radius.circular(12),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withOpacity(0.2)
+                              : Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
                       ],
-                    ],
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.darkBorder.withOpacity(0.5)
+                            : AppColors.border.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Message content
+                        _buildMessageContent(isDark),
+
+                        const SizedBox(height: 4),
+
+                        // Time and status
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              message.formattedTime,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: isSentByMe
+                                    ? (isDark
+                                          ? Colors.white.withOpacity(0.7)
+                                          : const Color(
+                                              0xFF667781,
+                                            )) // WhatsApp grey
+                                    : (isDark
+                                          ? Colors.white.withOpacity(0.6)
+                                          : const Color(0xFF667781)),
+                                fontSize: 11,
+                              ),
+                            ),
+                            if (isSentByMe) ...[
+                              const SizedBox(width: 4),
+                              _buildMessageStatus(),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
+
+            // Avatar for sent messages (right side) - optional, usually not shown
+            // Uncomment if you want to show user's own avatar on sent messages
+            // if (isSentByMe) ...[
+            //   const SizedBox(width: 8),
+            //   _buildAvatar(isDark),
+            // ],
           ],
         ),
       ),
     );
+  }
+
+  /// Build Avatar Widget
+  Widget _buildAvatar(bool isDark) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _getAvatarColor(message.senderName),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+          width: 1,
+        ),
+      ),
+      child: message.senderAvatar != null && message.senderAvatar!.isNotEmpty
+          ? ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: message.senderAvatar!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
+              ),
+            )
+          : _buildAvatarPlaceholder(),
+    );
+  }
+
+  /// Build Avatar Placeholder (Initials)
+  Widget _buildAvatarPlaceholder() {
+    final initials = message.senderName
+        .split(' ')
+        .take(2)
+        .map((word) => word.isNotEmpty ? word[0].toUpperCase() : '')
+        .join();
+
+    return Center(
+      child: Text(
+        initials.isEmpty ? '?' : initials,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  /// Get Avatar Color based on sender name
+  Color _getAvatarColor(String name) {
+    final colors = [
+      const Color(0xFF00A884), // WhatsApp Green
+      const Color(0xFF0088CC), // Telegram Blue
+      const Color(0xFF7B68EE), // Medium Purple
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFFFF6F00), // Orange
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFF44336), // Red
+      const Color(0xFF607D8B), // Blue Grey
+      const Color(0xFF795548), // Brown
+      const Color(0xFF009688), // Teal
+    ];
+
+    final hash = name.hashCode.abs();
+    return colors[hash % colors.length];
   }
 
   /// Build Message Content
@@ -188,7 +297,8 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              errorWidget: (context, url, error) => _buildPlaceholderImage(isDark),
+              errorWidget: (context, url, error) =>
+                  _buildPlaceholderImage(isDark),
             ),
           ),
         ),
@@ -262,7 +372,8 @@ class MessageBubble extends StatelessWidget {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primary;
 
     // Get file info
-    final fileName = message.attachmentName ?? message.message ?? 'Unknown file';
+    final fileName =
+        message.attachmentName ?? message.message ?? 'Unknown file';
     final fileSize = message.attachmentSize != null
         ? _formatFileSize(message.attachmentSize!)
         : '';
@@ -291,11 +402,7 @@ class MessageBubble extends StatelessWidget {
               color: fileColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              fileIcon,
-              color: fileColor,
-              size: 28,
-            ),
+            child: Icon(fileIcon, color: fileColor, size: 28),
           ),
 
           const SizedBox(width: 12),
@@ -339,7 +446,8 @@ class MessageBubble extends StatelessWidget {
           const SizedBox(width: 8),
 
           // Download Icon
-          if (message.attachmentUrl != null && message.attachmentUrl!.isNotEmpty)
+          if (message.attachmentUrl != null &&
+              message.attachmentUrl!.isNotEmpty)
             Icon(
               Icons.download_rounded,
               color: isDark
@@ -450,11 +558,7 @@ class MessageBubble extends StatelessWidget {
     // ✓✓ Grey = Delivered (تم التوصيل)
     // Note: Backend should send 'delivered_at' field
     // For now, we assume if not read, it's delivered
-    return Icon(
-      Icons.done_all,
-      size: 16,
-      color: Colors.grey[600],
-    );
+    return Icon(Icons.done_all, size: 16, color: Colors.grey[600]);
 
     // ✓ Grey = Sent (تم الإرسال)
     // This would be shown if message just sent but not delivered yet
