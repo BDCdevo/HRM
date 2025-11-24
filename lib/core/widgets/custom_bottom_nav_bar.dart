@@ -31,74 +31,98 @@ class CustomBottomNavBar extends StatelessWidget {
     final surfaceColor = isDark ? AppColors.darkAppBar : AppColors.white;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Responsive spacing
-    final horizontalPadding = screenWidth > 600 ? 24.0 : 8.0;
-    final fabSpacing = screenWidth > 600 ? 100.0 : 70.0;
+    // Responsive sizing
+    final isSmallScreen = screenWidth < 360;
+    final isMediumScreen = screenWidth >= 360 && screenWidth < 400;
+    final navHeight = isSmallScreen ? 60.0 : 65.0;
+    final horizontalPadding = isSmallScreen ? 4.0 : 8.0;
 
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8.0,
-      color: surfaceColor,
-      elevation: 8,
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              surfaceColor.withOpacity(0.95),
-              surfaceColor,
+    final fabSize = isSmallScreen ? 60.0 : (isMediumScreen ? 62.0 : 64.0);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        // Navigation Bar with notch
+        Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, -3),
+              ),
             ],
           ),
-        ),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: SafeArea(
+          child: ClipPath(
+            clipper: _NavBarNotchClipper(notchRadius: fabSize / 2 + 8),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
               child: Container(
-                height: 56,
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // First 2 items
-                    ...items.take(2).toList().asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      final isSelected = currentIndex == index;
+                color: surfaceColor.withOpacity(0.95),
+                child: SafeArea(
+                  child: Container(
+                    height: navHeight,
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          // First 2 items
+                          ...items.take(2).toList().asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            final isSelected = currentIndex == index;
 
-                      return Expanded(
-                        child: _NavBarButton(
-                          item: item,
-                          isSelected: isSelected,
-                          onTap: () => onTap(index),
-                        ),
-                      );
-                    }),
-                    // Spacer for FAB
-                    SizedBox(width: fabSpacing),
-                    // Last 2 items
-                    ...items.skip(2).toList().asMap().entries.map((entry) {
-                      final index = entry.key + 2;
-                      final item = entry.value;
-                      final isSelected = currentIndex == index;
+                            return Expanded(
+                              child: _NavBarButton(
+                                item: item,
+                                isSelected: isSelected,
+                                onTap: () => onTap(index),
+                                isSmallScreen: isSmallScreen,
+                                isMediumScreen: isMediumScreen,
+                              ),
+                            );
+                          }),
+                          // Spacer for FAB
+                          const Expanded(child: SizedBox()),
+                          // Last 2 items
+                          ...items.skip(2).take(2).toList().asMap().entries.map((entry) {
+                            final index = entry.key + 2;
+                            final item = entry.value;
+                            final isSelected = currentIndex == index;
 
-                      return Expanded(
-                        child: _NavBarButton(
-                          item: item,
-                          isSelected: isSelected,
-                          onTap: () => onTap(index),
-                        ),
-                      );
-                    }),
-                  ],
+                            return Expanded(
+                              child: _NavBarButton(
+                                item: item,
+                                isSelected: isSelected,
+                                onTap: () => onTap(index),
+                                isSmallScreen: isSmallScreen,
+                                isMediumScreen: isMediumScreen,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
+
+        // Floating FAB Button (positioned above nav bar)
+        Positioned(
+          bottom: navHeight * 0.85, // Position it to cut through the nav bar
+          child: _NavBarButton(
+            item: items[4], // The 5th item (FAB)
+            isSelected: false,
+            onTap: () => onTap(4),
+            isFab: true,
+            isSmallScreen: isSmallScreen,
+            isMediumScreen: isMediumScreen,
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -129,11 +153,17 @@ class _NavBarButton extends StatelessWidget {
   final NavBarItem item;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isFab;
+  final bool isSmallScreen;
+  final bool isMediumScreen;
 
   const _NavBarButton({
     required this.item,
     required this.isSelected,
     required this.onTap,
+    this.isFab = false,
+    this.isSmallScreen = false,
+    this.isMediumScreen = false,
   });
 
   @override
@@ -141,10 +171,56 @@ class _NavBarButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = item.color ?? AppColors.primary;
 
+    // Responsive sizing
+    final fabSize = isSmallScreen ? 60.0 : (isMediumScreen ? 62.0 : 64.0);
+    final fabIconSize = isSmallScreen ? 28.0 : (isMediumScreen ? 30.0 : 32.0);
+    final fabBorderWidth = isSmallScreen ? 2.0 : 2.5;
+    final labelFontSize = isSmallScreen ? 9.5 : (isMediumScreen ? 10.5 : 11.0);
+
+    // FAB Style
+    if (isFab) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: fabSize,
+          height: fabSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+          child: item.svgIcon != null
+              ? Padding(
+                  padding: EdgeInsets.all(isSmallScreen ? 16.0 : 18.0),
+                  child: SvgPicture.asset(
+                    item.svgIcon!,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                )
+              : Icon(
+                  item.icon!,
+                  size: fabIconSize,
+                  color: Colors.white,
+                ),
+        ),
+      );
+    }
+
+    // Regular Nav Button
+    final iconSize = isSmallScreen ? 20.0 : (isMediumScreen ? 22.0 : 24.0);
+    final iconSizeSelected = isSmallScreen ? 24.0 : (isMediumScreen ? 25.0 : 26.0);
+    final iconPadding = isSmallScreen ? 3.0 : 4.0;
+    final iconPaddingSelected = isSmallScreen ? 5.0 : 6.0;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        padding: EdgeInsets.symmetric(
+          vertical: isSmallScreen ? 2.0 : 4.0,
+          horizontal: isSmallScreen ? 1.0 : 2.0,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -155,25 +231,24 @@ class _NavBarButton extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.all(isSelected ? 6.0 : 4.0),
+                  padding: EdgeInsets.all(isSelected ? iconPaddingSelected : iconPadding),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? color.withOpacity(isDark ? 0.3 : 0.22)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: item.svgIcon != null
                       ? SvgPicture.asset(
                           isSelected
                               ? (item.activeSvgIcon ?? item.svgIcon!)
                               : item.svgIcon!,
-                          width: isSelected ? 26 : 22,
-                          height: isSelected ? 26 : 22,
-                          // Don't apply color filter to keep original WhatsApp colors
+                          width: isSelected ? iconSizeSelected : iconSize,
+                          height: isSelected ? iconSizeSelected : iconSize,
                         )
                       : Icon(
                           isSelected ? (item.activeIcon ?? item.icon!) : item.icon!,
-                          size: isSelected ? 26 : 22,
+                          size: isSelected ? iconSizeSelected : iconSize,
                           color: isSelected
                               ? color
                               : (isDark
@@ -221,10 +296,85 @@ class _NavBarButton extends StatelessWidget {
                   ),
               ],
             ),
-            // Hide label - icons only for cleaner look
+            const SizedBox(height: 2),
+            // Label
+            Flexible(
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: isSelected
+                      ? color
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : Colors.grey.shade600),
+                  fontSize: labelFontSize,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                child: Text(
+                  item.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+/// Custom Clipper for Navigation Bar Notch
+class _NavBarNotchClipper extends CustomClipper<Path> {
+  final double notchRadius;
+
+  _NavBarNotchClipper({required this.notchRadius});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final center = size.width / 2;
+
+    // Start from top-left
+    path.moveTo(0, 0);
+
+    // Top edge until notch start
+    path.lineTo(center - notchRadius - 12, 0);
+
+    // Create smooth curved notch (semicircle)
+    path.quadraticBezierTo(
+      center - notchRadius - 4, 0,
+      center - notchRadius, 4,
+    );
+
+    path.arcToPoint(
+      Offset(center + notchRadius, 4),
+      radius: Radius.circular(notchRadius),
+      clockwise: false,
+    );
+
+    path.quadraticBezierTo(
+      center + notchRadius + 4, 0,
+      center + notchRadius + 12, 0,
+    );
+
+    // Continue to top-right
+    path.lineTo(size.width, 0);
+
+    // Right edge
+    path.lineTo(size.width, size.height);
+
+    // Bottom edge
+    path.lineTo(0, size.height);
+
+    // Close path
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
+}
+
