@@ -91,12 +91,8 @@ class RecentContactsSection extends StatelessWidget {
             ),
           ),
 
-          // Divider
-          Divider(
-            color: isDark ? const Color(0xFF2A2D3E) : const Color(0xFFE5E7EB),
-            thickness: 1,
-            height: 1,
-          ),
+          // Spacing instead of divider
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -134,35 +130,49 @@ class RecentContactsSection extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           children: [
-            // Avatar with Rounded Corners
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16), // Rounded corners
-                gradient: LinearGradient(
-                  colors: colors[colorIndex],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: isDark ? const Color(0xFF2A2D3E) : const Color(0xFFE5E7EB),
-                  width: 2,
-                ),
-              ),
-              child: userAvatar != null && userAvatar.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(14), // Match container minus border
-                      child: CachedNetworkImage(
-                        imageUrl: userAvatar,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+            // Avatar with Rounded Corners and Online Indicator
+            Stack(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16), // Rounded corners
+                    gradient: LinearGradient(
+                      colors: colors[colorIndex],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF2A2D3E) : const Color(0xFFE5E7EB),
+                      width: 2,
+                    ),
+                  ),
+                  child: userAvatar != null && userAvatar.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(14), // Match container minus border
+                          child: CachedNetworkImage(
+                            imageUrl: userAvatar,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Center(
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => Center(
+                        )
+                      : Center(
                           child: Text(
                             initials,
                             style: const TextStyle(
@@ -172,18 +182,26 @@ class RecentContactsSection extends StatelessWidget {
                             ),
                           ),
                         ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                ),
+                // Online Indicator (randomly show for demo - replace with real status)
+                if (userId % 3 == 0) // Show for some users as demo
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22C55E), // Green
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF1C1E2B) : Colors.white,
+                          width: 2.5,
                         ),
                       ),
                     ),
+                  ),
+              ],
             ),
 
             const SizedBox(height: 6),

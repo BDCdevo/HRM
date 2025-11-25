@@ -315,14 +315,30 @@ class _ChatListView extends StatelessWidget {
                 },
               );
 
-              // Add rounded top border to first conversation
+              // Add rounded top border with shadow to first conversation
               if (isFirst) {
-                return ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2D3E) : Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
                   ),
-                  child: conversationWidget,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                    child: conversationWidget,
+                  ),
                 );
               }
 
