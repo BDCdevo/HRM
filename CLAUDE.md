@@ -16,6 +16,11 @@ flutter pub run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
+**Single Test File**:
+```bash
+flutter test test/path/to/specific_test.dart
+```
+
 ## Environment Configuration
 
 **Current**: PRODUCTION (`lib/core/config/api_config.dart:26`)
@@ -70,6 +75,10 @@ lib/features/{feature_name}/
 **Separate Features**: `leave` (logic) and `leaves` (UI) are intentionally separate to allow reusing business logic.
 
 **Chat Models Exception**: Chat models use `fromApiJson()` instead of standard `fromJson()` due to nested API response structure.
+
+**Location/Geofencing**: Attendance check-in uses `geolocator` for branch geofencing validation. Location permission required.
+
+**Firebase**: Crashlytics and Analytics enabled. Initialize in `main.dart` before `runApp()`.
 
 ## Development Commands
 
@@ -192,6 +201,11 @@ AppRouter.navigateAndRemoveUntil(context, AppRouter.login);
 - Central FAB opens requests dialog
 - Company ID hardcoded to `6` (BDC) - TODO: Add to UserModel
 
+### Assets
+- `assets/images/logo/` - App logos
+- `assets/svgs/` - SVG icons (use `flutter_svg`)
+- `assets/animations/` - Lottie JSON animations (use `lottie` package)
+
 ## Error Handling
 
 Use `fromDioException()` for network errors:
@@ -213,6 +227,35 @@ Uses `pusher_channels_flutter` with Laravel Reverb backend:
 - Service: `lib/core/services/websocket_service.dart`
 - Channel pattern: `private-chat.{companyId}.conversation.{conversationId}`
 - Reverb host: `ws://31.97.46.103:8081`
+
+## Online Status Indicator
+
+Real-time online status is tracked via `last_seen_at` timestamp on the User model.
+
+### How It Works
+1. **Backend Middleware** (`UpdateUserLastSeen`): Updates `last_seen_at` on every API request
+2. **Online Threshold**: User is "online" if `last_seen_at` is within last 5 minutes
+3. **API Response**: `is_online` boolean included in `/conversations` and `/users` endpoints
+
+### Backend Files (Production Server)
+- **Middleware**: `/var/www/erp1/app/Http/Middleware/UpdateUserLastSeen.php`
+- **Registration**: `/var/www/erp1/bootstrap/app.php` (added to `api` middleware group)
+- **Routes**: `/var/www/erp1/routes/hrm_api.php` (uses `update.last.seen` middleware)
+
+### Flutter Implementation
+Online indicator shown in 3 places:
+1. **ConversationCard** (`conversation_card.dart:368`): Green dot on avatar
+2. **RecentContactsSection** (`recent_contacts_section.dart:213`): Green dot on contact avatars
+3. **ChatAppBarWidget** (`chat_app_bar_widget.dart:237`): Green dot + "Online" text in header
+
+### Important: Employee → User Mapping
+Sanctum authenticates with Employee model, but `last_seen_at` is on User table. The middleware maps Employee email to User and updates the correct record:
+```php
+if ($authUser instanceof Employee) {
+    $user = User::where('email', $authUser->email)->first();
+    $user->update(['last_seen_at' => now()]);
+}
+```
 
 ## Attendance: Multiple Sessions
 

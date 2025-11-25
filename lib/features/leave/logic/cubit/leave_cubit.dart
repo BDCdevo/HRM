@@ -312,8 +312,8 @@ class LeaveCubit extends Cubit<LeaveState> {
         return;
       }
 
-      // Handle validation errors (422)
-      if (statusCode == 422 && e.response?.data?['errors'] != null) {
+      // Handle validation errors (400 or 422)
+      if ((statusCode == 400 || statusCode == 422) && e.response?.data?['errors'] != null) {
         final errors = e.response?.data?['errors'];
         final errorList = <String>[];
 
@@ -329,9 +329,12 @@ class LeaveCubit extends Cubit<LeaveState> {
           errorList.addAll(errors.cast<String>());
         }
 
+        // Translate error messages to Arabic
+        final translatedErrors = errorList.map(_translateErrorMessage).toList();
+
         emit(LeaveError(
-          message: errorList.isNotEmpty ? errorList.first : errorMessage,
-          errorDetails: errorList.join('\n'),
+          message: translatedErrors.isNotEmpty ? translatedErrors.first : _translateErrorMessage(errorMessage),
+          errorDetails: translatedErrors.length > 1 ? translatedErrors.join('\n') : null,
         ));
         return;
       }
@@ -344,8 +347,9 @@ class LeaveCubit extends Cubit<LeaveState> {
         return;
       }
 
+      // Handle other errors with translation
       emit(LeaveError(
-        message: errorMessage,
+        message: _translateErrorMessage(errorMessage),
         errorDetails: e.response?.data?.toString(),
       ));
     } else if (e.type == DioExceptionType.connectionTimeout ||
@@ -366,5 +370,125 @@ class LeaveCubit extends Cubit<LeaveState> {
         message: 'حدث خطأ غير متوقع',
       ));
     }
+  }
+
+  /// Translate backend error messages to Arabic (dynamic)
+  String _translateErrorMessage(String error) {
+    // Extract numbers from error message
+    final daysMatch = RegExp(r'(\d+)\s*days?').firstMatch(error);
+    final monthsMatch = RegExp(r'(\d+)\s*months?').firstMatch(error);
+
+    final days = daysMatch?.group(1) ?? '';
+    final months = monthsMatch?.group(1) ?? '';
+
+    // Insufficient balance errors
+    if (error.toLowerCase().contains('insufficient balance') ||
+        error.toLowerCase().contains('remaining')) {
+      if (days.isNotEmpty) {
+        return 'رصيد الإجازات غير كافٍ\nالرصيد المتبقي: $days ${_formatDays(days)}';
+      }
+      return 'رصيد الإجازات غير كافٍ للفترة المطلوبة';
+    }
+
+    // Notice period errors
+    if (error.toLowerCase().contains('advance notice') ||
+        error.toLowerCase().contains('notice period') ||
+        error.toLowerCase().contains('days before')) {
+      if (days.isNotEmpty) {
+        return 'يجب تقديم الطلب قبل $days ${_formatDays(days)} من تاريخ البدء';
+      }
+      return 'يجب تقديم الطلب قبل فترة كافية من تاريخ البدء';
+    }
+
+    // Vacation type not available (unlock period)
+    if (error.toLowerCase().contains('not yet available') ||
+        error.toLowerCase().contains('not available') ||
+        error.toLowerCase().contains('unlock') ||
+        error.toLowerCase().contains('wait')) {
+      if (months.isNotEmpty) {
+        return 'هذه الإجازة غير متاحة حالياً\nتتاح بعد $months ${_formatMonths(months)} من تاريخ التعيين';
+      }
+      return 'هذه الإجازة غير متاحة لك حالياً';
+    }
+
+    // Vacation type required
+    if (error.toLowerCase().contains('vacation type') &&
+        error.toLowerCase().contains('required')) {
+      return 'يرجى اختيار نوع الإجازة';
+    }
+
+    // Leave request validation failed (generic)
+    if (error.toLowerCase().contains('validation failed')) {
+      return 'فشل التحقق من طلب الإجازة\nيرجى مراجعة البيانات المدخلة';
+    }
+
+    // Date validation errors
+    if (error.toLowerCase().contains('start_date') ||
+        error.toLowerCase().contains('start date')) {
+      if (error.toLowerCase().contains('after') || error.toLowerCase().contains('future')) {
+        return 'تاريخ البدء يجب أن يكون في المستقبل';
+      }
+      return 'تاريخ البدء غير صالح';
+    }
+
+    if (error.toLowerCase().contains('end_date') ||
+        error.toLowerCase().contains('end date')) {
+      return 'تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء';
+    }
+
+    // Reason validation
+    if (error.toLowerCase().contains('reason')) {
+      if (error.toLowerCase().contains('required')) {
+        return 'يرجى إدخال سبب الإجازة';
+      }
+      if (error.toLowerCase().contains('max') || error.toLowerCase().contains('long')) {
+        return 'سبب الإجازة طويل جداً';
+      }
+    }
+
+    // Already has pending/approved request
+    if (error.toLowerCase().contains('pending') ||
+        error.toLowerCase().contains('already') ||
+        error.toLowerCase().contains('exists')) {
+      return 'لديك طلب إجازة موجود بالفعل لهذه الفترة';
+    }
+
+    // Overlapping dates
+    if (error.toLowerCase().contains('overlap') ||
+        error.toLowerCase().contains('conflict') ||
+        error.toLowerCase().contains('intersect')) {
+      return 'تتعارض هذه الفترة مع إجازة أخرى';
+    }
+
+    // Maximum days exceeded
+    if (error.toLowerCase().contains('maximum') ||
+        error.toLowerCase().contains('exceed') ||
+        error.toLowerCase().contains('limit')) {
+      if (days.isNotEmpty) {
+        return 'تم تجاوز الحد الأقصى ($days ${_formatDays(days)})';
+      }
+      return 'تم تجاوز الحد الأقصى المسموح';
+    }
+
+    // Return original if no translation found
+    return error;
+  }
+
+  /// Format days text in Arabic
+  String _formatDays(String days) {
+    final count = int.tryParse(days) ?? 0;
+    if (count == 1) return 'يوم';
+    if (count == 2) return 'يومين';
+    if (count >= 3 && count <= 10) return 'أيام';
+    return 'يوم';
+  }
+
+  /// Format months text in Arabic
+  String _formatMonths(String months) {
+    final count = int.tryParse(months) ?? 0;
+    if (count == 1) return 'شهر';
+    if (count == 2) return 'شهرين';
+    if (count >= 3 && count <= 10) return 'أشهر';
+    return 'شهر';
   }
 }

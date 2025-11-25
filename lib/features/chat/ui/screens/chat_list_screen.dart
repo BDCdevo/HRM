@@ -37,11 +37,22 @@ class ChatListScreen extends StatelessWidget {
   }
 }
 
-class _ChatListView extends StatelessWidget {
+class _ChatListView extends StatefulWidget {
   final int companyId;
   final int currentUserId;
 
   const _ChatListView({required this.companyId, required this.currentUserId});
+
+  @override
+  State<_ChatListView> createState() => _ChatListViewState();
+}
+
+class _ChatListViewState extends State<_ChatListView> {
+  // Key to access RecentContactsSection for refresh
+  final GlobalKey<RecentContactsSectionState> _recentContactsKey = GlobalKey();
+
+  int get companyId => widget.companyId;
+  int get currentUserId => widget.currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -245,6 +256,8 @@ class _ChatListView extends StatelessWidget {
       color: AppColors.accent,
       backgroundColor: isDark ? const Color(0xFF2A2D3E) : Colors.white,
       onRefresh: () async {
+        // Refresh both conversations and recent contacts
+        _recentContactsKey.currentState?.refresh();
         await context.read<ChatCubit>().refreshConversations(
           companyId: companyId,
           currentUserId: currentUserId,
@@ -255,15 +268,17 @@ class _ChatListView extends StatelessWidget {
           // Recent Contacts Section
           SliverToBoxAdapter(
             child: RecentContactsSection(
+              key: _recentContactsKey,
               companyId: companyId,
               currentUserId: currentUserId,
-              onContactTap: (userId, userName, userAvatar) async {
+              onContactTap: (userId, userName, userAvatar, isOnline) async {
                 // Create or navigate to conversation with selected user
                 await _createOrNavigateToConversation(
                   context,
                   userId,
                   userName,
                   userAvatar,
+                  isOnline: isOnline,
                 );
               },
             ),
@@ -292,6 +307,7 @@ class _ChatListView extends StatelessWidget {
                         currentUserId: currentUserId,
                         isGroupChat: conversation.isGroup,
                         participantId: conversation.participantId,
+                        isOnline: conversation.isOnline,
                       ),
                     ),
                   );
@@ -355,8 +371,9 @@ class _ChatListView extends StatelessWidget {
     BuildContext context,
     int userId,
     String userName,
-    String? userAvatar,
-  ) async {
+    String? userAvatar, {
+    bool isOnline = false,
+  }) async {
     try {
       // Show loading indicator
       showDialog(
@@ -391,6 +408,7 @@ class _ChatListView extends StatelessWidget {
               currentUserId: currentUserId,
               isGroupChat: false,
               participantId: userId,
+              isOnline: isOnline,
             ),
           ),
         );

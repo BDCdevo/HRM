@@ -11,10 +11,10 @@ import '../../logic/cubit/employees_state.dart';
 ///
 /// Displays horizontal scrollable list of all employees in the company
 /// Clicking on a contact navigates directly to chat with that person
-class RecentContactsSection extends StatelessWidget {
+class RecentContactsSection extends StatefulWidget {
   final int companyId;
   final int currentUserId;
-  final Function(int userId, String userName, String? userAvatar) onContactTap;
+  final Function(int userId, String userName, String? userAvatar, bool isOnline) onContactTap;
 
   const RecentContactsSection({
     super.key,
@@ -24,12 +24,36 @@ class RecentContactsSection extends StatelessWidget {
   });
 
   @override
+  State<RecentContactsSection> createState() => RecentContactsSectionState();
+}
+
+class RecentContactsSectionState extends State<RecentContactsSection> {
+  late EmployeesCubit _employeesCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _employeesCubit = EmployeesCubit(ChatRepository());
+    _employeesCubit.fetchEmployees(widget.companyId);
+  }
+
+  @override
+  void dispose() {
+    _employeesCubit.close();
+    super.dispose();
+  }
+
+  /// Refresh the contacts list
+  void refresh() {
+    _employeesCubit.fetchEmployees(widget.companyId);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (context) => EmployeesCubit(ChatRepository())
-        ..fetchEmployees(companyId),
+    return BlocProvider.value(
+      value: _employeesCubit,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,7 +83,7 @@ class RecentContactsSection extends StatelessWidget {
                 if (state is EmployeesLoaded) {
                   // Filter out current user
                   final employees = state.employees
-                      .where((emp) => emp['id'] != currentUserId)
+                      .where((emp) => emp['id'] != widget.currentUserId)
                       .toList();
 
                   if (employees.isEmpty) {
@@ -126,7 +150,7 @@ class RecentContactsSection extends StatelessWidget {
     final colorIndex = userId % colors.length;
 
     return GestureDetector(
-      onTap: () => onContactTap(userId, userName, userAvatar),
+      onTap: () => widget.onContactTap(userId, userName, userAvatar, isOnline),
       child: Container(
         width: 70,
         margin: const EdgeInsets.symmetric(horizontal: 4),

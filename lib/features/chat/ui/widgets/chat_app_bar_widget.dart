@@ -11,6 +11,7 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String participantName;
   final String? participantAvatar;
   final bool isGroupChat;
+  final bool isOnline;
   final VoidCallback? onTap;
   final bool isDark;
 
@@ -19,6 +20,7 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     required this.participantName,
     this.participantAvatar,
     this.isGroupChat = false,
+    this.isOnline = false,
     this.onTap,
     required this.isDark,
   });
@@ -63,10 +65,13 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                     Text(
                       isGroupChat
                           ? 'Tap for group info'
-                          : 'Tap to view profile',
+                          : (isOnline ? 'Online' : 'Tap to view profile'),
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.white.withOpacity(0.8),
+                        color: isOnline
+                            ? const Color(0xFF4ADE80) // Green for online
+                            : AppColors.white.withOpacity(0.8),
                         fontSize: 12,
+                        fontWeight: isOnline ? FontWeight.w500 : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -197,34 +202,56 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
-    // For private chats: show user avatar
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _getAvatarColor(participantName),
-        border: Border.all(color: AppColors.white.withOpacity(0.3), width: 1.5),
-      ),
-      child: participantAvatar != null && participantAvatar!.isNotEmpty
-          ? ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: participantAvatar!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.white,
+    // For private chats: show user avatar with online indicator
+    return Stack(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _getAvatarColor(participantName),
+            border: Border.all(color: AppColors.white.withOpacity(0.3), width: 1.5),
+          ),
+          child: participantAvatar != null && participantAvatar!.isNotEmpty
+              ? ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: participantAvatar!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.white,
+                        ),
+                      ),
                     ),
+                    errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
                   ),
+                )
+              : _buildAvatarPlaceholder(),
+        ),
+        // Online indicator dot
+        if (isOnline)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E), // Green
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? AppColors.darkAppBar : AppColors.primary,
+                  width: 2,
                 ),
-                errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
               ),
-            )
-          : _buildAvatarPlaceholder(),
+            ),
+          ),
+      ],
     );
   }
 

@@ -37,6 +37,7 @@ class ChatRoomScreen extends StatelessWidget {
   final int currentUserId;
   final bool isGroupChat;
   final int? participantId; // Other user's ID (for profile)
+  final bool isOnline; // Online status of participant
 
   const ChatRoomScreen({
     super.key,
@@ -47,6 +48,7 @@ class ChatRoomScreen extends StatelessWidget {
     required this.currentUserId,
     this.isGroupChat = false,
     this.participantId,
+    this.isOnline = false,
   });
 
   @override
@@ -66,6 +68,7 @@ class ChatRoomScreen extends StatelessWidget {
         currentUserId: currentUserId,
         isGroupChat: isGroupChat,
         participantId: participantId,
+        isOnline: isOnline,
       ),
     );
   }
@@ -79,6 +82,7 @@ class _ChatRoomView extends StatefulWidget {
   final int currentUserId;
   final bool isGroupChat;
   final int? participantId;
+  final bool isOnline;
 
   const _ChatRoomView({
     required this.conversationId,
@@ -88,6 +92,7 @@ class _ChatRoomView extends StatefulWidget {
     required this.currentUserId,
     this.isGroupChat = false,
     this.participantId,
+    this.isOnline = false,
   });
 
   @override
@@ -236,6 +241,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         participantName: widget.participantName,
         participantAvatar: widget.participantAvatar,
         isGroupChat: widget.isGroupChat,
+        isOnline: widget.isOnline,
         isDark: isDark,
         onTap: widget.isGroupChat ? _openGroupInfo : _openEmployeeProfile,
       ),

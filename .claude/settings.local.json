@@ -104,7 +104,9 @@
       "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\assets\\svgs && ren Welcome.json welcome.json\")",
       "Bash(if not exist \".dart_tool\" mkdir \".dart_tool\")",
       "Bash(dart pub get:*)",
-      "Bash(cmd /c \"cd android && gradlew.bat --stop\")"
+      "Bash(cmd /c \"cd android && gradlew.bat --stop\")",
+      "Bash(gradlew.bat bundleRelease:*)",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\android && gradlew.bat bundleRelease\")"
     ],
     "deny": [],
     "ask": []

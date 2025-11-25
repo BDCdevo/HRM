@@ -88,8 +88,20 @@ class ServicesGridWidget extends StatelessWidget {
               label: 'Notice Board',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Notice Board feature coming soon!'),
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.rocket_launch, color: Colors.white, size: 20),
+                        SizedBox(width: 12),
+                        Text('Notice Board feature coming soon!'),
+                      ],
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               },
@@ -109,7 +121,23 @@ class ServicesGridWidget extends StatelessWidget {
               icon: Icons.bar_chart,
               label: 'Reports',
               onTap: () {
-                Navigator.pushNamed(context, '/reports');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.rocket_launch, color: Colors.white, size: 20),
+                        SizedBox(width: 12),
+                        Text('Reports feature coming soon!'),
+                      ],
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               },
             ),
           ],

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -174,71 +173,83 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
         );
       }
 
-      return DropdownButtonFormField<VacationTypeModel>(
-        initialValue: _selectedVacationType,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: AppColors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.primary, width: 2),
+      // Using Container with DropdownButton for better state control
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _selectedVacationType != null ? AppColors.primary : AppColors.border,
+            width: _selectedVacationType != null ? 2 : 1,
           ),
         ),
-        hint: Text('Select vacation type', style: AppTextStyles.bodyMedium),
-        items: availableTypes.map((vacationType) {
-          return DropdownMenuItem<VacationTypeModel>(
-            value: vacationType,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  vacationType.name,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (vacationType.description != null)
-                  Text(
-                    vacationType.description!,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<VacationTypeModel>(
+            value: _selectedVacationType,
+            isExpanded: true,
+            hint: Text('اختر نوع الإجازة', style: AppTextStyles.bodyMedium),
+            icon: Icon(
+              Icons.keyboard_arrow_down,
+              color: _selectedVacationType != null ? AppColors.primary : AppColors.textSecondary,
             ),
-          );
-        }).toList(),
-        onChanged: (value) {
-          setState(() {
-            _selectedVacationType = value;
-            // Auto-set start date to minimum allowed date
-            if (value != null) {
-              debugPrint('🔵 Selected: ${value.name}');
-              debugPrint('🔵 requiredDaysBefore from model: ${value.requiredDaysBefore}');
-              final minDate = _getMinimumStartDateForType(value);
-              debugPrint('🔵 Calculated minDate: $minDate');
-              _startDate = minDate;
-              _endDate = null; // Reset end date
-            }
-          });
-        },
-        validator: (value) {
-          if (value == null) {
-            return 'Please select a vacation type';
-          }
-          return null;
-        },
+            items: availableTypes.map((vacationType) {
+              return DropdownMenuItem<VacationTypeModel>(
+                value: vacationType,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      vacationType.name,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (vacationType.description != null)
+                      Text(
+                        vacationType.description!,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final minDate = _getMinimumStartDateForType(value);
+
+                debugPrint('🟢🟢🟢 AUTO-DATE SELECTION 🟢🟢🟢');
+                debugPrint('🟢 Device DateTime.now(): $now');
+                debugPrint('🟢 Device today (date only): $today');
+                debugPrint('🟢 Selected vacation type: ${value.name}');
+                debugPrint('🟢 requiredDaysBefore from API: ${value.requiredDaysBefore}');
+                debugPrint('🟢 Calculated minDate: $minDate');
+                debugPrint('🟢 Expected: today + ${value.requiredDaysBefore} = ${today.add(Duration(days: value.requiredDaysBefore))}');
+                debugPrint('🟢🟢🟢 END AUTO-DATE SELECTION 🟢🟢🟢');
+
+                setState(() {
+                  _selectedVacationType = value;
+                  _startDate = minDate;
+                  _endDate = null;
+                });
+
+                // Auto-open calendar after state is updated
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _selectStartDate();
+                  }
+                });
+              }
+            },
+          ),
+        ),
       );
     }
 
@@ -271,9 +282,9 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'إشعار مسبق: ${_selectedVacationType!.requiredDaysBefore} أيام\n'
+                    'يجب تقديم الطلب قبل ${_selectedVacationType!.requiredDaysBefore} أيام\n'
                     'اليوم: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}\n'
-                    'أقرب تاريخ: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
+                    'أقرب تاريخ بدء: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.info,
                       fontWeight: FontWeight.w500,
@@ -292,18 +303,34 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: _startDate != null ? AppColors.primary : AppColors.border,
+                width: _startDate != null ? 2 : 1,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, color: AppColors.primary),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _startDate != null
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.border.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today,
+                    color: _startDate != null ? AppColors.primary : AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Start Date',
+                        'تاريخ البداية',
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -311,10 +338,8 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       const SizedBox(height: 4),
                       Text(
                         _startDate != null
-                            ? DateFormat('MMM dd, yyyy').format(_startDate!)
-                            : hasNoticeRequirement
-                                ? 'أقرب تاريخ: ${DateFormat('MMM dd').format(minStartDate)}'
-                                : 'Select start date',
+                            ? DateFormat('yyyy/MM/dd - EEEE', 'en').format(_startDate!)
+                            : 'اختر نوع الإجازة أولاً',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: _startDate != null
                               ? FontWeight.w600
@@ -324,10 +349,26 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                               : AppColors.textSecondary,
                         ),
                       ),
+                      // Show hint that date was auto-selected
+                      if (_startDate != null && hasNoticeRequirement)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'تم التحديد تلقائياً (اضغط للتغيير)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.info,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.edit_calendar,
+                  size: 20,
+                  color: _startDate != null ? AppColors.primary : AppColors.textSecondary,
+                ),
               ],
             ),
           ),
@@ -343,18 +384,34 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: _endDate != null ? AppColors.primary : AppColors.border,
+                width: _endDate != null ? 2 : 1,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, color: AppColors.primary),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _endDate != null
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.border.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.event,
+                    color: _endDate != null ? AppColors.primary : AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'End Date',
+                        'تاريخ النهاية',
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -362,8 +419,10 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       const SizedBox(height: 4),
                       Text(
                         _endDate != null
-                            ? DateFormat('MMM dd, yyyy').format(_endDate!)
-                            : 'Select end date',
+                            ? DateFormat('yyyy/MM/dd - EEEE', 'en').format(_endDate!)
+                            : _startDate != null
+                                ? 'اختر تاريخ النهاية'
+                                : 'اختر تاريخ البداية أولاً',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: _endDate != null
                               ? FontWeight.w600
@@ -376,7 +435,11 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.edit_calendar,
+                  size: 20,
+                  color: _endDate != null ? AppColors.primary : AppColors.textSecondary,
+                ),
               ],
             ),
           ),
@@ -457,25 +520,44 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   }
 
   /// Calculate minimum start date for a specific vacation type
+  ///
+  /// Backend validation logic (from Request.php):
+  /// ```php
+  /// $noticeDate = now()->addDays($this->requestable->required_days_before);
+  /// if ($this->start_date && $this->start_date->lt($noticeDate)) {
+  ///     $errors[] = "This vacation type requires X days advance notice.";
+  /// }
+  /// ```
+  ///
+  /// Example: Today = Nov 25, required_days_before = 7
+  /// - noticeDate = Nov 25 + 7 = Dec 2
+  /// - start_date must NOT be less than Dec 2
+  /// - First valid start_date = Dec 2
   DateTime _getMinimumStartDateForType(VacationTypeModel type) {
     final requiredDays = type.requiredDaysBefore;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // If no notice required, can start from today
+    // If no notice required, can start from tomorrow
     if (requiredDays <= 0) {
-      return today;
+      return today.add(const Duration(days: 1));
     }
 
-    // requiredDaysBefore = 7 means you need 7 days notice
-    // Today = Nov 25, then first valid date = Nov 25 + 7 = Dec 2
+    // Backend validation logic (from Request.php):
+    // $noticeDate = now()->addDays(required_days_before);
+    // if (start_date < noticeDate) => REJECTED
+    //
+    // Example: Today = Nov 25, required = 14 days
+    // noticeDate = Nov 25 + 14 = Dec 9
+    // start_date must be >= Dec 9
+    // First valid start_date = Dec 9
     final minDate = today.add(Duration(days: requiredDays));
 
     debugPrint('📅 =====================================');
-    debugPrint('📅 Now: $now');
-    debugPrint('📅 Today (midnight): $today');
-    debugPrint('📅 Required days from API: $requiredDays');
-    debugPrint('📅 Calculated min date: $minDate');
+    debugPrint('📅 Device now: $now');
+    debugPrint('📅 Device today (date only): $today');
+    debugPrint('📅 Required days notice: $requiredDays');
+    debugPrint('📅 Min start date (today + $requiredDays): $minDate');
     debugPrint('📅 =====================================');
 
     return minDate;
@@ -486,7 +568,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     if (_selectedVacationType == null) {
       return DateTime.now();
     }
-    return _getMinimumStartDateForType(_selectedVacationType!);
+    return _getMinimumStartDateForType(_selectedVacationType! );
   }
 
   Future<void> _selectStartDate() async {
@@ -508,19 +590,18 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     final requiredDays = _selectedVacationType!.requiredDaysBefore;
 
     // Debug: Print calculated dates
+    debugPrint('🗓️ ======= DATE PICKER DEBUG =======');
     debugPrint('🗓️ Today: ${DateTime.now()}');
     debugPrint('🗓️ Required Days Before: $requiredDays');
     debugPrint('🗓️ Min Start Date: $minStartDate');
+    debugPrint('🗓️ Current _startDate: $_startDate');
 
-    // Always start with minStartDate as the initial selected date
-    // If user already selected a date, use it only if it's still valid
-    DateTime initialDate = minStartDate;
-    if (_startDate != null && !_startDate!.isBefore(minStartDate)) {
-      initialDate = _startDate!;
-    }
+    // Always use minStartDate as initial date (ignore old _startDate)
+    // This ensures the calendar opens on the correct minimum date
+    final DateTime initialDate = minStartDate;
 
     debugPrint('🗓️ Initial Date for picker: $initialDate');
-    debugPrint('🗓️ First Date (disabled before): $minStartDate');
+    debugPrint('🗓️ ================================');
 
     final selected = await showDatePicker(
       context: context,
@@ -628,13 +709,17 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final startDateOnly = DateTime(_startDate!.year, _startDate!.month, _startDate!.day);
 
+    // Allow the 7th day itself (use < instead of <=)
+    // minStartDate is already calculated as today + (requiredDays - 1)
+    // So we reject only if startDate < minStartDate
     if (startDateOnly.isBefore(minStartDate)) {
       final requiredDays = _selectedVacationType!.requiredDaysBefore;
+      final actualMinDate = today.add(Duration(days: requiredDays));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'تاريخ البداية غير صالح!\n'
-            'هذا النوع من الإجازات يتطلب إشعار مسبق $requiredDays ${requiredDays == 1 ? 'يوم' : 'أيام'}\n'
+            'يجب تقديم الطلب قبل $requiredDays ${requiredDays == 1 ? 'يوم' : 'أيام'} من تاريخ البدء\n'
             'أقرب تاريخ متاح: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
           ),
           backgroundColor: AppColors.error,

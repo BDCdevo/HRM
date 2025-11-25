@@ -544,9 +544,11 @@ class _LeavesApplyWidgetState extends State<LeavesApplyWidget> {
         orElse: () => vacationTypes.first,
       );
 
-      // Add required notice days to current date
+      // Add required notice days to current date (use date only, no time)
       if (selectedType.requiredDaysBefore > 0) {
-        firstSelectableDate = DateTime.now().add(Duration(days: selectedType.requiredDaysBefore));
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        firstSelectableDate = today.add(Duration(days: selectedType.requiredDaysBefore));
       }
     }
 
@@ -633,21 +635,14 @@ class _LeavesApplyWidgetState extends State<LeavesApplyWidget> {
         orElse: () => state.availableTypes.first,
       );
 
-      final daysDifference = _startDate!.difference(DateTime.now()).inDays;
+      // Calculate days difference from today (date only, no time)
+      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final startDateOnly = DateTime(_startDate!.year, _startDate!.month, _startDate!.day);
+      final daysDifference = startDateOnly.difference(today).inDays;
 
-      if (daysDifference < selectedType.requiredDaysBefore) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'هذا النوع من الإجازة يتطلب إشعاراً مسبقاً ${selectedType.requiredDaysBefore} يوم.\n'
-              'يرجى اختيار تاريخ بدء بعد ${selectedType.requiredDaysBefore} يوم من الآن على الأقل.',
-            ),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-        return;
-      }
+      // Skip client-side validation for notice period
+      // Let the backend handle this validation to avoid timezone differences
+      // between client device and server
     }
 
     // Submit leave request via BLoC

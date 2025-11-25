@@ -113,6 +113,10 @@ class ConversationModel {
       }
     }
 
+    // DEBUG: Log is_online value
+    final isOnlineValue = conversationType == 'private' ? (json['is_online'] as bool? ?? false) : false;
+    print('🟢 Conversation ${json['id']} - $participantName: is_online = $isOnlineValue (raw: ${json['is_online']})');
+
     return ConversationModel(
       id: json['id'] as int,
       type: conversationType,
@@ -136,7 +140,7 @@ class ConversationModel {
           : null,
       unreadCount: json['unread_count'] as int? ?? 0,
       updatedAt: json['last_message_at'] as String? ?? DateTime.now().toIso8601String(),
-      isOnline: conversationType == 'private' ? (json['is_online'] as bool? ?? false) : false,
+      isOnline: isOnlineValue,
       participantsCount: participantsCount,
     );
   }
