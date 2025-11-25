@@ -77,6 +77,7 @@ class RecentContactsSection extends StatelessWidget {
                         employee['id'] as int,
                         employee['name'] as String,
                         employee['avatar'] as String?,
+                        employee['is_online'] as bool? ?? false,
                       );
                     },
                   );
@@ -104,6 +105,7 @@ class RecentContactsSection extends StatelessWidget {
     int userId,
     String userName,
     String? userAvatar,
+    bool isOnline,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -183,8 +185,8 @@ class RecentContactsSection extends StatelessWidget {
                           ),
                         ),
                 ),
-                // Online Indicator (randomly show for demo - replace with real status)
-                if (userId % 3 == 0) // Show for some users as demo
+                // Online Indicator (real status from API)
+                if (isOnline)
                   Positioned(
                     right: 0,
                     bottom: 0,
