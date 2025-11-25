@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/leave_cubit.dart';
 import '../../logic/cubit/leave_state.dart';
 import '../../data/models/leave_request_model.dart';
@@ -76,16 +76,19 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             if (state is LeaveCancelled) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: const Text('تم إلغاء طلب الإجازة بنجاح'),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
             } else if (state is LeaveError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.displayMessage),
-                  backgroundColor: AppColors.error,
-                ),
+              ErrorSnackBar.show(
+                context: context,
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
+                onRetry: () => _leaveCubit.fetchLeaveHistory(),
               );
             }
           },
@@ -99,42 +102,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
 
             // Show error state
             if (state is LeaveError && state is! LeaveHistoryLoaded) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error Loading Leave History',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.displayMessage,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: 'Retry',
-                        onPressed: () {
-                          _leaveCubit.fetchLeaveHistory();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+              return CompactErrorWidget(
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                onRetry: () => _leaveCubit.fetchLeaveHistory(),
               );
             }
 
@@ -153,35 +123,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
 
             // Show empty state
             if (leaveRequests.isEmpty && !isRefreshing) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.event_busy,
-                        size: 64,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No Leave Requests',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'You haven\'t applied for any leave yet',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+              return const EmptyStateWidget(
+                icon: Icons.event_busy,
+                title: 'لا يوجد طلبات إجازة',
+                message: 'لم تقدم أي طلبات إجازة بعد',
               );
             }
 

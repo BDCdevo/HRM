@@ -253,7 +253,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ),
     NavBarItem(
       svgIcon: 'assets/svgs/profile_icon.svg',
-      label: 'Profile',
+      label: 'More',
+      color: AppColors.primary,
+    ),
+    NavBarItem(
+      icon: Icons.add,
+      label: 'New',
       color: AppColors.primary,
     ),
   ];
@@ -273,24 +278,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             index: _currentIndex,
             children: _buildScreens(state),
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showRequestsDialog(context),
-            backgroundColor: AppColors.primary,
-            elevation: 8,
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: _currentIndex,
             items: _navItems,
             onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
+              if (index == 4) {
+                // FAB button clicked - show requests dialog
+                _showRequestsDialog(context);
+              } else {
+                setState(() {
+                  _currentIndex = index;
+                });
+              }
             },
           ),
         );

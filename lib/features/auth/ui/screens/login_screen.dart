@@ -6,6 +6,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../../core/widgets/app_loading_screen.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/auth_cubit.dart';
 import '../../logic/cubit/auth_state.dart';
 
@@ -68,11 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.displayMessage),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
             );
           }
         },

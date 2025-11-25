@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 /// Vacation Type Model
 ///
@@ -25,13 +26,16 @@ class VacationTypeModel extends Equatable {
   });
 
   factory VacationTypeModel.fromJson(Map<String, dynamic> json) {
+    final requiredDays = json['required_days_before'] as int? ?? 0;
+    debugPrint('📋 VacationType: ${json['name']} - required_days_before: $requiredDays (raw: ${json['required_days_before']})');
+
     return VacationTypeModel(
       id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String?,
       balance: json['balance'] as int? ?? json['total_days'] as int? ?? 0,
       unlockAfterMonths: json['unlock_after_months'] as int? ?? 0,
-      requiredDaysBefore: json['required_days_before'] as int? ?? 0,
+      requiredDaysBefore: requiredDays,
       requiresApproval: json['requires_approval'] as bool? ?? true,
       isAvailable: json['is_available'] as bool? ?? true,
     );

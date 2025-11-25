@@ -350,7 +350,7 @@ class AuthRepo {
   /// Save User Data
   ///
   /// Saves user data to secure storage for session persistence
-  /// Stores user ID, email, name, and company ID
+  /// Stores user ID, email, name, company ID, and image data
   Future<void> saveUserData(UserModel user) async {
     try {
       await _storage.write(key: 'user_id', value: user.id.toString());
@@ -364,6 +364,18 @@ class AuthRepo {
       }
       if (user.roles != null && user.roles!.isNotEmpty) {
         await _storage.write(key: 'user_roles', value: user.roles!.join(','));
+      }
+      // Save image data
+      if (user.image != null) {
+        await _storage.write(key: 'user_image_id', value: user.image!.id.toString());
+        await _storage.write(key: 'user_image_url', value: user.image!.url);
+        await _storage.write(key: 'user_image_filename', value: user.image!.fileName);
+        print('📷 User image data saved: ${user.image!.url}');
+      } else {
+        // Clear image data if user has no image
+        await _storage.delete(key: 'user_image_id');
+        await _storage.delete(key: 'user_image_url');
+        await _storage.delete(key: 'user_image_filename');
       }
       print('💾 User data saved successfully');
     } catch (e) {
@@ -389,6 +401,21 @@ class AuthRepo {
       final companyIdStr = await _storage.read(key: 'user_company_id');
       final rolesStr = await _storage.read(key: 'user_roles');
 
+      // Retrieve image data
+      final imageIdStr = await _storage.read(key: 'user_image_id');
+      final imageUrl = await _storage.read(key: 'user_image_url');
+      final imageFileName = await _storage.read(key: 'user_image_filename');
+
+      MediaModel? image;
+      if (imageIdStr != null && imageUrl != null && imageUrl.isNotEmpty) {
+        image = MediaModel(
+          id: int.tryParse(imageIdStr) ?? 0,
+          url: imageUrl,
+          fileName: imageFileName ?? '',
+        );
+        print('📷 User image loaded from cache: $imageUrl');
+      }
+
       return UserModel(
         id: int.parse(userId),
         email: email,
@@ -396,6 +423,7 @@ class AuthRepo {
         phone: phone,
         companyId: companyIdStr != null ? int.tryParse(companyIdStr) : null,
         roles: rolesStr != null ? rolesStr.split(',') : [],
+        image: image,
       );
     } catch (e) {
       print('❌ Error reading stored user data: $e');
@@ -435,6 +463,10 @@ class AuthRepo {
       await _storage.delete(key: 'user_phone');
       await _storage.delete(key: 'user_company_id');
       await _storage.delete(key: 'user_roles');
+      // Clear image data
+      await _storage.delete(key: 'user_image_id');
+      await _storage.delete(key: 'user_image_url');
+      await _storage.delete(key: 'user_image_filename');
       print('🔓 All auth data cleared');
     } catch (e) {
       print('❌ Error clearing auth data: $e');

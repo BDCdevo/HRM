@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/repo/chat_repository.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
@@ -54,21 +55,16 @@ class _ChatListView extends StatelessWidget {
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
           if (state is ChatError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-                action: SnackBarAction(
-                  label: 'Retry',
-                  textColor: AppColors.white,
-                  onPressed: () {
-                    context.read<ChatCubit>().fetchConversations(
-                      companyId: companyId,
-                      currentUserId: currentUserId,
-                    );
-                  },
-                ),
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
+              onRetry: () {
+                context.read<ChatCubit>().fetchConversations(
+                  companyId: companyId,
+                  currentUserId: currentUserId,
+                );
+              },
             );
           }
         },
@@ -136,59 +132,14 @@ class _ChatListView extends StatelessWidget {
 
   /// Build Error State
   Widget _buildErrorState(BuildContext context, String message) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load conversations',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<ChatCubit>().fetchConversations(
-                  companyId: companyId,
-                  currentUserId: currentUserId,
-                );
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.darkAccent
-                    : AppColors.accent,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return CompactErrorWidget(
+      message: ErrorSnackBar.getArabicMessage(message),
+      onRetry: () {
+        context.read<ChatCubit>().fetchConversations(
+          companyId: companyId,
+          currentUserId: currentUserId,
+        );
+      },
     );
   }
 
@@ -442,11 +393,10 @@ class _ChatListView extends StatelessWidget {
 
       // Show error
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start chat: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
+        ErrorSnackBar.show(
+          context: context,
+          message: ErrorSnackBar.getArabicMessage(e.toString()),
+          isNetworkError: ErrorSnackBar.isNetworkRelated(e.toString()),
         );
       }
     }

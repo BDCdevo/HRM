@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/logic/cubit/auth_cubit.dart';
@@ -127,10 +126,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
             },
-            child: BlocBuilder<DashboardCubit, DashboardState>(
+            child: BlocConsumer<DashboardCubit, DashboardState>(
+              listener: (context, dashboardState) {
+                // Show error as SnackBar instead of full screen
+                if (dashboardState.hasError && dashboardState.displayError != null) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              dashboardState.displayError!,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppColors.error.withOpacity(0.9),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      margin: const EdgeInsets.all(16),
+                      duration: const Duration(seconds: 4),
+                      action: SnackBarAction(
+                        label: 'إعادة المحاولة',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          context.read<DashboardCubit>().fetchDashboardStats();
+                        },
+                      ),
+                    ),
+                  );
+                }
+              },
               builder: (context, dashboardState) {
-              // Show loading state with skeleton
-              if (dashboardState is DashboardLoading) {
+              // Show skeleton ONLY on first load (no cached data)
+              if (dashboardState.isLoading && !dashboardState.hasData) {
                 return Scaffold(
                   appBar: PreferredSize(
                     preferredSize: const Size.fromHeight(56),
@@ -142,54 +175,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   body: const DashboardSkeleton(),
                 );
               }
-
-              // Show error state
-              if (dashboardState is DashboardError) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error Loading Dashboard',
-                          style: AppTextStyles.titleLarge.copyWith(
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          dashboardState.displayMessage,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        CustomButton(
-                          text: 'Retry',
-                          onPressed: () {
-                            context.read<DashboardCubit>().fetchDashboardStats();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              // Get stats from loaded state or use defaults
-              final stats = dashboardState is DashboardLoaded
-                  ? dashboardState.stats
-                  : null;
 
               return Scaffold(
                 appBar: AppBar(
@@ -345,14 +330,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ],
                                   ),
 
-                                  // Refresh and WhatsApp Icons
-                                  IconButton(
-                                    icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
-                                    onPressed: () {
-                                      context.read<DashboardCubit>().refresh();
-                                      _attendanceCubit.fetchTodayStatus();
-                                    },
-                                  ),
+                                  // Refresh Icon with loading indicator
+                                  dashboardState.isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.white,
+                                          ),
+                                        )
+                                      : IconButton(
+                                          icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
+                                          onPressed: () {
+                                            context.read<DashboardCubit>().refresh();
+                                            _attendanceCubit.fetchTodayStatus();
+                                          },
+                                        ),
                                 ],
                               ),
                             ),
@@ -378,16 +372,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const SizedBox(height: 24),
 
                                 // Today's Attendance Stats Card
-                                BlocBuilder<DashboardCubit, DashboardState>(
-                                  builder: (context, dashboardState) {
-                                    final stats = dashboardState is DashboardLoaded
-                                        ? dashboardState.stats
-                                        : null;
+                                Builder(
+                                  builder: (context) {
+                                    // Use stats from current or previous state
+                                    final currentStats = dashboardState.previousStats;
 
                                     // Use stats from API or default values
-                                    final presentCount = stats?.todayPresent ?? 0;
-                                    final absentCount = stats?.todayAbsent ?? 0;
-                                    final checkedOutCount = stats?.todayCheckedOut ?? 0;
+                                    final presentCount = currentStats?.todayPresent ?? 0;
+                                    final absentCount = currentStats?.todayAbsent ?? 0;
+                                    final checkedOutCount = currentStats?.todayCheckedOut ?? 0;
 
                                     return TodayAttendanceStatsCard(
                                       presentCount: presentCount,

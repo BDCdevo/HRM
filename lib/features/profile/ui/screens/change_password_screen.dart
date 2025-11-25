@@ -4,6 +4,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/models/change_password_request_model.dart';
 import '../../logic/cubit/profile_cubit.dart';
 import '../../logic/cubit/profile_state.dart';
@@ -128,20 +129,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             }
 
             if (state is PasswordChanged) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(state.message)),
+                    ],
+                  ),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
               // Go back to profile screen
               Navigator.pop(context);
             } else if (state is ProfileError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.displayMessage),
-                  backgroundColor: AppColors.error,
-                ),
+              ErrorSnackBar.show(
+                context: context,
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
               );
             }
           },

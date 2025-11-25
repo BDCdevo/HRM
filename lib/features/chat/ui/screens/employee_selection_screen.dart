@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/networking/dio_client.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/repo/chat_repository.dart';
 import '../../logic/cubit/employees_cubit.dart';
 import '../../logic/cubit/employees_state.dart';
@@ -177,11 +178,10 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
           }
 
           if (state is ConversationCreateError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
             );
           }
         },
@@ -344,51 +344,9 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
 
   /// Build Error State
   Widget _buildErrorState(String message, bool isDark) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load employees',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<EmployeesCubit>().fetchEmployees(widget.companyId);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return CompactErrorWidget(
+      message: ErrorSnackBar.getArabicMessage(message),
+      onRetry: () => context.read<EmployeesCubit>().fetchEmployees(widget.companyId),
     );
   }
 

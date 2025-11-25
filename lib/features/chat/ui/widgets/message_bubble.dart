@@ -76,12 +76,10 @@ class MessageBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSentByMe
                           ? (isDark
-                                ? AppColors.primary.withOpacity(
-                                    0.85,
-                                  ) // Primary color in dark mode
-                                : AppColors.primary.withOpacity(
-                                    0.15,
-                                  )) // Light primary in light mode
+                                ? const Color(0xFF005C4B) // Dark WhatsApp green
+                                : const Color(
+                                    0xFFD9FDD3,
+                                  )) // Light WhatsApp green (very light)
                           : (isDark
                                 ? AppColors
                                       .darkCard // Dark card color for received
@@ -131,10 +129,11 @@ class MessageBubble extends StatelessWidget {
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: isSentByMe
                                     ? (isDark
-                                          ? Colors.white.withOpacity(0.7)
+                                          ? Colors.white
+                                              .withOpacity(0.85) // White in dark mode
                                           : const Color(
                                               0xFF667781,
-                                            )) // WhatsApp grey
+                                            )) // WhatsApp grey on light green
                                     : (isDark
                                           ? Colors.white.withOpacity(0.6)
                                           : const Color(0xFF667781)),
@@ -143,7 +142,7 @@ class MessageBubble extends StatelessWidget {
                             ),
                             if (isSentByMe) ...[
                               const SizedBox(width: 4),
-                              _buildMessageStatus(),
+                              _buildMessageStatus(isDark),
                             ],
                           ],
                         ),
@@ -257,7 +256,11 @@ class MessageBubble extends StatelessWidget {
           message.message,
           style: AppTextStyles.bodyMedium.copyWith(
             color: isSentByMe
-                ? (isDark ? AppColors.white : AppColors.textPrimary)
+                ? (isDark
+                      ? AppColors.white // White text in dark mode
+                      : const Color(
+                          0xFF111B21,
+                        )) // Dark text on light green background
                 : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
             fontSize: 15,
           ),
@@ -545,20 +548,28 @@ class MessageBubble extends StatelessWidget {
   }
 
   /// Build Message Status Icon (WhatsApp Style)
-  Widget _buildMessageStatus() {
+  Widget _buildMessageStatus(bool isDark) {
     // ✓✓ Blue = Read (رسالة مقروءة)
     if (message.isRead) {
       return Icon(
         Icons.done_all,
         size: 16,
-        color: const Color(0xFF53BDEB), // WhatsApp blue
+        color: isDark
+            ? Colors.white // White in dark mode
+            : const Color(0xFF53BDEB), // WhatsApp blue in light mode
       );
     }
 
     // ✓✓ Grey = Delivered (تم التوصيل)
     // Note: Backend should send 'delivered_at' field
     // For now, we assume if not read, it's delivered
-    return Icon(Icons.done_all, size: 16, color: Colors.grey[600]);
+    return Icon(
+      Icons.done_all,
+      size: 16,
+      color: isDark
+          ? Colors.white.withOpacity(0.8)
+          : const Color(0xFF667781), // WhatsApp grey
+    );
 
     // ✓ Grey = Sent (تم الإرسال)
     // This would be shown if message just sent but not delivered yet

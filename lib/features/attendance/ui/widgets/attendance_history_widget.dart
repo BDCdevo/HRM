@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/attendance_history_cubit.dart';
 import '../../logic/cubit/attendance_history_state.dart';
 
@@ -93,60 +94,18 @@ class _AttendanceHistoryWidgetState extends State<AttendanceHistoryWidget> {
                 }
 
                 if (state is AttendanceHistoryError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading history',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          state.displayMessage,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => _historyCubit.fetchHistory(),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+                  return CompactErrorWidget(
+                    message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                    onRetry: () => _historyCubit.fetchHistory(),
                   );
                 }
 
                 if (state is AttendanceHistoryLoaded) {
                   if (state.records.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.history,
-                            size: 64,
-                            color: AppColors.textSecondary.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No attendance records',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    return const EmptyStateWidget(
+                      icon: Icons.history,
+                      title: 'لا يوجد سجلات حضور',
+                      message: 'لم يتم تسجيل أي حضور بعد',
                     );
                   }
 

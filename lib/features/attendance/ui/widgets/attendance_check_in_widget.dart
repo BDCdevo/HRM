@@ -10,6 +10,7 @@ import '../../../../core/styles/app_colors_extension.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../../../core/widgets/success_animation.dart';
 import '../../../../core/services/location_service.dart';
 import '../../logic/cubit/attendance_cubit.dart';
@@ -151,12 +152,10 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget>
             },
           );
         } else if (state is AttendanceError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ ${state.displayMessage}'),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
-            ),
+          ErrorSnackBar.show(
+            context: context,
+            message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+            isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
           );
         }
       },

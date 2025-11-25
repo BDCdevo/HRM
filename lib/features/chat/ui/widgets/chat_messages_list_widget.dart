@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/models/message_model.dart';
 import '../../logic/cubit/messages_state.dart';
 import 'message_bubble.dart';
@@ -197,49 +198,9 @@ class ChatMessagesListWidget extends StatelessWidget {
 
   /// Build Error State
   Widget _buildErrorState(BuildContext context, String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load messages',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppColors.darkAccent : AppColors.accent,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return CompactErrorWidget(
+      message: ErrorSnackBar.getArabicMessage(errorMessage),
+      onRetry: onRefresh,
     );
   }
 

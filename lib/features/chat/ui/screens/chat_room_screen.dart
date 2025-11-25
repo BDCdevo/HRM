@@ -13,6 +13,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/networking/dio_client.dart';
 import '../../../../core/services/websocket_service.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/repo/chat_repository.dart';
 import '../../data/models/message_model.dart';
 import '../../logic/cubit/messages_cubit.dart';
@@ -250,25 +251,18 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
           }
 
           if (state is MessageSendError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-                action: SnackBarAction(
-                  label: 'Dismiss',
-                  textColor: AppColors.white,
-                  onPressed: () {},
-                ),
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
             );
           }
 
           if (state is MessagesError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
             );
           }
         },

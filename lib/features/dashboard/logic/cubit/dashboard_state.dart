@@ -3,63 +3,71 @@ import '../../data/models/dashboard_stats_model.dart';
 
 /// Base Dashboard State
 abstract class DashboardState extends Equatable {
-  const DashboardState();
+  /// Previous stats to keep showing data even during errors
+  final DashboardStatsModel? previousStats;
 
-  @override
-  List<Object?> get props => [];
-}
+  /// Error message if any
+  final String? errorMessage;
 
-/// Dashboard Initial State
-///
-/// Initial state when the dashboard cubit is created
-class DashboardInitial extends DashboardState {
-  const DashboardInitial();
-}
+  /// Whether currently loading
+  final bool isLoading;
 
-/// Dashboard Loading State
-///
-/// State when fetching dashboard statistics from API
-class DashboardLoading extends DashboardState {
-  const DashboardLoading();
-}
-
-/// Dashboard Loaded State
-///
-/// State when dashboard statistics have been successfully fetched
-class DashboardLoaded extends DashboardState {
-  final DashboardStatsModel stats;
-
-  const DashboardLoaded({required this.stats});
-
-  @override
-  List<Object?> get props => [stats];
-}
-
-/// Dashboard Error State
-///
-/// State when an error occurs while fetching dashboard statistics
-class DashboardError extends DashboardState {
-  final String message;
-  final String? errorDetails;
-
-  const DashboardError({
-    required this.message,
-    this.errorDetails,
+  const DashboardState({
+    this.previousStats,
+    this.errorMessage,
+    this.isLoading = false,
   });
 
   @override
-  List<Object?> get props => [message, errorDetails];
+  List<Object?> get props => [previousStats, errorMessage, isLoading];
 
-  /// Get user-friendly error message
-  String get displayMessage {
-    if (message.contains('401') || message.contains('Unauthenticated')) {
-      return 'Session expired. Please login again.';
-    } else if (message.contains('500')) {
-      return 'Server error. Please try again later.';
-    } else if (message.contains('Network')) {
-      return 'Network error. Please check your connection.';
-    } else {
-      return message;
+  /// Check if has cached data
+  bool get hasData => previousStats != null;
+
+  /// Check if has error
+  bool get hasError => errorMessage != null;
+
+  /// Get user-friendly error message (Arabic)
+  String? get displayError {
+    if (errorMessage == null) return null;
+
+    if (errorMessage!.contains('401') || errorMessage!.contains('Unauthenticated')) {
+      return 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى';
+    } else if (errorMessage!.contains('500')) {
+      return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+    } else if (errorMessage!.contains('Network') || errorMessage!.contains('connection')) {
+      return 'لا يوجد اتصال بالإنترنت';
+    } else if (errorMessage!.contains('timeout')) {
+      return 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى';
     }
+    return errorMessage;
   }
+}
+
+/// Dashboard Initial State
+class DashboardInitial extends DashboardState {
+  const DashboardInitial() : super();
+}
+
+/// Dashboard Loading State - keeps previous data visible
+class DashboardLoading extends DashboardState {
+  const DashboardLoading({super.previousStats}) : super(isLoading: true);
+}
+
+/// Dashboard Loaded State
+class DashboardLoaded extends DashboardState {
+  final DashboardStatsModel stats;
+
+  const DashboardLoaded({required this.stats}) : super(previousStats: stats);
+
+  @override
+  List<Object?> get props => [stats, previousStats, errorMessage, isLoading];
+}
+
+/// Dashboard Error State - keeps previous data visible with error banner
+class DashboardError extends DashboardState {
+  const DashboardError({
+    required String message,
+    super.previousStats,
+  }) : super(errorMessage: message);
 }

@@ -6,6 +6,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/models/update_profile_request_model.dart';
 import '../../logic/cubit/profile_cubit.dart';
 import '../../logic/cubit/profile_state.dart';
@@ -261,18 +262,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             } else if (state is ProfileUpdated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: const Text('تم تحديث الملف الشخصي بنجاح'),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
               // Go back to previous screen
               Navigator.pop(context);
             } else if (state is ProfileError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.displayMessage),
-                  backgroundColor: AppColors.error,
-                ),
+              ErrorSnackBar.show(
+                context: context,
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
               );
             }
           },

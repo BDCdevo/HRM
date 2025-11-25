@@ -4,67 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HRM (Human Resource Management) Flutter application with Laravel (Filament) PHP backend. The app follows Clean Architecture with BLoC/Cubit state management, integrated Figma designs, and comprehensive API documentation.
+HRM (Human Resource Management) Flutter app with Laravel (Filament) PHP backend. Clean Architecture with BLoC/Cubit state management.
+
+**Version**: 1.1.1+11 | **SDK**: Flutter 3.9.2+ / Dart ^3.9.2
 
 ## Quick Start
 
-**Prerequisites**: Flutter 3.9.2+, Dart SDK 3.9.2+, PHP 8.4+
-
 ```bash
-# 1. Install Flutter dependencies
 flutter pub get
-
-# 2. Generate model code
 flutter pub run build_runner build --delete-conflicting-outputs
-
-# 3. Configure API endpoint (edit lib/core/config/api_config.dart line 26)
-# Choose: baseUrlEmulator (Android), baseUrlSimulator (iOS/Web), baseUrlRealDevice, or baseUrlProduction
-
-# 4. Start backend (if using local development)
-cd D:\php_project\filament-hrm && php artisan serve
-
-# 5. Run app
 flutter run
 ```
 
-For detailed setup, see `README.md` or `GETTING_STARTED_5MIN.md`.
-
 ## Environment Configuration
 
-### Current Environment
-The app is **currently configured for PRODUCTION** (`baseUrlProduction`). Check `lib/core/config/api_config.dart:26` to verify.
-
-### Available Environments
+**Current**: PRODUCTION (`lib/core/config/api_config.dart:26`)
 
 ```dart
-// lib/core/config/api_config.dart line 26
-static const String baseUrl = baseUrlProduction;    // Production: https://erp1.bdcbiz.com/api/v1
-// static const String baseUrl = baseUrlEmulator;   // Android Emulator: http://10.0.2.2:8000/api/v1
+static const String baseUrl = baseUrlProduction;    // https://erp1.bdcbiz.com/api/v1
+// static const String baseUrl = baseUrlEmulator;   // Android: http://10.0.2.2:8000/api/v1
 // static const String baseUrl = baseUrlSimulator;  // iOS/Web: http://localhost:8000/api/v1
-// static const String baseUrl = baseUrlRealDevice; // Real Device: http://192.168.1.X:8000/api/v1
 ```
 
-### Production Server Details
-- **URL**: `https://erp1.bdcbiz.com`
-- **API Base**: `https://erp1.bdcbiz.com/api/v1`
-- **Server IP**: `31.97.46.103`
-- **Laravel**: 12.37.0
-- **Database**: MySQL (erp1)
-- **SSL**: Valid (Let's Encrypt)
+**CRITICAL**: After changing `baseUrl`, use Hot Restart (`R`), not hot reload.
 
-### Switching Environments
+### Production Server
+- **SSH**: `ssh -i ~/.ssh/id_ed25519 root@31.97.46.103`
+- **Path**: `/var/www/erp1`
 
-**To switch to local development**:
-1. Open `lib/core/config/api_config.dart`
-2. Change line 26 to: `static const String baseUrl = baseUrlEmulator;`
-3. Start local backend: `cd D:\php_project\filament-hrm && php artisan serve`
-4. Hot restart Flutter app
-
-**To switch back to production**:
-1. Change line 26 to: `static const String baseUrl = baseUrlProduction;`
-2. Hot restart Flutter app
-
-See `PRODUCTION_SWITCH_README.md` for detailed switching guide.
+### Local Backend
+```bash
+cd D:\php_project\filament-hrm && php artisan serve
+```
 
 ## Architecture
 
@@ -73,416 +44,109 @@ See `PRODUCTION_SWITCH_README.md` for detailed switching guide.
 ```
 lib/features/{feature_name}/
 ├── data/
-│   ├── models/          # Data models with JSON serialization
-│   └── repo/            # Repository pattern for API calls
+│   ├── models/          # @JsonSerializable() models + .g.dart files
+│   └── repo/            # Repository using DioClient.getInstance()
 ├── logic/
-│   └── cubit/           # Business logic (BLoC pattern)
-│       ├── {feature}_cubit.dart
-│       └── {feature}_state.dart
+│   └── cubit/           # Cubit + State (extends Equatable)
 └── ui/
-    ├── screens/         # Full-page screens
-    └── widgets/         # Feature-specific widgets
+    ├── screens/
+    └── widgets/
 ```
 
 ### Core Infrastructure
 
-```
-lib/core/
-├── config/              # API endpoints, environment configs
-├── networking/          # DioClient (singleton), ApiInterceptor
-├── routing/             # AppRouter, NavigationHelper, route guards, transitions
-├── styles/              # AppTheme, AppColors, AppTextStyles
-├── widgets/             # Reusable components (CustomButton, CustomTextField)
-├── services/            # LocationService for GPS
-├── errors/              # Error handling utilities
-├── constants/           # App-wide constants
-└── integrations/
-    └── figma_links/     # Design system references
-```
+- `lib/core/config/api_config.dart` - API endpoints (all endpoints defined here)
+- `lib/core/networking/` - DioClient (singleton), ApiInterceptor (auth token injection)
+- `lib/core/routing/app_router.dart` - Custom router (NOT go_router despite pubspec dependency)
+- `lib/core/styles/` - AppColors, AppTextStyles, AppColorsExtension
+- `lib/core/errors/` - AppError types, ErrorHandler, fromDioException()
+- `lib/core/services/websocket_service.dart` - Pusher/Reverb for real-time chat
+- `lib/core/navigation/main_navigation_screen.dart` - Main 4-tab layout
 
-### Existing Features
+### Key Patterns
 
-- `auth` - Login, registration, admin login, token management
-- `dashboard` - Dashboard statistics with service cards
-- `attendance` - Check-in/out with location tracking, history, calendar, multiple sessions
-- `leave` / `leaves` - Leave requests, balance, history (note: separate features for logic vs UI)
-- `holidays` - Company holidays calendar and management
-- `chat` - WhatsApp-style messaging with real-time chat, file attachments, employee selection
-- `profile` - User profile, edit, change password
-- `notifications` - Notification list and management
-- `work_schedule` - Work schedule display
-- `reports` - Monthly reports
-- `branches` - Branch management with geofencing
-- `home`, `settings`, `about`, `more` - Additional screens
+**DioClient Singleton**: Always use `DioClient.getInstance()`, never instantiate directly.
+
+**Separate Features**: `leave` (logic) and `leaves` (UI) are intentionally separate to allow reusing business logic.
+
+**Chat Models Exception**: Chat models use `fromApiJson()` instead of standard `fromJson()` due to nested API response structure.
 
 ## Development Commands
 
-### Flutter
-
 ```bash
-# Install dependencies
-flutter pub get
-
-# Run code generation (for JSON models)
+# Code generation (run after model changes)
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# Watch mode for continuous generation
-flutter pub run build_runner watch
+# Build release APK
+flutter build apk --release --obfuscate --split-debug-info=build/debug_info
 
-# Run on specific devices
-flutter run                    # Android emulator (default)
-flutter run -d windows
-flutter run -d chrome
+# Build release AAB (Play Store)
+flutter build appbundle --release --obfuscate --split-debug-info=build/debug_info
 
-# Code quality
+# Testing & Analysis
+flutter test
 flutter analyze
 dart format .
-flutter test
-
-# Clean build (if issues occur)
-flutter clean
-flutter pub get
-
-# Build release (recommended with obfuscation and shrinking)
-flutter build apk --release --obfuscate --split-debug-info=build/debug_info
-flutter build appbundle --release --obfuscate --split-debug-info=build/debug_info
-flutter build windows
-
-# Version management (update pubspec.yaml)
-# Current version: 1.1.0+10
-# Format: MAJOR.MINOR.PATCH+BUILD_NUMBER
-# Example: version: 1.2.0+7
 ```
 
-**Version Info**: Current app version is `1.1.0+10` (defined in `pubspec.yaml` line 19). Increment build number for each release.
-
-### Backend (Laravel)
-
-#### Local Backend (`D:\php_project\filament-hrm`)
+### Backend Commands
 
 ```bash
-# Start server
+# Local (D:\php_project\filament-hrm)
 php artisan serve
+php artisan cache:clear && php artisan config:clear
 
-# Database operations
-php artisan migrate
-php artisan migrate:fresh --seed  # Reset and seed
-php artisan db:seed
-
-# Clear caches (always do this after backend code changes)
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-
-# Check routes
-php artisan route:list --path=api/v1
-```
-
-#### Production Backend (SSH Access)
-
-**Server**: `root@31.97.46.103`
-**Laravel Path**: `/var/www/erp1` (confirmed via SSH)
-
-```bash
-# Connect to server
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@31.97.46.103
-
-# Common commands (run on server)
+# Production (after SSH)
 cd /var/www/erp1
 php artisan cache:clear
-php artisan config:clear
-php artisan migrate
-php artisan route:list --path=api/v1
-
-# View logs
-tail -f /var/www/erp1/storage/logs/laravel.log
-```
-
-**Important**: Test backend changes locally (`D:\php_project\filament-hrm`) before deploying to production.
-
-#### Testing Scripts (`C:\xampp\htdocs\flowERP`)
-
-Additional PHP test utilities for backend testing:
-```bash
-cd C:\xampp\htdocs\flowERP
-php test_multiple_sessions.php  # Test attendance sessions
+tail -f storage/logs/laravel.log
 ```
 
 ## API Integration
 
-### Base URL Configuration
-
-Edit `lib/core/config/api_config.dart` line 26:
-
-```dart
-// Choose based on environment
-static const String baseUrl = baseUrlProduction;   // Production: https://erp1.bdcbiz.com/api/v1
-static const String baseUrl = baseUrlEmulator;     // Android Emulator: http://10.0.2.2:8000/api/v1
-static const String baseUrl = baseUrlSimulator;    // iOS/Web: http://localhost:8000/api/v1
-static const String baseUrl = baseUrlRealDevice;   // Real Device: http://192.168.1.X:8000/api/v1
-```
-
-**Note**: For real device testing, update the IP in `baseUrlRealDevice` to match your computer's local network IP.
-
-### HTTP Client Pattern
-
-All API calls use DioClient singleton with automatic token injection via ApiInterceptor:
+### Repository Pattern
 
 ```dart
 final _dioClient = DioClient.getInstance();
 
-// Example repository method
 Future<Model> fetchData() async {
   final response = await _dioClient.get(ApiConfig.endpoint);
   if (response.statusCode == 200) {
-    return Model.fromJson(response.data['data']);
+    return Model.fromJson(response.data['data']);  // Parse from 'data' key
   }
   throw Exception(response.data['message']);
 }
 ```
 
-### API Response Structure
-
-Standard API responses follow this format:
-
-```json
-// Success (200)
-{
-  "success": true,
-  "message": "Operation successful",
-  "data": { /* payload */ }
-}
-
-// Error (4xx, 5xx)
-{
-  "success": false,
-  "message": "Error description",
-  "errors": { /* validation errors */ }
-}
-```
-
-Always check `response.statusCode` and parse `response.data['data']` for success responses.
-
-### Authentication Flow
-
-1. Login stores token in `flutter_secure_storage` (key: `auth_token`)
-2. ApiInterceptor automatically adds `Authorization: Bearer {token}` to all requests
-3. 401 responses trigger logout flow
-4. Supports both employee and admin authentication with separate guards
+### Authentication
+- Token stored in `flutter_secure_storage` (key: `auth_token`)
+- ApiInterceptor auto-adds `Authorization: Bearer {token}`
+- 401 responses trigger logout via NavigationHelper
 
 ## Theme System
 
-### Colors
-
-All colors defined in `lib/core/styles/app_colors.dart`:
-
-- **Primary**: `#6B7FA8` (warm neutral blue)
-- **Accent**: `#7FA89A` (warm teal)
-- **Success**: `#6B9B7F`, **Error**: `#B37373`, **Warning**: `#BF9B6F`
-- **WhatsApp Colors**: `whatsappGrayDark`, `whatsappGrayMedium`, `whatsappGrayLight`
-- Use `AppColors.*` constants, NOT hardcoded hex values
-
-### Text Styles
-
-All text styles defined in `lib/core/styles/app_text_styles.dart`:
-
-**Available styles** (60+ styles):
-- **Display**: `displayLarge`, `displayMedium`, `displaySmall`
-- **Headline**: `headlineLarge`, `headlineMedium`, `headlineSmall`
-- **Title**: `titleLarge`, `titleMedium`, `titleSmall`
-- **Body**: `bodyLarge`, `bodyMedium`, `bodySmall`
-- **Label**: `labelLarge`, `labelMedium`, `labelSmall`
-- **Button**: `button`, `buttonSmall`
-- **Input**: `inputText`, `inputLabel`, `inputHint`, `inputError`, `inputHelper`
-- **Form**: `formTitle`, `formDescription`
-- **Chat**: `messageText`, `messageTime`, `conversationTitle`, `conversationSubtitle`, `voiceTimer`
-- **Greeting**: `greeting`, `userName`, `welcomeTitle`, `welcomeSubtitle`
-- **Stats**: `statNumberLarge`, `statNumberMedium`, `statLabel`
-- **Timer**: `timerLarge`, `timerMedium`, `timerSmall`
-- **Badge/Chip**: `badgeText`, `chipText`
-- **Menu/List**: `menuItem`, `listTitle`, `listSubtitle`
-- **Calendar**: `calendarDay`, `calendarHeader`, `dateLabel`
-- **Special**: `link`, `caption`, `overline`
-
-### Usage
+**ALWAYS use `AppColors.*` and `AppTextStyles.*` - NEVER hardcode colors or text styles.**
 
 ```dart
-// ✅ Correct - Use AppTextStyles
-Text(
-  'Welcome Back',
-  style: AppTextStyles.welcomeTitle.copyWith(
-    color: textColor,
-  ),
-)
-
-// ✅ Correct - Use AppColors
+// Correct
+Text('Welcome', style: AppTextStyles.welcomeTitle)
 Container(color: AppColors.primary)
-CustomButton(text: 'Save', type: ButtonType.primary, onPressed: () {})
 
-// ❌ Wrong - Never use TextStyle directly
-Text(
-  'Welcome',
-  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-)
-
-// ❌ Wrong - Never use hardcoded colors
+// Wrong - never do this
+Text('Welcome', style: TextStyle(fontSize: 26))
 Container(color: Color(0xFF2D3142))
 ```
 
-**Full guides**:
-- Theme guide: `lib/core/styles/THEME_GUIDE.md`
-- **Text Styles guide**: `TEXT_STYLES_GUIDE.md` - Complete guide with all styles and examples
-
-## Feature Development Workflow
-
-1. **Create feature structure**: `lib/features/{feature_name}/data/models/`, `data/repo/`, `logic/cubit/`, `ui/screens/`, `ui/widgets/`
-2. **Define model**: Add JSON serialization annotations (`@JsonSerializable()`)
-3. **Generate code**: `flutter pub run build_runner build --delete-conflicting-outputs`
-4. **Implement repository**:
-   - Use `DioClient.getInstance()` singleton
-   - Handle responses: check `statusCode`, parse `response.data['data']`
-   - Throw meaningful exceptions for errors
-5. **Create cubit**:
-   - Extend from BLoC's `Cubit<YourState>`
-   - State must extend `Equatable` with `props` list
-   - Implement `copyWith` for immutable state updates
-   - Use try-catch with loading/success/error flow
-6. **Build UI**:
-   - Use BlocBuilder/BlocConsumer to watch state
-   - Use core widgets: `CustomButton`, `CustomTextField`
-   - Follow `AppColors.*` and `AppTextStyles.*`
-   - Add route to `AppRouter` if creating new screen
-   - Support dark mode using `AppColorsExtension`
-7. **Test**: Unit tests for cubits/repos, widget tests for complex UI
-8. **Document**: Update API_DOCUMENTATION.md if adding new endpoints
-
-### Common Development Patterns
-
-**Loading States**:
+For dark mode support, use `AppColorsExtension`:
 ```dart
-// Use AppLoadingScreen for full-screen loading
-if (state is Loading) {
-  return AppLoadingScreen(
-    animationType: LoadingAnimationType.spinner,
-    message: 'Loading data...',
-  );
-}
-
-// Use CircularProgressIndicator for inline loading
-if (isLoading) return const Center(child: CircularProgressIndicator());
+color: Theme.of(context).extension<AppColorsExtension>()!.primary
 ```
 
-**Error Handling**:
-```dart
-// Show error with SnackBar
-if (state.error != null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(state.error!),
-      backgroundColor: AppColors.error,
-    ),
-  );
-}
-```
+## State Management (BLoC/Cubit)
 
-**Date Formatting**:
-```dart
-import 'package:intl/intl.dart';
-
-// Format date
-final formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-// Format time
-final formattedTime = DateFormat('HH:mm').format(DateTime.now());
-
-// Relative time
-import 'package:timeago/timeago.dart' as timeago;
-final relativeTime = timeago.format(dateTime);
-```
-
-**Accessing Auth User**:
-```dart
-// Get current user from AuthCubit
-final authState = context.read<AuthCubit>().state;
-if (authState is AuthAuthenticated) {
-  final user = authState.user;
-  print('User ID: ${user.id}');
-  print('User Email: ${user.email}');
-}
-```
-
-## Important Architectural Patterns
-
-### Singleton Pattern
-- **DioClient**: Use `DioClient.getInstance()` - never instantiate directly
-- Ensures single HTTP client instance with shared configuration and interceptors
-
-### Repository Pattern
-- All API calls go through repository classes in `features/{name}/data/repo/`
-- Repositories use DioClient and return models (not raw responses)
-- UI layer (screens/widgets) never calls DioClient directly
-
-### BLoC/Cubit Pattern
-- Business logic lives in `features/{name}/logic/cubit/`
-- UI subscribes to state changes via `BlocBuilder` or `BlocConsumer`
-- Cubits call repositories, never DioClient directly
-- Always emit new state instances (immutable pattern)
-
-### Separate Features Pattern
-- Note: `leave` and `leaves` are separate features
-- `leave` contains business logic (models, repos, cubits)
-- `leaves` contains UI layer (screens, widgets)
-- This separation allows reusing logic across different UIs
-
-## Code Generation
-
-Models use `json_serializable` for automatic JSON serialization:
+States MUST extend `Equatable` and implement `copyWith`:
 
 ```dart
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user_model.g.dart';
-
-@JsonSerializable()
-class UserModel {
-  final int id;
-  final String name;
-
-  UserModel({required this.id, required this.name});
-
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
-}
-```
-
-### When to Run Build Runner
-
-Run code generation after:
-- Creating a new model with `@JsonSerializable()`
-- Adding/removing fields from existing models
-- Changing `@JsonKey` annotations
-- Getting build errors about missing `.g.dart` files
-
-```bash
-# One-time generation
-flutter pub run build_runner build --delete-conflicting-outputs
-
-# Watch mode (auto-generates on file save)
-flutter pub run build_runner watch --delete-conflicting-outputs
-
-# Clean before building (if conflicts occur)
-flutter pub run build_runner clean
-flutter pub run build_runner build --delete-conflicting-outputs
-```
-
-**Important**: Always commit `.g.dart` files to version control.
-
-## State Management
-
-Uses `flutter_bloc` with Cubit pattern. States must extend `Equatable` for efficient rebuilds:
-
-```dart
-// State with Equatable
 class FeatureState extends Equatable {
   final bool isLoading;
   final String? error;
@@ -501,909 +165,86 @@ class FeatureState extends Equatable {
   @override
   List<Object?> get props => [isLoading, error, data];
 }
-
-// Cubit with error handling
-class FeatureCubit extends Cubit<FeatureState> {
-  final FeatureRepo _repo;
-
-  FeatureCubit(this._repo) : super(const FeatureState());
-
-  Future<void> fetchData() async {
-    emit(state.copyWith(isLoading: true, error: null));
-    try {
-      final data = await _repo.getData();
-      emit(state.copyWith(isLoading: false, data: data));
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
-    }
-  }
-}
 ```
 
-**Important**: Always implement `copyWith` method for state classes to enable immutable updates.
+## Code Generation
 
-### Using BlocListener for Side Effects
-
-Use `BlocListener` for actions like navigation, snackbars, or triggering other operations:
-
-```dart
-BlocListener<FeatureCubit, FeatureState>(
-  listener: (context, state) {
-    if (state.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.error!)),
-      );
-    }
-    if (state.data != null) {
-      // Navigate, refresh, or trigger other cubits
-      context.read<OtherCubit>().fetchData();
-    }
-  },
-  child: YourWidget(),
-)
-```
-
-Use `BlocConsumer` when you need both listening and building from the same cubit.
-
-## Key Dependencies
-
-**State & Networking**:
-- **flutter_bloc**: State management (Cubit pattern)
-- **equatable**: Value equality for states (required for BLoC rebuilds)
-- **dio**: HTTP client (singleton pattern via DioClient)
-- **flutter_secure_storage**: Secure token storage (key: `auth_token`)
-
-**Code Generation**:
-- **json_annotation** + **build_runner** + **json_serializable**: JSON serialization
-
-**UI & Media**:
-- **fl_chart**: Charts and visualizations
-- **cached_network_image**: Image caching
-- **image_picker**: Image/file selection
-
-**Location & Permissions**:
-- **geolocator**: GPS location services (for attendance)
-- **permission_handler**: Runtime permissions
-
-**Utilities**:
-- **intl**: Date/time formatting
-- **timeago**: Relative time formatting
-- **shared_preferences**: Local key-value storage
-
-**Animations**:
-- **lottie**: Lottie JSON animations for loading screens
-- **flutter_svg**: SVG support for vector graphics
-
-**Audio & Files**:
-- **record**: Audio recording for voice messages
-- **audioplayers**: Audio playback
-- **file_picker**: File selection for attachments
-- **path_provider**: File system paths
-
-**Real-time Communication**:
-- **pusher_channels_flutter**: WebSocket for real-time chat (Laravel Reverb)
-
-## Testing
+Models use `@JsonSerializable()`. Run after model changes:
 
 ```bash
-# Run all tests
-flutter test
-
-# Run specific test file
-flutter test test/features/auth/logic/cubit/auth_cubit_test.dart
-
-# Run with coverage
-flutter test --coverage
-
-# View coverage report (HTML)
-genhtml coverage/lcov.info -o coverage/html
-```
-
-Use `mockito` for mocking dependencies and `bloc_test` for testing cubits. Current test coverage is minimal - expand as needed.
-
-## Navigation System
-
-**Note**: Despite `go_router` being in dependencies, the app uses a **custom routing system** via `AppRouter` with manual route generation and custom transitions.
-
-### Centralized Routing
-
-All navigation uses named routes via `AppRouter` (not go_router):
-
-```dart
-// Navigate to a screen
-AppRouter.navigateTo(context, AppRouter.profile);
-
-// Replace current screen
-AppRouter.navigateAndReplace(context, AppRouter.mainNavigation);
-
-// Clear stack and navigate
-AppRouter.navigateAndRemoveUntil(context, AppRouter.login);
-```
-
-### Custom Page Transitions
-
-```dart
-// Use extension method with custom transition
-const ProfileScreen().navigate(
-  context,
-  transition: RouteTransitionType.slideFromRight,
-);
-
-// Available transitions: material, fade, slideFromRight, slideFromLeft,
-// slideFromBottom, slideFromTop, scale, rotation, slideAndFade
-```
-
-### Route Guards
-
-Protect routes requiring authentication:
-
-```dart
-class ProtectedScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ProtectedRoute(
-      child: Scaffold(/* content */),
-      requireAdmin: false, // Set true for admin-only routes
-    );
-  }
-}
-```
-
-### Navigation Helpers
-
-```dart
-// Quick navigation methods
-NavigationHelper.goToLogin(context);
-NavigationHelper.goToHome(context);
-NavigationHelper.logout(context);
-
-// Show dialogs
-NavigationHelper.showCustomDialog(context: context, child: widget);
-NavigationHelper.showConfirmationDialog(context, title: '...', message: '...');
-NavigationHelper.showLoadingDialog(context);
-```
-
-### Adding New Routes
-
-1. Add route name in `lib/core/routing/app_router.dart`
-2. Add case in `onGenerateRoute` method
-3. Use `AppRouter.navigateTo(context, AppRouter.yourRoute)`
-
-Full navigation guide: `lib/core/routing/README.md`
-
-### Bottom Navigation Structure
-
-The app uses `MainNavigationScreen` as the main container with 4 tabs:
-
-1. **Home** (`HomeMainScreen`) - Dashboard with attendance widget and service cards
-2. **Chat** (`ChatListScreen`) - WhatsApp-style messaging
-3. **Leaves** (`LeavesMainScreen`) - Leave management (apply, history, balance)
-4. **More** (`MoreMainScreen`) - Settings, reports, profile, etc.
-
-**Important**:
-- After login, users land on `MainNavigationScreen` (not individual screens)
-- Each tab maintains its own navigation stack
-- Company ID is currently hardcoded to `6` (BDC) in `MainNavigationScreen` - TODO: Add to UserModel
-
-## Assets & Resources
-
-### Asset Directories
-
-```
-assets/
-├── images/logo/           # Company logos (BDC logo, etc.)
-├── svgs/                  # SVG icons and illustrations
-├── whatsapp_icons/        # WhatsApp-style chat icons
-└── animations/            # Lottie JSON animations
-    └── loding.json       # Note: Typo in filename (should be "loading.json")
-```
-
-**Important**: The loading animation file is currently named `loding.json` (typo). The app handles this gracefully with fallback.
-
-### Adding New Assets
-
-1. Place files in appropriate directory
-2. Update `pubspec.yaml`:
-   ```yaml
-   flutter:
-     assets:
-       - assets/your_directory/
-   ```
-3. Run `flutter pub get`
-4. Access in code:
-   ```dart
-   Image.asset('assets/images/logo/bdc_logo.png')
-   SvgPicture.asset('assets/svgs/icon.svg')
-   Lottie.asset('assets/animations/loading.json')
-   ```
-
-## Documentation References
-
-- **API Documentation**: `API_DOCUMENTATION.md` - All backend endpoints and response formats
-- **Flutter API Setup**: `FLUTTER_API_SETUP.md` - Arabic guide for API integration
-- **Theme Guide**: `lib/core/styles/THEME_GUIDE.md` - Complete theme system documentation
-- **Navigation Guide**: `lib/core/routing/README.md` - Routing system details
-- **Quick Reference**: `QUICK_REFERENCE.md` - Quick reference guide (Arabic)
-- **Changelog**: `CHANGELOG.md` - Detailed change history
-- **Production Testing**: `PRODUCTION_TESTING_GUIDE.md` - Production testing checklist
-- **Production Switch**: `PRODUCTION_SWITCH_README.md` - Environment switching guide
-- **Chat Implementation**: `CHAT_FEATURE_IMPLEMENTATION_REPORT.md` - Complete chat feature documentation
-- **Security Guide**: `SECURITY_QUICK_GUIDE.md` - Security improvements and testing (Arabic)
-- **Attendance Documentation**: `ATTENDANCE_FEATURE_DOCUMENTATION.md` - Multiple sessions implementation
-- **Loading Animations**: `LOADING_ANIMATIONS_GUIDE.md` - Loading animation system guide (Arabic)
-- **Profile Image Upload**: `PROFILE_IMAGE_UPLOAD_COMPLETE.md` - Profile image upload implementation (English)
-- **Profile Image Upload (Arabic)**: `PROFILE_IMAGE_ARABIC_GUIDE.md` - دليل رفع الصورة الشخصية
-- **Figma Designs**: https://www.figma.com/design/gNAzHVWnkINNfxNmDZX7Nt
-- **Backend Location**: `D:\php_project\filament-hrm` (local), `/var/www/erp1` (production server)
-
-## Location Services
-
-The app uses GPS location for attendance check-in/check-out:
-
-```dart
-// LocationService provides:
-- isLocationServiceEnabled()
-- checkPermission() / requestPermission()
-- getCurrentPosition()
-```
-
-Required permissions configured in:
-- **Android**: `android/app/src/main/AndroidManifest.xml` (ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION)
-- **iOS**: `ios/Runner/Info.plist` (NSLocationWhenInUseUsageDescription)
-
-## Common Issues
-
-### API Connection
-- **Android Emulator**: Use `10.0.2.2` instead of `localhost`
-- **Real device**: Ensure same WiFi network, use computer's IP address
-- **Production**: Ensure internet connectivity, verify `baseUrl = baseUrlProduction`
-- **Check backend**: For local dev, verify `php artisan serve` is running
-
-### Build Runner Issues
-```bash
-# Clear and rebuild
-flutter pub run build_runner clean
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-### Token Issues
-- Token stored in `flutter_secure_storage` with key `auth_token`
-- ApiInterceptor handles 401 responses
-- Check token in login response: `response.data['data']['access_token']`
-- If persistent issues: logout and login again
+Commit `.g.dart` files to version control.
 
-### Location Permission Issues
-- Ensure location services are enabled on device
-- Check manifest/plist files for proper permission declarations
-- Test permission flow: denied → request → granted
+## Navigation
 
-### Environment Mismatch
-- **Symptom**: "Connection refused" or "Cannot connect to server"
-- **Solution**: Verify `baseUrl` in `lib/core/config/api_config.dart:26` matches your target environment
-- **CRITICAL**: After changing `baseUrl`, you MUST perform a **hot restart** (not hot reload) - press `R` in terminal or use IDE restart button
-- Hot reload will NOT pick up `const` changes in `api_config.dart`
-
-### Lottie Animation Not Showing
-- **Symptom**: Loading screen shows logo instead of Lottie animation
-- **Solution**:
-  1. Verify file exists at `assets/animations/loading.json` (not `loding.json`)
-  2. Check `pubspec.yaml` includes `- assets/animations/`
-  3. Run `flutter pub get`
-  4. This is intentional fallback behavior - no error occurs
-
-### Dark Mode Issues
-- **Symptom**: Colors not changing in dark mode
-- **Solution**: Use `AppColorsExtension` instead of `AppColors` for theme-aware colors
-  ```dart
-  // ✅ Correct (theme-aware)
-  color: Theme.of(context).extension<AppColorsExtension>()!.primary
-
-  // ❌ Wrong (static)
-  color: AppColors.primary
-  ```
-
-## Debugging & Performance
-
-### Logging
-
-**API Requests**: DioClient automatically logs all requests/responses via ApiInterceptor.
-
-**Enable detailed logs**:
-```dart
-// In lib/core/networking/dio_client.dart
-dio.interceptors.add(LogInterceptor(
-  requestBody: true,
-  responseBody: true,
-  error: true,
-));
-```
-
-### Performance Monitoring
-
-**Check build size**:
-```bash
-flutter build apk --analyze-size
-flutter build appbundle --analyze-size
-```
-
-**Profile mode** (for performance testing):
-```bash
-flutter run --profile
-```
-
-**Memory leaks**: Use Flutter DevTools to monitor memory usage and check for BLoC leaks (ensure proper cubit disposal).
-
-### Hot Reload vs Hot Restart
-
-- **Hot Reload** (`r`): Fast, preserves state, but doesn't pick up const changes or new assets
-- **Hot Restart** (`R`): Slower, clears state, picks up all changes including `api_config.dart` baseUrl
-
-**When to use Hot Restart**:
-- After changing `ApiConfig.baseUrl`
-- After modifying `pubspec.yaml`
-- After adding new assets
-- After modifying app entry point (`main.dart`)
-- When hot reload doesn't reflect your changes
-
-## Attendance Feature: Multiple Sessions
-
-### Overview
-The attendance system supports **unlimited check-in/check-out sessions per day**. Employees can:
-- Check-in → Check-out → Check-in → Check-out (unlimited cycles)
-- Track multiple work sessions with GPS location
-- View all sessions with real-time status updates
-
-### Key Implementation Details
-
-#### State Management Pattern
-Always use `hasActiveSession` from API (NOT `hasCheckedIn` && `!hasCheckedOut`):
+Uses **custom AppRouter** (`lib/core/routing/app_router.dart`) - NOT go_router:
 
 ```dart
-// ✅ Correct approach
+AppRouter.navigateTo(context, AppRouter.profile);
+AppRouter.navigateAndReplace(context, AppRouter.mainNavigation);
+AppRouter.navigateAndRemoveUntil(context, AppRouter.login);
+```
+
+### Main Navigation Structure
+- 4 tabs: Home, Chat, Requests, More
+- Central FAB opens requests dialog
+- Company ID hardcoded to `6` (BDC) - TODO: Add to UserModel
+
+## Error Handling
+
+Use `fromDioException()` for network errors:
+
+```dart
+try {
+  final data = await _repository.getData();
+  emit(state.copyWith(data: data));
+} on DioException catch (e) {
+  emit(state.copyWith(error: fromDioException(e)));
+}
+```
+
+For UI display, use `ErrorHandler.handle()` from `lib/core/errors/error_handler.dart`.
+
+## Real-time Chat (WebSocket)
+
+Uses `pusher_channels_flutter` with Laravel Reverb backend:
+- Service: `lib/core/services/websocket_service.dart`
+- Channel pattern: `private-chat.{companyId}.conversation.{conversationId}`
+- Reverb host: `ws://31.97.46.103:8081`
+
+## Attendance: Multiple Sessions
+
+Use `hasActiveSession` from API (NOT `hasCheckedIn && !hasCheckedOut`):
+
+```dart
 final hasActiveSession = status?.hasActiveSession ?? false;
-
-if (hasActiveSession) {
-  // Show "Check Out" button
-} else {
-  // Show "Check In" button
-}
-
-// ❌ Wrong (old single-session approach)
-if (hasCheckedIn && !hasCheckedOut) {
-  // This breaks with multiple sessions
-}
+if (hasActiveSession) { /* Check Out */ } else { /* Check In */ }
 ```
-
-#### State Persistence
-Use state persistence to maintain status during loading states:
-
-```dart
-class _AttendanceWidgetState extends State<AttendanceWidget> {
-  AttendanceStatusModel? _lastStatus;  // Store last status
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AttendanceCubit, AttendanceState>(
-      builder: (context, state) {
-        // Save status when loaded
-        if (state is AttendanceStatusLoaded) {
-          _lastStatus = state.status;
-        }
-
-        // Use persisted status (survives SessionsLoading, etc.)
-        final status = _lastStatus ?? extractFromState(state);
-        final hasActiveSession = status?.hasActiveSession ?? false;
-      },
-    );
-  }
-}
-```
-
-#### Auto-refresh Pattern
-Always refresh status after successful operations:
-
-```dart
-listener: (context, state) {
-  if (state is CheckInSuccess || state is CheckOutSuccess) {
-    // Refresh to get updated hasActiveSession
-    context.read<AttendanceCubit>().fetchTodayStatus();
-    context.read<AttendanceCubit>().fetchTodaySessions();
-  }
-}
-```
-
-#### Custom Type Converter
-Handle mixed String/num types from API:
-
-```dart
-class DurationHoursConverter implements JsonConverter<double?, dynamic> {
-  const DurationHoursConverter();
-
-  @override
-  double? fromJson(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
-  }
-
-  @override
-  dynamic toJson(double? value) => value;
-}
-
-// Usage in model
-@JsonKey(name: 'duration_hours')
-@DurationHoursConverter()
-final double? durationHours;
-```
-
-### API Response Structure
-
-```json
-{
-  "has_checked_in": true,
-  "has_checked_out": false,
-  "has_active_session": true,  // ⭐ Use this for button state
-  "current_session": {
-    "session_id": 15,
-    "check_in_time": "09:00:00"
-  },
-  "sessions_summary": {
-    "total_sessions": 3,
-    "active_sessions": 1,
-    "completed_sessions": 2
-  }
-}
-```
-
-### Testing Multiple Sessions
-
-Backend test script available at `C:\xampp\htdocs\flowERP\test_multiple_sessions.php`:
-
-```bash
-cd C:\xampp\htdocs\flowERP
-php test_multiple_sessions.php
-```
-
-This tests:
-- Multiple sequential check-in/check-out cycles
-- Status updates after each operation
-- Session list accuracy
-
-### Documentation
-See `ATTENDANCE_FEATURE_DOCUMENTATION.md` for:
-- Complete technical implementation details
-- API endpoints with examples
-- Troubleshooting guide
-- Testing checklist
-- Future improvements
-
-## Backend Development
-
-### Backend Locations
-
-**Local Development**: `D:\php_project\filament-hrm`
-- Use for testing backend changes before production
-- Run `php artisan serve` to start local server
-
-**Production Server**: `/var/www/erp1` (via SSH to `root@31.97.46.103`)
-- Live production environment
-- Access via SSH: `ssh -i ~/.ssh/id_ed25519 root@31.97.46.103`
-
-**Testing Scripts**: `C:\xampp\htdocs\flowERP`
-- PHP utilities for testing backend functionality
-
-### Testing Backend Changes
-
-**Always test locally first**, then deploy to production:
-
-1. **Make changes** in `D:\php_project\filament-hrm`
-2. **Clear caches**: `php artisan cache:clear && php artisan config:clear`
-3. **Restart server**: `php artisan serve`
-4. **Test in Flutter**: Set `baseUrl = baseUrlEmulator` and test thoroughly
-5. **Deploy to production**: Copy changes to production server
-6. **Clear production caches**: SSH to server and run `php artisan cache:clear`
-7. **Test production**: Set `baseUrl = baseUrlProduction` and verify
-
-### Database Seeding
-
-Important seed data for testing:
-- **Departments**: Required for employee registration
-- **Vacation Types**: Required for leave requests
-- **Work Schedules**: Required for attendance tracking
-
-```bash
-# Seed specific tables (local)
-php artisan db:seed --class=DepartmentSeeder
-php artisan db:seed --class=VacationTypeSeeder
-
-# Reset and seed everything (local)
-php artisan migrate:fresh --seed
-```
-
-**Warning**: Never run `migrate:fresh` on production - it deletes all data!
 
 ## Multi-Tenancy
 
-The system supports multi-tenancy with `CurrentCompanyScope`:
-
-### Important Patterns
-- All models with `CompanyOwned` trait automatically scope by company
-- API requests must set session company_id explicitly
-- Employee sees only their company's data
-
-### Common Issue: CurrentCompanyScope Error
-**Symptom**: `ModelNotFoundException: CurrentCompanyScope: No company_id set in the session or on the user`
-
-**Solution**: Add session company_id before querying:
+Backend uses `CurrentCompanyScope`. If you get "No company_id set" error:
 ```php
 session(['current_company_id' => $employee->company_id]);
 ```
 
-See `CURRENTCOMPANYSCOPE_FIX_COMPLETE.md` for detailed fix documentation.
-
 ## Test Credentials
 
-### Production Server
-```
-Email: Ahmed@bdcbiz.com
-Password: password
-Company ID: 6 (BDC)
-Department: التطوير
-```
-
-### Local Development
-```
-Email: employee@example.com
-Password: password
-```
-
-Or create test employees via Admin Panel at `http://localhost:8000/admin`
-
-## Chat Feature
-
-### Overview
-WhatsApp-inspired chat system with private and group messaging, file attachments, and real-time updates.
-
-### Architecture Pattern
-```
-ChatListScreen (conversations) → ChatRoomScreen (messages)
-      ↓                                    ↓
-  ChatCubit                          MessagesCubit
-      ↓                                    ↓
-           ChatRepository (shared)
-```
-
-### Key Implementation Details
-
-**Repository**: `lib/features/chat/data/repo/chat_repository.dart`
-- `getConversations(companyId)` - Fetch all conversations
-- `createConversation(companyId, participantIds, type, name?)` - Create new chat
-- `getMessages(conversationId, companyId)` - Fetch messages
-- `sendMessage(conversationId, companyId, body, attachment?)` - Send message with optional file
-- `getUsers(companyId)` - Get employees for new chat
-
-**Cubits**:
-- `ChatCubit` - Manages conversation list state
-- `MessagesCubit` - Manages messages within a conversation
-- `EmployeesCubit` - Manages employee selection with search
-
-**Usage Example**:
-```dart
-// Navigate to chat list
-Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => ChatListScreen(
-      companyId: authState.user.companyId,
-      currentUserId: authState.user.id,
-    ),
-  ),
-);
-```
-
-**Models**:
-- Chat models use special `fromApiJson()` factory methods (not standard `fromJson()`) due to nested API response structure
-- Example: `ConversationModel.fromApiJson()` unwraps `data` wrapper from API
-- Standard models use `fromJson()` generated by `json_serializable`
-- Supports text messages, images, files, and voice messages
-
-**Testing**: Backend test available via `/api/conversations` endpoints
-
-See `CHAT_FEATURE_IMPLEMENTATION_REPORT.md` for complete implementation details.
-
-### Important: Model Parsing Patterns
-
-This codebase uses **two different JSON parsing patterns**:
-
-**Pattern 1: Standard Models** (most features)
-```dart
-// Uses json_serializable generated fromJson()
-final model = UserModel.fromJson(response.data['data']);
-```
-
-**Pattern 2: Chat Models** (chat feature only)
-```dart
-// Uses custom fromApiJson() that handles nested structure
-final conversation = ConversationModel.fromApiJson(response.data);
-// fromApiJson() internally unwraps response.data['data']
-```
-
-**When adding new features**: Use Pattern 1 (standard `fromJson()`) unless dealing with complex nested API structures.
-
-## Real-time Features (WebSocket)
-
-The app supports real-time updates via Laravel Reverb (Pusher protocol) for chat and notifications.
-
-### WebSocketService
-
-**Location**: `lib/core/services/websocket_service.dart`
-
-**Configuration** (Production):
-- Host: `31.97.46.103:8081`
-- Protocol: `ws://` (WebSocket)
-- App Key: `pgvjq8gblbrxpk5ptogp`
-
-**Usage Pattern**:
-```dart
-// Initialize (typically in main.dart or after login)
-await WebSocketService.instance.initialize();
-
-// Subscribe to private channel
-WebSocketService.instance.subscribeToPrivateChannel(
-  channelName: 'private-user.${userId}',
-  eventName: 'NewMessage',
-  onEvent: (data) {
-    // Handle real-time event
-    print('New message: $data');
-  },
-);
-
-// Disconnect (on logout)
-await WebSocketService.instance.disconnect();
-```
-
-**Authentication**: Uses `/api/broadcasting/auth` endpoint with Bearer token from `flutter_secure_storage`.
-
-**Important**: WebSocket is optional - features work with polling fallback if WebSocket fails to connect.
-
-## Security Configuration
-
-### Android Release Builds
-
-The app is configured with production-grade security:
-
-**Network Security** (`android/app/src/main/res/xml/network_security_config.xml`):
-- HTTPS-only in production (`cleartextTrafficPermitted="false"`)
-- Development localhost exception for testing
-- SSL certificate pinning configured
-
-**ProGuard** (`android/app/proguard-rules.pro`):
-- Code obfuscation enabled in release builds
-- Removes debug logs and unused code
-- Protects against reverse engineering
-
-**Build Configuration** (`android/app/build.gradle.kts`):
-- `isMinifyEnabled = true` - Code shrinking and obfuscation
-- `isShrinkResources = true` - Removes unused resources
-- `allowBackup = false` - Prevents data extraction
-- Package name: `com.bdcbiz.hrm`
-- Min SDK: 24 (Android 7.0+)
-- Target SDK: 36 (Android 14)
-
-### Release Signing
-
-**Keystore Configuration**: The app uses a keystore for signing release builds.
-
-**Location**: `android/key.properties` (gitignored)
-
-**Required properties**:
-```properties
-storePassword=YourStorePassword
-keyPassword=YourKeyPassword
-keyAlias=upload
-storeFile=../app/upload-keystore.jks
-```
-
-**Generating Keystore**:
-```bash
-keytool -genkey -v -storetype JKS -keyalg RSA -keysize 2048 \
-  -validity 10000 -alias upload \
-  -keystore android/app/upload-keystore.jks
-```
-
-**Important Notes**:
-- Keystore file and passwords are NOT committed to git
-- Store keystore securely - required for all future app updates
-- Before production release, remove localhost exceptions from `network_security_config.xml`
-
-See `SECURITY_QUICK_GUIDE.md` for security testing checklist and MobSF testing instructions.
-
-## Loading Animations System
-
-The app includes a unified loading screen system with 4 animation types.
-
-### AppLoadingScreen Widget
-
-**Location**: `lib/core/widgets/app_loading_screen.dart`
-
-**Available Animation Types**:
-- `LoadingAnimationType.logo` - Default, shows company logo with scale/fade animation
-- `LoadingAnimationType.lottie` - Lottie JSON animation (requires `assets/animations/loading.json`)
-- `LoadingAnimationType.spinner` - Rotating gradient circle
-- `LoadingAnimationType.dots` - Three pulsating dots (iOS-style)
-
-**Usage**:
-```dart
-// In loading states
-AppLoadingScreen(
-  animationType: LoadingAnimationType.lottie,
-  message: 'Loading...',
-  showLogo: false,
-  isDark: false,
-)
-```
-
-**Adding Lottie Animations**:
-1. Download free animations from [LottieFiles.com](https://lottiefiles.com)
-2. Save as `assets/animations/loading.json`
-3. Ensure `assets/animations/` is listed in `pubspec.yaml`
-4. Falls back to logo animation if file not found
-
-See `LOADING_ANIMATIONS_GUIDE.md` for detailed guide with recommended animations.
-
-## Error Handling System
-
-The app includes a comprehensive error handling system with beautiful UIs and consistent error management.
-
-### Error Types
-
-The system supports 7 error types:
-- **NetworkError**: No internet, timeout, server unreachable
-- **AuthError**: Invalid credentials, session expired, unauthorized
-- **ValidationError**: Form validation errors with field-level support
-- **ServerError**: 500, 503, maintenance errors
-- **BusinessError**: Not found, already exists, insufficient balance
-- **PermissionError**: Location, camera, storage permissions
-- **GeofenceError**: Outside boundary, no branch assigned
-
-### Error Display Options
-
-**ErrorHandler** provides 4 display types:
-```dart
-ErrorHandler.handle(
-  context: context,
-  error: error,
-  displayType: ErrorDisplayType.snackbar,  // Bottom snackbar (default)
-  // displayType: ErrorDisplayType.dialog,  // Alert dialog
-  // displayType: ErrorDisplayType.toast,   // Lightweight toast
-  onRetry: () => retryOperation(),
-);
-```
-
-### Error Widgets
-
-- **ErrorScreen**: Full-screen error (for critical errors)
-- **ErrorDialog**: Alert dialog with retry
-- **EmptyStateWidget**: For empty lists/data
-- **InlineErrorWidget**: For forms
-- **CompactErrorWidget**: For list items
-
-### Usage Pattern
-
-```dart
-// In Cubit
-try {
-  final data = await _repository.getData();
-  emit(state.copyWith(data: data));
-} on DioException catch (e) {
-  emit(state.copyWith(error: fromDioException(e)));
-} catch (e) {
-  emit(state.copyWith(error: UnknownError.unexpected(e)));
-}
-
-// In Screen
-BlocConsumer<MyCubit, MyState>(
-  listener: (context, state) {
-    if (state.error != null) {
-      ErrorHandler.handle(
-        context: context,
-        error: state.error!,
-        onRetry: () => context.read<MyCubit>().retry(),
-      );
-    }
-  },
-  builder: (context, state) {
-    if (state.isLoading) return CircularProgressIndicator();
-    if (state.error != null && state.data == null) {
-      return ErrorScreen(error: state.error!, onRetry: () => retry());
-    }
-    if (state.data == null || state.data!.isEmpty) {
-      return EmptyStateWidget(title: 'No data', icon: Icons.inbox);
-    }
-    return ListView(...);  // Show data
-  },
-)
-```
-
-**Documentation**:
-- **Quick Start**: `ERROR_HANDLING_QUICK_START.md` - Get started quickly
-- **Full Guide**: `ERROR_HANDLING_GUIDE.md` - Comprehensive guide with examples
-
-**Important**: Always use `fromDioException()` to convert network errors to AppError for consistent handling.
-
-## Internet Connectivity Handling
-
-The app handles internet connectivity **without** external packages like `connectivity_plus`.
-
-### Why No Package?
-
-- ✅ Dio automatically detects network errors
-- ✅ Error system converts to clear Arabic messages
-- ✅ Lighter and more reliable
-- ✅ No battery drain from constant monitoring
-
-### Automatic Handling (Recommended)
-
-```dart
-// In Cubit - automatically handled
-try {
-  final data = await _repository.getData();
-  emit(state.copyWith(data: data));
-} on DioException catch (e) {
-  // Auto-converts to NetworkError.noInternet() if no internet
-  emit(state.copyWith(error: fromDioException(e)));
-}
-```
-
-### Manual Check (Optional)
-
-For special cases (before heavy operations):
-
-```dart
-import '../core/services/connectivity_helper.dart';
-
-// Check before upload/download
-final hasInternet = await ConnectivityHelper.hasInternetConnection();
-
-if (!hasInternet) {
-  ErrorHandler.handle(
-    context: context,
-    error: NetworkError.noInternet(),
-  );
-  return;
-}
-```
-
-**Documentation**: `CONNECTIVITY_GUIDE.md` - Complete connectivity handling guide
-
-**File**: `lib/core/services/connectivity_helper.dart` - Optional manual connectivity check
-
-## Dark Mode & Theme System
-
-The app supports dark mode with persistent theme selection.
-
-### ThemeCubit
-
-**Location**: `lib/core/theme/cubit/theme_cubit.dart`
-
-**Usage**:
-```dart
-// Toggle theme
-context.read<ThemeCubit>().toggleTheme();
-
-// Set specific theme
-context.read<ThemeCubit>().setThemeMode(ThemeMode.dark);
-
-// Get current theme
-final isDark = context.read<ThemeCubit>().state.themeMode == ThemeMode.dark;
-```
-
-**Themes**:
-- Light theme: `AppTheme.lightTheme`
-- Dark theme: `AppTheme.darkTheme`
-- Both defined in `lib/core/theme/app_theme.dart`
-
-**Persistence**: Theme preference saved via `shared_preferences` and restored on app restart.
-
-**Color Extensions**: `AppColorsExtension` provides theme-aware colors that automatically adjust for dark mode.
+**Production**: `Ahmed@bdcbiz.com` / `password` (Company ID: 6)
+**Local**: `employee@example.com` / `password`
+
+## Key Files Quick Reference
+
+| Purpose | Location |
+|---------|----------|
+| API Endpoints | `lib/core/config/api_config.dart` |
+| HTTP Client | `lib/core/networking/dio_client.dart` |
+| Auth Interceptor | `lib/core/networking/api_interceptor.dart` |
+| Router | `lib/core/routing/app_router.dart` |
+| Colors | `lib/core/styles/app_colors.dart` |
+| Text Styles | `lib/core/styles/app_text_styles.dart` |
+| Error Types | `lib/core/errors/app_error.dart` |
+| WebSocket | `lib/core/services/websocket_service.dart` |
+| Main Nav | `lib/core/navigation/main_navigation_screen.dart` |

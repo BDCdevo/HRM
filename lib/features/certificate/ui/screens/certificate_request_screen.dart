@@ -6,6 +6,7 @@ import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/success_animation.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/certificate_cubit.dart';
 import '../../logic/cubit/certificate_state.dart';
 import '../../data/repo/certificate_repo.dart';
@@ -160,11 +161,10 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
               },
             );
           } else if (state is CertificateError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
             );
           }
         },

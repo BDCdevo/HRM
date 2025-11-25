@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/leave_cubit.dart';
 import '../../logic/cubit/leave_state.dart';
 import '../../data/models/vacation_type_model.dart';
@@ -67,17 +69,19 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
             if (state is LeaveApplied) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: const Text('تم تقديم طلب الإجازة بنجاح'),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
               Navigator.pop(context, true); // Return true to indicate success
             } else if (state is LeaveError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.displayMessage),
-                  backgroundColor: AppColors.error,
-                ),
+              ErrorSnackBar.show(
+                context: context,
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                isNetworkError: ErrorSnackBar.isNetworkRelated(state.displayMessage),
               );
             }
           },
@@ -218,6 +222,15 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
         onChanged: (value) {
           setState(() {
             _selectedVacationType = value;
+            // Auto-set start date to minimum allowed date
+            if (value != null) {
+              debugPrint('🔵 Selected: ${value.name}');
+              debugPrint('🔵 requiredDaysBefore from model: ${value.requiredDaysBefore}');
+              final minDate = _getMinimumStartDateForType(value);
+              debugPrint('🔵 Calculated minDate: $minDate');
+              _startDate = minDate;
+              _endDate = null; // Reset end date
+            }
           });
         },
         validator: (value) {
@@ -233,8 +246,44 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
   }
 
   Widget _buildDateSelector() {
+    // Show notice period info if vacation type is selected
+    final hasNoticeRequirement = _selectedVacationType != null &&
+        _selectedVacationType!.requiredDaysBefore > 0;
+    final minStartDate = _selectedVacationType != null
+        ? _getMinimumStartDate()
+        : DateTime.now();
+
     return Column(
       children: [
+        // Notice period info banner - shows minimum allowed start date
+        if (_selectedVacationType != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.info, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'إشعار مسبق: ${_selectedVacationType!.requiredDaysBefore} أيام\n'
+                    'اليوم: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}\n'
+                    'أقرب تاريخ: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.info,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         // Start Date
         InkWell(
           onTap: () => _selectStartDate(),
@@ -263,7 +312,9 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       Text(
                         _startDate != null
                             ? DateFormat('MMM dd, yyyy').format(_startDate!)
-                            : 'Select start date',
+                            : hasNoticeRequirement
+                                ? 'أقرب تاريخ: ${DateFormat('MMM dd').format(minStartDate)}'
+                                : 'Select start date',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: _startDate != null
                               ? FontWeight.w600
@@ -405,12 +456,80 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     );
   }
 
+  /// Calculate minimum start date for a specific vacation type
+  DateTime _getMinimumStartDateForType(VacationTypeModel type) {
+    final requiredDays = type.requiredDaysBefore;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // If no notice required, can start from today
+    if (requiredDays <= 0) {
+      return today;
+    }
+
+    // requiredDaysBefore = 7 means you need 7 days notice
+    // Today = Nov 25, then first valid date = Nov 25 + 7 = Dec 2
+    final minDate = today.add(Duration(days: requiredDays));
+
+    debugPrint('📅 =====================================');
+    debugPrint('📅 Now: $now');
+    debugPrint('📅 Today (midnight): $today');
+    debugPrint('📅 Required days from API: $requiredDays');
+    debugPrint('📅 Calculated min date: $minDate');
+    debugPrint('📅 =====================================');
+
+    return minDate;
+  }
+
+  /// Calculate minimum start date based on selected vacation type's required notice days
+  DateTime _getMinimumStartDate() {
+    if (_selectedVacationType == null) {
+      return DateTime.now();
+    }
+    return _getMinimumStartDateForType(_selectedVacationType!);
+  }
+
   Future<void> _selectStartDate() async {
+    // Check if vacation type is selected first
+    if (_selectedVacationType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('الرجاء اختيار نوع الإجازة أولاً'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      return;
+    }
+
+    final minStartDate = _getMinimumStartDate();
+    final requiredDays = _selectedVacationType!.requiredDaysBefore;
+
+    // Debug: Print calculated dates
+    debugPrint('🗓️ Today: ${DateTime.now()}');
+    debugPrint('🗓️ Required Days Before: $requiredDays');
+    debugPrint('🗓️ Min Start Date: $minStartDate');
+
+    // Always start with minStartDate as the initial selected date
+    // If user already selected a date, use it only if it's still valid
+    DateTime initialDate = minStartDate;
+    if (_startDate != null && !_startDate!.isBefore(minStartDate)) {
+      initialDate = _startDate!;
+    }
+
+    debugPrint('🗓️ Initial Date for picker: $initialDate');
+    debugPrint('🗓️ First Date (disabled before): $minStartDate');
+
     final selected = await showDatePicker(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: minStartDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: requiredDays > 0
+          ? 'أقرب تاريخ: ${DateFormat('yyyy/MM/dd').format(minStartDate)}'
+          : 'اختر تاريخ البداية',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -480,9 +599,12 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
 
     if (_selectedVacationType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a vacation type'),
+        SnackBar(
+          content: const Text('الرجاء اختيار نوع الإجازة'),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;
@@ -490,9 +612,50 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
 
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select start and end dates'),
+        SnackBar(
+          content: const Text('الرجاء اختيار تاريخ البداية والنهاية'),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      return;
+    }
+
+    // Final validation: Check if start date respects notice period
+    final minStartDate = _getMinimumStartDate();
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final startDateOnly = DateTime(_startDate!.year, _startDate!.month, _startDate!.day);
+
+    if (startDateOnly.isBefore(minStartDate)) {
+      final requiredDays = _selectedVacationType!.requiredDaysBefore;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'تاريخ البداية غير صالح!\n'
+            'هذا النوع من الإجازات يتطلب إشعار مسبق $requiredDays ${requiredDays == 1 ? 'يوم' : 'أيام'}\n'
+            'أقرب تاريخ متاح: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
+    // Additional validation: Check if start date is not in the past
+    if (startDateOnly.isBefore(today)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('لا يمكن اختيار تاريخ في الماضي'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;

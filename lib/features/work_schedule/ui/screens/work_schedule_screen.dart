@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/work_schedule_cubit.dart';
 import '../../logic/cubit/work_schedule_state.dart';
 import '../widgets/work_schedule_skeleton.dart';
@@ -59,24 +60,9 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
           }
 
           if (state is WorkScheduleError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => _workScheduleCubit.fetchWorkSchedule(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            return CompactErrorWidget(
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              onRetry: () => _workScheduleCubit.fetchWorkSchedule(),
             );
           }
 

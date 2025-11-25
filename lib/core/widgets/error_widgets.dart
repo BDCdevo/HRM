@@ -569,7 +569,7 @@ class CompactErrorWidget extends StatelessWidget {
           children: [
             Icon(
               Icons.error_outline,
-              color: AppColors.error.withOpacity(0.5),
+              color: AppColors.error.withValues(alpha: 0.5),
               size: 48,
             ),
             const SizedBox(height: 12),
@@ -591,5 +591,77 @@ class CompactErrorWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Professional Error SnackBar Helper
+///
+/// Use this to show error messages as SnackBar instead of full screen errors
+class ErrorSnackBar {
+  /// Show a professional error SnackBar with icon and retry button
+  static void show({
+    required BuildContext context,
+    required String message,
+    VoidCallback? onRetry,
+    Duration duration = const Duration(seconds: 4),
+    bool isNetworkError = false,
+  }) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isNetworkError ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.error.withValues(alpha: 0.9),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+        duration: duration,
+        action: onRetry != null
+            ? SnackBarAction(
+                label: 'إعادة المحاولة',
+                textColor: Colors.white,
+                onPressed: onRetry,
+              )
+            : null,
+      ),
+    );
+  }
+
+  /// Convert common error messages to Arabic user-friendly messages
+  static String getArabicMessage(String error) {
+    if (error.contains('401') || error.contains('Unauthenticated')) {
+      return 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى';
+    } else if (error.contains('500')) {
+      return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+    } else if (error.contains('Network') || error.contains('connection') || error.contains('SocketException')) {
+      return 'لا يوجد اتصال بالإنترنت';
+    } else if (error.contains('timeout')) {
+      return 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى';
+    } else if (error.contains('404')) {
+      return 'البيانات غير موجودة';
+    }
+    return error;
+  }
+
+  /// Check if error is network related
+  static bool isNetworkRelated(String error) {
+    return error.contains('Network') ||
+           error.contains('connection') ||
+           error.contains('SocketException') ||
+           error.contains('timeout');
   }
 }

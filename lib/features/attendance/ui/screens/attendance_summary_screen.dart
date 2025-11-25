@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/models/employee_attendance_model.dart';
 import '../../logic/cubit/attendance_summary_cubit.dart';
 import '../../logic/cubit/attendance_summary_state.dart';
@@ -85,27 +86,9 @@ class _AttendanceSummaryScreenState extends State<AttendanceSummaryScreen> {
 
             if (state is AttendanceSummaryError) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, color: AppColors.white, size: 64),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading data',
-                      style: const TextStyle(color: AppColors.white, fontSize: 18),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.message,
-                      style: TextStyle(color: AppColors.white.withOpacity(0.7), fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () => _cubit.fetchTodaySummary(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+                child: CompactErrorWidget(
+                  message: ErrorSnackBar.getArabicMessage(state.message),
+                  onRetry: () => _cubit.fetchTodaySummary(),
                 ),
               );
             }

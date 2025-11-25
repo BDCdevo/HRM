@@ -5,6 +5,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_colors_extension.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/theme/cubit/theme_cubit.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/attendance_cubit.dart';
 import '../../logic/cubit/attendance_state.dart';
 import '../../data/models/attendance_session_model.dart';
@@ -66,53 +67,9 @@ class SessionsListWidget extends StatelessWidget {
 
   /// Build Error State
   Widget _buildErrorState(String errorMessage, BuildContext context, bool isDark, Color cardColor, Color textColor, Color secondaryTextColor) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(isDark ? 0.15 : 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.error.withOpacity(isDark ? 0.4 : 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: AppColors.error,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Error Loading Sessions',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.error,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            errorMessage,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: secondaryTextColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              context.read<AttendanceCubit>().fetchTodaySessions();
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-            ),
-          ),
-        ],
-      ),
+    return CompactErrorWidget(
+      message: ErrorSnackBar.getArabicMessage(errorMessage),
+      onRetry: () => context.read<AttendanceCubit>().fetchTodaySessions(),
     );
   }
 

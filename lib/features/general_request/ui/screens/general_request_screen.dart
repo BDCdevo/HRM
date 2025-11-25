@@ -5,6 +5,7 @@ import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/repo/general_request_repo.dart';
 import '../../logic/cubit/general_request_cubit.dart';
 import '../../logic/cubit/general_request_state.dart';
@@ -174,11 +175,10 @@ class _GeneralRequestScreenContentState
               ),
             );
           } else if (state is GeneralRequestError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorSnackBar.show(
+              context: context,
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              isNetworkError: ErrorSnackBar.isNetworkRelated(state.message),
             );
           }
         },

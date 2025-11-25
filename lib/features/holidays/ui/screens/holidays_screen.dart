@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/widgets/app_loading_screen.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../data/repo/holiday_repo.dart';
 import '../../logic/cubit/holiday_cubit.dart';
 import '../../logic/cubit/holiday_state.dart';
@@ -160,45 +160,9 @@ class _HolidaysScreenContent extends StatelessWidget {
           }
 
           if (state is HolidayError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'حدث خطأ',
-                    style: AppTextStyles.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<HolidayCubit>().refresh();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('إعادة المحاولة'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+            return CompactErrorWidget(
+              message: ErrorSnackBar.getArabicMessage(state.message),
+              onRetry: () => context.read<HolidayCubit>().refresh(),
             );
           }
 

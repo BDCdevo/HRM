@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
-import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/error_widgets.dart';
 import '../../logic/cubit/leave_cubit.dart';
 import '../../logic/cubit/leave_state.dart';
 import '../../data/models/leave_balance_model.dart';
@@ -65,42 +65,9 @@ class _LeaveBalanceScreenState extends State<LeaveBalanceScreen> {
 
             // Show error state
             if (state is LeaveError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error Loading Balance',
-                        style: AppTextStyles.titleLarge.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.displayMessage,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: 'Retry',
-                        onPressed: () {
-                          _leaveCubit.fetchLeaveBalance();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+              return CompactErrorWidget(
+                message: ErrorSnackBar.getArabicMessage(state.displayMessage),
+                onRetry: () => _leaveCubit.fetchLeaveBalance(),
               );
             }
 

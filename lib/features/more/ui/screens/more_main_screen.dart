@@ -72,17 +72,38 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
         body: BlocConsumer<ProfileCubit, ProfileState>(
           listener: (context, state) {
             if (state is ProfileImageUploaded) {
+              // Refresh AuthCubit to update user image across the app
+              context.read<AuthCubit>().refreshUserProfile();
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Text(state.message),
+                    ],
+                  ),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
             } else if (state is ProfileError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.displayMessage),
+                  content: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(state.displayMessage)),
+                    ],
+                  ),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
                 ),
               );
             }

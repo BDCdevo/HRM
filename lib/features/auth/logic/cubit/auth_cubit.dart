@@ -378,4 +378,53 @@ class AuthCubit extends Cubit<AuthState> {
   void resetState() {
     emit(const AuthInitial());
   }
+
+  /// Update User Data
+  ///
+  /// Updates the authenticated user data (e.g., after profile image change)
+  /// Stores updated data in secure storage
+  Future<void> updateUserData(UserModel updatedUser) async {
+    if (state is AuthAuthenticated) {
+      final currentUser = (state as AuthAuthenticated).user;
+
+      // Merge updated data with current user (keep access token)
+      final mergedUser = updatedUser.copyWith(
+        accessToken: currentUser.accessToken,
+      );
+
+      // Save to storage
+      await _authRepo.saveUserData(mergedUser);
+
+      print('🔄 User data updated in AuthCubit');
+      emit(AuthAuthenticated(mergedUser));
+    }
+  }
+
+  /// Refresh User Profile
+  ///
+  /// Fetches fresh user data from API and updates state
+  Future<void> refreshUserProfile() async {
+    try {
+      print('🔄 Refreshing user profile...');
+      final user = await _authRepo.getProfile();
+
+      if (state is AuthAuthenticated) {
+        final currentUser = (state as AuthAuthenticated).user;
+
+        // Keep access token from current state
+        final updatedUser = user.copyWith(
+          accessToken: currentUser.accessToken,
+        );
+
+        // Save to storage
+        await _authRepo.saveUserData(updatedUser);
+
+        print('✅ User profile refreshed: ${user.email}');
+        emit(AuthAuthenticated(updatedUser));
+      }
+    } catch (e) {
+      print('❌ Failed to refresh user profile: $e');
+      // Don't change state on error - keep current user data
+    }
+  }
 }
