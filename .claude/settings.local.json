@@ -106,7 +106,10 @@
       "Bash(dart pub get:*)",
       "Bash(cmd /c \"cd android && gradlew.bat --stop\")",
       "Bash(gradlew.bat bundleRelease:*)",
-      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\android && gradlew.bat bundleRelease\")"
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\android && gradlew.bat bundleRelease\")",
+      "Bash(netsh wlan show:*)",
+      "Bash(del \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\core\\services\\wifi_service.dart\")",
+      "Bash(cmd /c del \"C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm\\lib\\core\\services\\wifi_service.dart\")"
     ],
     "deny": [],
     "ask": []

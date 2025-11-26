@@ -197,4 +197,11 @@ class WebSocketService {
   static String getChatChannelName(int companyId, int conversationId) {
     return 'chat.$companyId.conversation.$conversationId';
   }
+
+  /// Get channel name for user notifications
+  ///
+  /// Used to receive notifications about new messages in any conversation
+  static String getUserChannelName(int companyId, int userId) {
+    return 'user.$companyId.$userId';
+  }
 }

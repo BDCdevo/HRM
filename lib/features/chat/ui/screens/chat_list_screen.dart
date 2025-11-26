@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/widgets/error_widgets.dart';
+import '../../../../core/services/websocket_service.dart';
 import '../../data/repo/chat_repository.dart';
 import '../../logic/cubit/chat_cubit.dart';
 import '../../logic/cubit/chat_state.dart';
@@ -61,12 +65,133 @@ class _ChatListView extends StatefulWidget {
   State<_ChatListView> createState() => _ChatListViewState();
 }
 
-class _ChatListViewState extends State<_ChatListView> {
+class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserver {
   // Key to access RecentContactsSection for refresh
   final GlobalKey<RecentContactsSectionState> _recentContactsKey = GlobalKey();
 
+  // Auto-refresh timer for new messages (fallback)
+  Timer? _refreshTimer;
+
+  // WebSocket service for real-time updates
+  final WebSocketService _websocket = WebSocketService.instance;
+  String? _userChannelName;
+
+  // Refresh interval (30 seconds - increased since we have WebSocket now)
+  static const _refreshInterval = Duration(seconds: 30);
+
   int get companyId => widget.companyId;
   int get currentUserId => widget.currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _setupWebSocket();
+    _startAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _cleanupWebSocket();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Setup WebSocket listener for real-time message notifications
+  Future<void> _setupWebSocket() async {
+    try {
+      // Initialize WebSocket connection
+      await _websocket.initialize();
+
+      // Get user channel name: user.{companyId}.{userId}
+      _userChannelName = WebSocketService.getUserChannelName(
+        companyId,
+        currentUserId,
+      );
+
+      // Subscribe to user's private channel for notifications
+      await _websocket.subscribeToPrivateChannel(
+        channelName: _userChannelName!,
+        onEvent: (PusherEvent event) {
+          print('📨 Chat List - Received event: ${event.eventName}');
+
+          // Handle new message notification
+          if (event.eventName == 'new.message') {
+            _handleNewMessageNotification(event.data);
+          }
+        },
+      );
+
+      print('✅ WebSocket setup complete for chat list (channel: $_userChannelName)');
+    } catch (e) {
+      print('❌ Failed to setup WebSocket for chat list: $e');
+      // WebSocket failed, rely on polling
+    }
+  }
+
+  /// Handle incoming message notification
+  void _handleNewMessageNotification(String? data) {
+    if (data == null) return;
+
+    try {
+      final jsonData = jsonDecode(data);
+      final conversationId = jsonData['conversation_id'];
+      final senderName = jsonData['sender_name'] ?? 'New message';
+
+      print('📬 New message in conversation $conversationId from $senderName');
+
+      // Refresh conversation list immediately
+      if (mounted) {
+        context.read<ChatCubit>().fetchConversations(
+          companyId: companyId,
+          currentUserId: currentUserId,
+          silent: true,
+        );
+      }
+    } catch (e) {
+      print('❌ Error parsing message notification: $e');
+    }
+  }
+
+  /// Cleanup WebSocket subscription
+  Future<void> _cleanupWebSocket() async {
+    if (_userChannelName != null) {
+      await _websocket.unsubscribe(_userChannelName!);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Refresh when app comes to foreground
+      _refreshConversations();
+      _startAutoRefresh();
+    } else if (state == AppLifecycleState.paused) {
+      // Stop timer when app goes to background
+      _refreshTimer?.cancel();
+    }
+  }
+
+  /// Start auto-refresh timer
+  void _startAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(_refreshInterval, (_) {
+      _refreshConversations();
+    });
+  }
+
+  /// Refresh conversations silently (without loading indicator)
+  void _refreshConversations() {
+    if (mounted) {
+      context.read<ChatCubit>().fetchConversations(
+        companyId: companyId,
+        currentUserId: currentUserId,
+        silent: true,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

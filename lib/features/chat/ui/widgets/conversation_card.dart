@@ -124,9 +124,13 @@ class _ConversationCardState extends State<ConversationCard>
                             Text(
                               widget.conversation.formattedTime,
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: isDark ? const Color(0xFF8F92A1) : const Color(0xFF6B7280),
+                                color: widget.conversation.hasUnreadMessages
+                                    ? (isDark ? AppColors.darkAccent : AppColors.accent)
+                                    : (isDark ? const Color(0xFF8F92A1) : const Color(0xFF6B7280)),
                                 fontSize: 13,
-                                fontWeight: FontWeight.w400,
+                                fontWeight: widget.conversation.hasUnreadMessages
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
                               ),
                             ),
                           ],
@@ -136,19 +140,24 @@ class _ConversationCardState extends State<ConversationCard>
 
                         // Last Message and Badge
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // For groups: show participants count
                                   if (widget.conversation.isGroup &&
                                       widget.conversation.participantsCount != null) ...[
-                                    Icon(
-                                      Icons.people,
-                                      size: 14,
-                                      color: isDark
-                                          ? AppColors.darkTextSecondary
-                                          : AppColors.textSecondary,
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Icon(
+                                        Icons.people,
+                                        size: 14,
+                                        color: isDark
+                                            ? AppColors.darkTextSecondary
+                                            : AppColors.textSecondary,
+                                      ),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -161,18 +170,20 @@ class _ConversationCardState extends State<ConversationCard>
                                       ),
                                     ),
                                   ],
-                                  // Last message preview
+                                  // Last message preview - show 2 lines for unread
                                   Expanded(
                                     child: Text(
                                       widget.conversation.lastMessagePreview,
                                       style: AppTextStyles.bodyMedium.copyWith(
-                                        color: isDark
-                                            ? const Color(0xFF8F92A1)
-                                            : const Color(0xFF6B7280),
+                                        color: widget.conversation.hasUnreadMessages
+                                            ? (isDark ? Colors.white : const Color(0xFF1F2937))
+                                            : (isDark ? const Color(0xFF8F92A1) : const Color(0xFF6B7280)),
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w400,
+                                        fontWeight: widget.conversation.hasUnreadMessages
+                                            ? FontWeight.w600
+                                            : FontWeight.w400,
                                       ),
-                                      maxLines: 1,
+                                      maxLines: widget.conversation.hasUnreadMessages ? 2 : 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),

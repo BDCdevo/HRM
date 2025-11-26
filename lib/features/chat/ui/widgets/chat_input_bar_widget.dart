@@ -48,34 +48,40 @@ class ChatInputBarWidget extends StatelessWidget {
       );
     }
 
-    final hasText = messageController.text.isNotEmpty;
+    // Listen to text changes for real-time icon switching
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: messageController,
+      builder: (context, value, child) {
+        final hasText = value.text.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.15 : 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.15 : 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Text field with emoji, attachment, and camera icons inside
-          Expanded(
-            child: _buildTextInputField(hasText),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Text field with emoji, attachment, and camera icons inside
+              Expanded(
+                child: _buildTextInputField(hasText),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Send or Mic button
+              _buildActionButton(hasText),
+            ],
           ),
-
-          const SizedBox(width: 8),
-
-          // Send or Mic button
-          _buildActionButton(hasText),
-        ],
-      ),
+        );
+      },
     );
   }
 

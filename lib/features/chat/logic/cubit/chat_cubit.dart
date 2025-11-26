@@ -15,12 +15,17 @@ class ChatCubit extends Cubit<ChatState> {
   /// Loads all conversations for the current user in a specific company
   ///
   /// Important: Pass currentUserId to extract participant info correctly
+  /// Set [silent] to true for background refresh (no loading indicator)
   Future<void> fetchConversations({
     required int companyId,
     required int currentUserId,
+    bool silent = false,
   }) async {
     try {
-      emit(const ChatLoading());
+      // Only show loading on first load, not on silent refresh
+      if (!silent && state is! ChatLoaded) {
+        emit(const ChatLoading());
+      }
 
       final conversations = await _repository.getConversations(
         companyId: companyId,
@@ -30,7 +35,10 @@ class ChatCubit extends Cubit<ChatState> {
       emit(ChatLoaded(conversations));
     } catch (e) {
       print('❌ ChatCubit - Fetch Conversations Error: $e');
-      emit(ChatError(e.toString()));
+      // On silent refresh, don't show error - keep existing data
+      if (!silent || state is! ChatLoaded) {
+        emit(ChatError(e.toString()));
+      }
     }
   }
 
