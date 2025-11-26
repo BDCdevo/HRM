@@ -61,10 +61,12 @@ class CheckInCard extends StatelessWidget {
                 : Lottie.asset(
                     'assets/animations/welcome.json',
                     width: double.infinity,
-                    // height: 160,
                     fit: BoxFit.contain,
                     repeat: true,
                     animate: true,
+                    // Performance optimizations
+                    frameRate: FrameRate(30),
+                    renderCache: RenderCache.raster,
                   ),
           ),
           // const SizedBox(height: 24),

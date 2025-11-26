@@ -231,6 +231,9 @@ class _AppLoadingScreenState extends State<AppLoadingScreen>
             fit: BoxFit.contain,
             repeat: true,
             animate: true,
+            // Performance optimizations
+            frameRate: FrameRate(30),
+            renderCache: RenderCache.raster,
             errorBuilder: (context, error, stackTrace) {
               // Fallback to logo if Lottie not found
               print('⚠️ Lottie file not found: $error');

@@ -130,6 +130,9 @@ class _GeneralRequestScreenContentState
                         child: Lottie.asset(
                           'assets/svgs/success.json',
                           repeat: false,
+                          // Performance optimizations
+                          frameRate: FrameRate(30),
+                          renderCache: RenderCache.raster,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
                               Icons.check_circle,

@@ -328,6 +328,9 @@ class _CheckInCounterCardState extends State<CheckInCounterCard> {
       fit: BoxFit.contain,
       repeat: true,
       animate: true,
+      // Performance optimizations for large animations
+      frameRate: FrameRate(30), // Reduce from 60fps to 30fps
+      renderCache: RenderCache.raster, // Cache rendered frames
       errorBuilder: (context, error, stackTrace) {
         // If animation fails to load, show icon
         return Center(

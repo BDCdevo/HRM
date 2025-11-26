@@ -646,6 +646,9 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget>
             fit: BoxFit.contain,
             repeat: true,
             animate: true,
+            // Performance optimizations
+            frameRate: FrameRate(30),
+            renderCache: RenderCache.raster,
             errorBuilder: (context, error, stackTrace) {
               // If Lottie fails to parse, show icon
               return Center(

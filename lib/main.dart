@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
@@ -8,10 +9,18 @@ import 'features/auth/logic/cubit/auth_state.dart';
 import 'core/routing/app_router.dart';
 import 'core/navigation/main_navigation_screen.dart';
 import 'features/auth/ui/screens/login_screen.dart';
-import 'core/widgets/app_loading_screen.dart';
 import 'core/styles/app_colors.dart';
 
 void main() {
+  // Ensure Flutter bindings are initialized before any async operations
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Set preferred orientations for performance
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -36,7 +45,7 @@ class MyApp extends StatelessWidget {
           // Loading Overlay (only when checking authentication)
           if (authState is AuthInitial || authState is AuthLoading)
             Container(
-              color: Colors.black.withOpacity(0.6), // خلفية شفافة
+              color: Colors.black.withValues(alpha: 0.6), // خلفية شفافة
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

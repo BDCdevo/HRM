@@ -308,6 +308,9 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
                 'assets/animations/welcome.json',
                 fit: BoxFit.contain,
                 repeat: true,
+                // Performance optimizations
+                frameRate: FrameRate(30),
+                renderCache: RenderCache.raster,
               ),
             ),
 

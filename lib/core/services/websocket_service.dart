@@ -19,11 +19,14 @@ class WebSocketService {
   final _storage = const FlutterSecureStorage();
 
   // Reverb configuration from production server
+  // NOTE: WebSocket uses ws:// on port 8081 because Laravel Reverb
+  // is configured without SSL on this port. The authorization endpoint
+  // uses HTTPS for secure token transmission.
+  // TODO: Consider enabling SSL on Reverb for full encryption
   static const String _appKey = 'pgvjq8gblbrxpk5ptogp';
   static const String _host = '31.97.46.103';
   static const int _port = 8081;
-  static const String _scheme = 'ws'; // Use 'ws' for WebSocket (not https)
-  // For Reverb, we use host:port format in cluster
+  static const String _scheme = 'ws';
   static const String _cluster = 'mt1';
 
   bool _isInitialized = false;

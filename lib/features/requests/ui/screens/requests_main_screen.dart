@@ -76,6 +76,9 @@ class RequestsMainScreen extends StatelessWidget {
                         fit: BoxFit.contain,
                         repeat: true,
                         animate: true,
+                        // Performance optimizations
+                        frameRate: FrameRate(30),
+                        renderCache: RenderCache.raster,
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(
                             Icons.assignment,
