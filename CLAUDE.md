@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HRM (Human Resource Management) Flutter app with Laravel (Filament) PHP backend. Clean Architecture with BLoC/Cubit state management.
 
-**Version**: 1.1.1+11 | **SDK**: Flutter 3.9.2+ / Dart ^3.9.2
+**Version**: 1.1.3+13 | **SDK**: Dart ^3.9.2
 
 ## Quick Start
 
@@ -278,6 +278,33 @@ session(['current_company_id' => $employee->company_id]);
 **Production**: `Ahmed@bdcbiz.com` / `password` (Company ID: 6)
 **Local**: `employee@example.com` / `password`
 
+## Feature Modules
+
+The app contains these feature modules under `lib/features/`:
+
+| Module | Purpose |
+|--------|---------|
+| `auth` | Login, registration, admin login |
+| `attendance` | Check-in/out, geofencing, sessions |
+| `chat` | Real-time messaging with Pusher/Reverb |
+| `dashboard` | Home stats and quick actions |
+| `home` | Home screen widgets |
+| `leave` | Leave request logic and screens |
+| `leaves` | Leave UI components (separate for reuse) |
+| `profile` | User profile, edit, change password |
+| `notifications` | Push notifications |
+| `requests` | General request management |
+| `reports` | Monthly reports |
+| `work_schedule` | Work schedule display |
+| `more` | More tab with navigation options |
+| `about` | About screen |
+| `settings` | App settings |
+| `branches` | Branch data and geofencing |
+| `holidays` | Company holidays |
+| `training` | Training features |
+| `certificate` | Employee certificates |
+| `general_request` | General request forms |
+
 ## Key Files Quick Reference
 
 | Purpose | Location |
@@ -291,3 +318,7 @@ session(['current_company_id' => $employee->company_id]);
 | Error Types | `lib/core/errors/app_error.dart` |
 | WebSocket | `lib/core/services/websocket_service.dart` |
 | Main Nav | `lib/core/navigation/main_navigation_screen.dart` |
+
+## Windows Development Notes
+
+This project is developed on Windows. Use backslash paths in Windows commands or escape appropriately. The project uses `cmd.exe` style paths (e.g., `D:\php_project\filament-hrm`).

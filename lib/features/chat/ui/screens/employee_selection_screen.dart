@@ -499,6 +499,8 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
     final name = employee['name'] as String? ?? 'Unknown';
     final email = employee['email'] as String? ?? '';
     final id = employee['id'] as int;
+    final avatar = employee['avatar'] as String?;
+    final isOnline = employee['is_online'] as bool? ?? false;
     final isSelected = _selectedEmployeeIds.contains(id);
 
     return Material(
@@ -542,43 +544,56 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
                   ),
                 ),
 
-              // Avatar
+              // Avatar with online indicator
               Hero(
                 tag: 'avatar_$name',
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        (isDark ? AppColors.darkPrimary : AppColors.primary)
-                            .withOpacity(0.15),
-                        (isDark ? AppColors.darkAccent : AppColors.accent)
-                            .withOpacity(0.15),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(
-                      color: isSelected && _isMultiSelectMode
-                          ? (isDark ? AppColors.darkAccent : AppColors.accent)
-                          : (isDark ? AppColors.darkPrimary : AppColors.primary)
-                              .withOpacity(0.2),
-                      width: isSelected && _isMultiSelectMode ? 3 : 2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      name.split(' ').take(2).map((n) => n.isNotEmpty ? n[0] : '').join().toUpperCase(),
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color:
-                            isDark ? AppColors.darkPrimary : AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected && _isMultiSelectMode
+                              ? (isDark ? AppColors.darkAccent : AppColors.accent)
+                              : (isDark ? AppColors.darkPrimary : AppColors.primary)
+                                  .withOpacity(0.2),
+                          width: isSelected && _isMultiSelectMode ? 3 : 2,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: avatar != null && avatar.isNotEmpty
+                            ? Image.network(
+                                avatar,
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildAvatarPlaceholder(name, isDark),
+                              )
+                            : _buildAvatarPlaceholder(name, isDark),
                       ),
                     ),
-                  ),
+                    // Online indicator
+                    if (isOnline)
+                      Positioned(
+                        right: 2,
+                        bottom: 2,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark ? AppColors.darkCard : AppColors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
@@ -645,6 +660,34 @@ class _EmployeeSelectionViewState extends State<_EmployeeSelectionView>
                   size: 24,
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build Avatar Placeholder (initials)
+  Widget _buildAvatarPlaceholder(String name, bool isDark) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            (isDark ? AppColors.darkPrimary : AppColors.primary).withOpacity(0.15),
+            (isDark ? AppColors.darkAccent : AppColors.accent).withOpacity(0.15),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          name.split(' ').take(2).map((n) => n.isNotEmpty ? n[0] : '').join().toUpperCase(),
+          style: AppTextStyles.titleLarge.copyWith(
+            color: isDark ? AppColors.darkPrimary : AppColors.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
       ),

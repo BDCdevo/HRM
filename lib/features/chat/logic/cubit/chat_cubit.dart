@@ -107,4 +107,46 @@ class ChatCubit extends Cubit<ChatState> {
   void reset() {
     emit(const ChatInitial());
   }
+
+  /// Increment unread count for a conversation
+  ///
+  /// Called when a new message is received via WebSocket
+  void incrementUnreadCount(int conversationId) {
+    if (state is ChatLoaded) {
+      final currentState = state as ChatLoaded;
+      final updatedConversations = currentState.conversations.map((conv) {
+        if (conv.id == conversationId) {
+          return conv.copyWith(unreadCount: conv.unreadCount + 1);
+        }
+        return conv;
+      }).toList();
+
+      emit(ChatLoaded(updatedConversations));
+    }
+  }
+
+  /// Clear unread count for a conversation
+  ///
+  /// Called when user opens a conversation
+  void clearUnreadCount(int conversationId) {
+    if (state is ChatLoaded) {
+      final currentState = state as ChatLoaded;
+      final updatedConversations = currentState.conversations.map((conv) {
+        if (conv.id == conversationId) {
+          return conv.copyWith(unreadCount: 0);
+        }
+        return conv;
+      }).toList();
+
+      emit(ChatLoaded(updatedConversations));
+    }
+  }
+
+  /// Get total unread count
+  int get totalUnreadCount {
+    if (state is ChatLoaded) {
+      return (state as ChatLoaded).totalUnreadCount;
+    }
+    return 0;
+  }
 }

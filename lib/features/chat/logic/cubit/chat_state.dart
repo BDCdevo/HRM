@@ -27,6 +27,10 @@ class ChatLoaded extends ChatState {
 
   const ChatLoaded(this.conversations);
 
+  /// Total unread messages count across all conversations
+  int get totalUnreadCount =>
+      conversations.fold(0, (sum, conv) => sum + conv.unreadCount);
+
   @override
   List<Object?> get props => [conversations];
 }

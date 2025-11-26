@@ -203,4 +203,33 @@ class ConversationModel {
         return lastMessage!.message;
     }
   }
+
+  /// Create a copy with updated fields
+  ConversationModel copyWith({
+    int? id,
+    String? type,
+    int? participantId,
+    String? participantName,
+    String? participantAvatar,
+    String? participantDepartment,
+    MessageModel? lastMessage,
+    int? unreadCount,
+    String? updatedAt,
+    bool? isOnline,
+    int? participantsCount,
+  }) {
+    return ConversationModel(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      participantId: participantId ?? this.participantId,
+      participantName: participantName ?? this.participantName,
+      participantAvatar: participantAvatar ?? this.participantAvatar,
+      participantDepartment: participantDepartment ?? this.participantDepartment,
+      lastMessage: lastMessage ?? this.lastMessage,
+      unreadCount: unreadCount ?? this.unreadCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isOnline: isOnline ?? this.isOnline,
+      participantsCount: participantsCount ?? this.participantsCount,
+    );
+  }
 }

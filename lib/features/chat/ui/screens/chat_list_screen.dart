@@ -28,6 +28,20 @@ class ChatListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if ChatCubit is already provided by parent (MainNavigationScreen)
+    ChatCubit? existingCubit;
+    try {
+      existingCubit = context.read<ChatCubit>();
+    } catch (_) {
+      // No existing cubit
+    }
+
+    // If cubit already exists, use it directly
+    if (existingCubit != null) {
+      return _ChatListView(companyId: companyId, currentUserId: currentUserId);
+    }
+
+    // Otherwise create a new one (for direct navigation)
     return BlocProvider(
       create: (context) => ChatCubit(
         ChatRepository(),
