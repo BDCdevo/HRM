@@ -1,18 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../styles/app_colors.dart';
 
 /// App Theme System - Blue Theme
 ///
 /// Perfect harmony between Light & Dark modes
 /// Based on Material Design 3 with blue color scheme
+/// Uses Cairo font for Arabic support
 class AppTheme {
+  /// Get Cairo text theme for Arabic support
+  static TextTheme _getCairoTextTheme(TextTheme base) {
+    return GoogleFonts.cairoTextTheme(base);
+  }
   // ============================================
   // LIGHT THEME - Blue & White
   // ============================================
   static ThemeData get lightTheme {
+    // Base text theme with Cairo font
+    final baseTextTheme = const TextTheme(
+      displayLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+        letterSpacing: -0.5,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+        letterSpacing: -0.5,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textPrimary,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        color: AppColors.textPrimary,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        color: AppColors.textPrimary,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        color: AppColors.textSecondary,
+      ),
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+
+      // Use Cairo font for Arabic support
+      fontFamily: GoogleFonts.cairo().fontFamily,
 
       // Primary Colors
       primaryColor: AppColors.primary,
@@ -139,53 +196,8 @@ class AppTheme {
         ),
       ),
 
-      // Text Theme
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.5,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.5,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: AppColors.textPrimary,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
-        ),
-      ),
+      // Text Theme - Using Cairo font for Arabic support
+      textTheme: _getCairoTextTheme(baseTextTheme),
 
       // Icon Theme
       iconTheme: const IconThemeData(
@@ -270,9 +282,60 @@ class AppTheme {
   // DARK THEME - Blue & Dark
   // ============================================
   static ThemeData get darkTheme {
+    // Base text theme for dark mode with Cairo font
+    final darkBaseTextTheme = const TextTheme(
+      displayLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkTextPrimary,
+        letterSpacing: -0.5,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkTextPrimary,
+        letterSpacing: -0.5,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkTextPrimary,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: AppColors.darkTextPrimary,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: AppColors.darkTextPrimary,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: AppColors.darkTextPrimary,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        color: AppColors.darkTextPrimary,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        color: AppColors.darkTextSecondary,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        color: AppColors.darkTextSecondary,
+      ),
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+
+      // Use Cairo font for Arabic support
+      fontFamily: GoogleFonts.cairo().fontFamily,
 
       // Primary Colors
       primaryColor: AppColors.darkPrimary,
@@ -399,53 +462,8 @@ class AppTheme {
         ),
       ),
 
-      // Text Theme
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: AppColors.darkTextPrimary,
-          letterSpacing: -0.5,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: AppColors.darkTextPrimary,
-          letterSpacing: -0.5,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: AppColors.darkTextPrimary,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: AppColors.darkTextPrimary,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          color: AppColors.darkTextPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: AppColors.darkTextSecondary,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          color: AppColors.darkTextSecondary,
-        ),
-      ),
+      // Text Theme - Using Cairo font for Arabic support
+      textTheme: _getCairoTextTheme(darkBaseTextTheme),
 
       // Icon Theme
       iconTheme: const IconThemeData(
