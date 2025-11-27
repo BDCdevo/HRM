@@ -232,10 +232,10 @@ class AppThemeColors {
       borderMedium: AppColors.borderMedium,
       divider: AppColors.divider,
       dividerLight: AppColors.dividerLight,
-      // Fields
+      // Fields - neutral colors, no yellow
       fieldBackground: AppColors.fieldBackground,
       fieldBorder: AppColors.border,
-      fieldBorderFocused: AppColors.primary,
+      fieldBorderFocused: AppColors.textPrimary,
       // Brand
       primary: AppColors.primary,
       primaryLight: AppColors.primaryLight,
@@ -255,10 +255,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation - Clean white AppBar
+      // Navigation - minimal yellow, dark for selected
       appBarBackground: AppColors.white,
       navBarBackground: AppColors.white,
-      navBarSelected: AppColors.primary,
+      navBarSelected: AppColors.textPrimary,
       navBarUnselected: AppColors.textTertiary,
       // Shadows & Overlays
       shadow: AppColors.shadow,
@@ -307,10 +307,10 @@ class AppThemeColors {
       borderMedium: AppColors.darkBorder,
       divider: AppColors.darkDivider,
       dividerLight: AppColors.darkDivider,
-      // Fields
+      // Fields - neutral colors
       fieldBackground: AppColors.darkInput,
       fieldBorder: AppColors.darkBorder,
-      fieldBorderFocused: AppColors.darkPrimary,
+      fieldBorderFocused: AppColors.darkTextPrimary,
       // Brand
       primary: AppColors.darkPrimary,
       primaryLight: AppColors.primary,
@@ -330,10 +330,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation
+      // Navigation - minimal yellow
       appBarBackground: AppColors.darkAppBar,
       navBarBackground: AppColors.darkAppBar,
-      navBarSelected: AppColors.darkPrimary,
+      navBarSelected: AppColors.darkTextPrimary,
       navBarUnselected: AppColors.darkNavUnselected,
       // Shadows & Overlays
       shadow: AppColors.shadow,
