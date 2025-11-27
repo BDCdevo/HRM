@@ -18,6 +18,8 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -35,7 +37,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -65,7 +67,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                   employee.employeeName,
                   style: AppTextStyles.headlineMedium.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -74,7 +76,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                 Text(
                   '${employee.role ?? 'No Role'} • ${employee.department ?? 'No Department'}',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -91,13 +93,14 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Status Badge
-                _buildStatusBadge(),
+                _buildStatusBadge(context),
 
                 const SizedBox(height: 16),
 
                 // Check-in Time
                 if (employee.checkInTime != null)
                   _buildDetailRow(
+                    context: context,
                     icon: Icons.login,
                     label: 'Check-In Time',
                     value: employee.checkInTime!,
@@ -109,6 +112,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                 // Duration
                 if (employee.duration != null)
                   _buildDetailRow(
+                    context: context,
                     icon: Icons.timer_outlined,
                     label: 'Duration',
                     value: employee.duration!,
@@ -120,6 +124,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                 // Check-out Time
                 if (employee.checkOutTime != null)
                   _buildDetailRow(
+                    context: context,
                     icon: Icons.logout,
                     label: 'Check-Out Time',
                     value: employee.checkOutTime!,
@@ -137,7 +142,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.warning.withOpacity(0.1),
+                          color: AppColors.warning.withOpacity(isDark ? 0.2 : 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -154,7 +159,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                             Text(
                               'Late Reason',
                               style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -162,7 +167,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                             Text(
                               employee.lateReason!,
                               style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
                               ),
                             ),
                           ],
@@ -184,7 +189,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -201,7 +206,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                             Text(
                               'Check-In Location',
                               style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.textSecondary,
+                                color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -212,7 +217,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
                                   child: Text(
                                     employee.formattedLocation ?? 'N/A',
                                     style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.textPrimary,
+                                      color: isDark ? Colors.white : AppColors.textPrimary,
                                       fontFamily: 'monospace',
                                     ),
                                   ),
@@ -293,7 +298,9 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Status Badge
-  Widget _buildStatusBadge() {
+  Widget _buildStatusBadge(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     Color statusColor;
     String statusText;
     Color statusBgColor;
@@ -303,31 +310,31 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
       case 'present':
         statusColor = AppColors.success;
         statusText = 'PRESENT';
-        statusBgColor = const Color(0xFFD4EDDA);
+        statusBgColor = isDark ? AppColors.success.withOpacity(0.2) : const Color(0xFFD4EDDA);
         statusIcon = Icons.check_circle;
         break;
       case 'late':
         statusColor = const Color(0xFFFF9800);
         statusText = 'LATE';
-        statusBgColor = const Color(0xFFFFE5D0);
+        statusBgColor = isDark ? const Color(0xFFFF9800).withOpacity(0.2) : const Color(0xFFFFE5D0);
         statusIcon = Icons.access_time;
         break;
       case 'absent':
         statusColor = AppColors.error;
         statusText = 'ABSENT';
-        statusBgColor = const Color(0xFFF8D7DA);
+        statusBgColor = isDark ? AppColors.error.withOpacity(0.2) : const Color(0xFFF8D7DA);
         statusIcon = Icons.cancel;
         break;
       case 'checked_out':
         statusColor = AppColors.info;
         statusText = 'CHECKED OUT';
-        statusBgColor = const Color(0xFFD1ECF1);
+        statusBgColor = isDark ? AppColors.info.withOpacity(0.2) : const Color(0xFFD1ECF1);
         statusIcon = Icons.exit_to_app;
         break;
       default:
         statusColor = Colors.grey;
         statusText = 'UNKNOWN';
-        statusBgColor = const Color(0xFFE0E0E0);
+        statusBgColor = isDark ? Colors.grey.withOpacity(0.2) : const Color(0xFFE0E0E0);
         statusIcon = Icons.help_outline;
     }
 
@@ -361,17 +368,20 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
 
   /// Build Detail Row
   Widget _buildDetailRow({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(isDark ? 0.2 : 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -388,7 +398,7 @@ class EmployeeDetailsBottomSheet extends StatelessWidget {
               Text(
                 label,
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

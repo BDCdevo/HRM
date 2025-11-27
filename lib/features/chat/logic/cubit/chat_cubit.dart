@@ -1,12 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/models/conversation_model.dart';
+import '../../data/models/message_model.dart';
 import '../../data/repo/chat_repository.dart';
 import 'chat_state.dart';
+import 'messages_cubit.dart';
 
 /// Chat Cubit
 ///
 /// Manages chat/conversations list state
 class ChatCubit extends Cubit<ChatState> {
   final ChatRepository _repository;
+
+  /// Track locally deleted conversation IDs to filter them out on refresh
+  /// Static so it persists across cubit instances
+  static Set<int> _deletedConversationIds = <int>{};
 
   ChatCubit(this._repository) : super(const ChatInitial());
 
@@ -32,7 +39,15 @@ class ChatCubit extends Cubit<ChatState> {
         currentUserId: currentUserId,
       );
 
-      emit(ChatLoaded(conversations));
+      // Filter out locally deleted conversations
+      print('🔍 [fetchConversations] Filtering. Deleted IDs: $_deletedConversationIds');
+      print('🔍 [fetchConversations] Before filter: ${conversations.length} conversations');
+      final filteredConversations = _deletedConversationIds.isEmpty
+          ? conversations
+          : conversations.where((c) => !_deletedConversationIds.contains(c.id)).toList();
+      print('🔍 [fetchConversations] After filter: ${filteredConversations.length} conversations');
+
+      emit(ChatLoaded(filteredConversations));
     } catch (e) {
       print('❌ ChatCubit - Fetch Conversations Error: $e');
       // On silent refresh, don't show error - keep existing data
@@ -64,7 +79,15 @@ class ChatCubit extends Cubit<ChatState> {
         currentUserId: currentUserId,
       );
 
-      emit(ChatLoaded(conversations));
+      // Filter out locally deleted conversations
+      print('🔍 [refreshConversations] Filtering. Deleted IDs: $_deletedConversationIds');
+      print('🔍 [refreshConversations] Before filter: ${conversations.length} conversations');
+      final filteredConversations = _deletedConversationIds.isEmpty
+          ? conversations
+          : conversations.where((c) => !_deletedConversationIds.contains(c.id)).toList();
+      print('🔍 [refreshConversations] After filter: ${filteredConversations.length} conversations');
+
+      emit(ChatLoaded(filteredConversations));
     } catch (e) {
       print('❌ ChatCubit - Refresh Conversations Error: $e');
 
@@ -133,6 +156,69 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  /// Handle new message notification
+  ///
+  /// Updates conversation locally (moves to top, updates last message, increments unread)
+  /// Then fetches from API in background to ensure data consistency
+  void handleNewMessage({
+    required int conversationId,
+    required String senderName,
+    required String messagePreview,
+    required int companyId,
+    required int currentUserId,
+  }) {
+    // Ignore messages for deleted conversations
+    if (_deletedConversationIds.contains(conversationId)) {
+      print('⚠️ Ignoring message for deleted conversation $conversationId');
+      return;
+    }
+
+    if (state is ChatLoaded) {
+      final currentState = state as ChatLoaded;
+      final conversations = List<ConversationModel>.from(currentState.conversations);
+
+      // Find the conversation
+      final index = conversations.indexWhere((c) => c.id == conversationId);
+
+      if (index != -1) {
+        // Update the conversation
+        final conversation = conversations[index];
+        final updatedConversation = conversation.copyWith(
+          unreadCount: conversation.unreadCount + 1,
+          updatedAt: DateTime.now().toIso8601String(),
+          lastMessage: MessageModel(
+            id: 0,
+            conversationId: conversationId,
+            senderId: 0,
+            senderName: senderName,
+            message: messagePreview,
+            messageType: 'text',
+            isRead: false,
+            isMine: false,
+            createdAt: DateTime.now().toIso8601String(),
+            updatedAt: DateTime.now().toIso8601String(),
+          ),
+        );
+
+        // Remove from current position and add to top
+        conversations.removeAt(index);
+        conversations.insert(0, updatedConversation);
+
+        // Emit updated state immediately
+        emit(ChatLoaded(conversations));
+
+        print('✅ Conversation $conversationId moved to top with new message');
+      }
+
+      // Also fetch from API in background to ensure consistency
+      fetchConversations(
+        companyId: companyId,
+        currentUserId: currentUserId,
+        silent: true,
+      );
+    }
+  }
+
   /// Clear unread count for a conversation
   ///
   /// Called when user opens a conversation
@@ -156,5 +242,48 @@ class ChatCubit extends Cubit<ChatState> {
       return (state as ChatLoaded).totalUnreadCount;
     }
     return 0;
+  }
+
+  /// Delete Conversation
+  ///
+  /// Deletes/leaves a conversation
+  Future<void> deleteConversation({
+    required int conversationId,
+    required int companyId,
+  }) async {
+    try {
+      // Add to deleted set to prevent it from coming back on refresh
+      _deletedConversationIds.add(conversationId);
+      print('🗑️ Added $conversationId to deleted set. Current deleted IDs: $_deletedConversationIds');
+
+      // Optimistically remove from UI
+      if (state is ChatLoaded) {
+        final currentState = state as ChatLoaded;
+        final updatedConversations = currentState.conversations
+            .where((c) => c.id != conversationId)
+            .toList();
+        emit(ChatLoaded(updatedConversations));
+      }
+
+      // Delete from server
+      await _repository.deleteConversation(
+        conversationId: conversationId,
+        companyId: companyId,
+      );
+
+      // Clear messages cache for this conversation
+      MessagesCubit.clearCache(conversationId);
+
+      print('✅ Conversation $conversationId deleted successfully');
+    } catch (e) {
+      print('❌ ChatCubit - Delete Conversation Error: $e');
+      // On error, remove from deleted set so it can come back
+      _deletedConversationIds.remove(conversationId);
+    }
+  }
+
+  /// Clear deleted conversations cache (call when user logs out)
+  static void clearDeletedCache() {
+    _deletedConversationIds.clear();
   }
 }

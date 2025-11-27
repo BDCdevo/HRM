@@ -48,18 +48,18 @@ class _TrainingRequestScreenContentState
   DateTime? _endDate;
 
   final List<Map<String, String>> _trainingTypes = [
-    {'value': 'technical', 'label': 'تدريب تقني'},
-    {'value': 'soft_skills', 'label': 'مهارات شخصية'},
-    {'value': 'management', 'label': 'إدارة وقيادة'},
-    {'value': 'language', 'label': 'لغات'},
-    {'value': 'certification', 'label': 'شهادة مهنية'},
-    {'value': 'other', 'label': 'أخرى'},
+    {'value': 'technical', 'label': 'Technical Training'},
+    {'value': 'soft_skills', 'label': 'Soft Skills'},
+    {'value': 'management', 'label': 'Management & Leadership'},
+    {'value': 'language', 'label': 'Languages'},
+    {'value': 'certification', 'label': 'Professional Certificate'},
+    {'value': 'other', 'label': 'Other'},
   ];
 
   final List<Map<String, String>> _costCoverageOptions = [
-    {'value': 'full', 'label': 'تغطية كاملة'},
-    {'value': 'partial', 'label': 'تغطية جزئية'},
-    {'value': 'none', 'label': 'بدون تغطية'},
+    {'value': 'full', 'label': 'Full Coverage'},
+    {'value': 'partial', 'label': 'Partial Coverage'},
+    {'value': 'none', 'label': 'No Coverage'},
   ];
 
   @override
@@ -152,7 +152,7 @@ class _TrainingRequestScreenContentState
         backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
         elevation: 0,
         title: Text(
-          'طلب تدريب',
+          'Training Request',
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
@@ -202,7 +202,7 @@ class _TrainingRequestScreenContentState
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'تم إرسال الطلب بنجاح',
+                        'Request Submitted Successfully',
                         style: AppTextStyles.headlineSmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextPrimary
@@ -213,7 +213,7 @@ class _TrainingRequestScreenContentState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'سيتم مراجعة طلبك والرد عليك قريباً',
+                        'Your request will be reviewed and you will be notified soon',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -223,7 +223,7 @@ class _TrainingRequestScreenContentState
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: 'حسناً',
+                        text: 'OK',
                         type: ButtonType.primary,
                         onPressed: () {
                           Navigator.of(context).pop(); // Close dialog
@@ -290,7 +290,7 @@ class _TrainingRequestScreenContentState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'طلب تدريب',
+                                'Training Request',
                                 style: AppTextStyles.headlineSmall.copyWith(
                                   color: AppColors.white,
                                   fontWeight: FontWeight.bold,
@@ -298,7 +298,7 @@ class _TrainingRequestScreenContentState
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'املأ النموذج أدناه لتقديم طلب الحصول على دورة تدريبية',
+                                'Fill out the form below to apply for a training course',
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: AppColors.white.withValues(alpha: 0.9),
                                 ),
@@ -313,7 +313,7 @@ class _TrainingRequestScreenContentState
 
                   // Training Type Section
                   Text(
-                    'نوع التدريب *',
+                    'Training Type *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -373,7 +373,7 @@ class _TrainingRequestScreenContentState
 
                   // Training Name
                   Text(
-                    'اسم الدورة التدريبية *',
+                    'Training Course Name *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -384,10 +384,10 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _trainingNameController,
-                    hint: 'مثال: دورة إدارة المشاريع الاحترافية',
+                    hint: 'e.g., Professional Project Management Course',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'يرجى إدخال اسم الدورة';
+                        return 'Please enter the course name';
                       }
                       return null;
                     },
@@ -396,7 +396,7 @@ class _TrainingRequestScreenContentState
 
                   // Provider
                   Text(
-                    'مقدم التدريب',
+                    'Training Provider',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -407,13 +407,13 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _providerController,
-                    hint: 'مثال: معهد التطوير المهني',
+                    hint: 'e.g., Professional Development Institute',
                   ),
                   const SizedBox(height: 20),
 
                   // Location
                   Text(
-                    'موقع التدريب',
+                    'Training Location',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -424,7 +424,7 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _locationController,
-                    hint: 'مثال: الرياض - أونلاين',
+                    hint: 'e.g., Riyadh - Online',
                   ),
                   const SizedBox(height: 20),
 
@@ -436,7 +436,7 @@ class _TrainingRequestScreenContentState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'تاريخ البدء',
+                              'Start Date',
                               style: AppTextStyles.bodyLarge.copyWith(
                                 color: isDark
                                     ? AppColors.darkTextPrimary
@@ -470,7 +470,7 @@ class _TrainingRequestScreenContentState
                                     const SizedBox(width: 12),
                                     Text(
                                       _startDate == null
-                                          ? 'اختر التاريخ'
+                                          ? 'Select Date'
                                           : DateFormat(
                                               'yyyy-MM-dd',
                                             ).format(_startDate!),
@@ -493,7 +493,7 @@ class _TrainingRequestScreenContentState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'تاريخ الانتهاء',
+                              'End Date',
                               style: AppTextStyles.bodyLarge.copyWith(
                                 color: isDark
                                     ? AppColors.darkTextPrimary
@@ -527,7 +527,7 @@ class _TrainingRequestScreenContentState
                                     const SizedBox(width: 12),
                                     Text(
                                       _endDate == null
-                                          ? 'اختر التاريخ'
+                                          ? 'Select Date'
                                           : DateFormat(
                                               'yyyy-MM-dd',
                                             ).format(_endDate!),
@@ -550,7 +550,7 @@ class _TrainingRequestScreenContentState
 
                   // Cost
                   Text(
-                    'تكلفة التدريب',
+                    'Training Cost',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -561,14 +561,14 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _costController,
-                    hint: 'مثال: 5000',
+                    hint: 'e.g., 5000',
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
 
                   // Cost Coverage
                   Text(
-                    'تغطية التكلفة',
+                    'Cost Coverage',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -631,7 +631,7 @@ class _TrainingRequestScreenContentState
 
                   // Justification
                   Text(
-                    'مبررات الحصول على التدريب',
+                    'Justification for Training',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -642,14 +642,14 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _justificationController,
-                    hint: 'اشرح لماذا تحتاج هذا التدريب...',
+                    hint: 'Explain why you need this training...',
                     maxLines: 3,
                   ),
                   const SizedBox(height: 20),
 
                   // Expected Benefit
                   Text(
-                    'الفائدة المتوقعة',
+                    'Expected Benefit',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -660,14 +660,14 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _benefitController,
-                    hint: 'كيف سيفيدك هذا التدريب في عملك؟',
+                    hint: 'How will this training benefit your work?',
                     maxLines: 3,
                   ),
                   const SizedBox(height: 20),
 
                   // Additional Notes
                   Text(
-                    'ملاحظات إضافية *',
+                    'Additional Notes *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -678,11 +678,11 @@ class _TrainingRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _reasonController,
-                    hint: 'أي ملاحظات أخرى تود إضافتها...',
+                    hint: 'Any other notes you want to add...',
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'يرجى إضافة ملاحظات';
+                        return 'Please add notes';
                       }
                       return null;
                     },
@@ -691,7 +691,7 @@ class _TrainingRequestScreenContentState
 
                   // Submit Button
                   CustomButton(
-                    text: 'إرسال الطلب',
+                    text: 'Submit Request',
                     type: ButtonType.primary,
                     onPressed: isSubmitting ? null : _submitRequest,
                     isLoading: isSubmitting,

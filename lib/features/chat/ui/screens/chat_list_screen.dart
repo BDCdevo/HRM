@@ -136,17 +136,20 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
 
     try {
       final jsonData = jsonDecode(data);
-      final conversationId = jsonData['conversation_id'];
-      final senderName = jsonData['sender_name'] ?? 'New message';
+      final conversationId = jsonData['conversation_id'] as int?;
+      final senderName = jsonData['sender_name'] as String? ?? 'New message';
+      final messagePreview = jsonData['message_preview'] as String? ?? '';
 
       print('📬 New message in conversation $conversationId from $senderName');
 
-      // Refresh conversation list immediately
-      if (mounted) {
-        context.read<ChatCubit>().fetchConversations(
+      // Update conversation list immediately (local update + background API fetch)
+      if (mounted && conversationId != null) {
+        context.read<ChatCubit>().handleNewMessage(
+          conversationId: conversationId,
+          senderName: senderName,
+          messagePreview: messagePreview,
           companyId: companyId,
           currentUserId: currentUserId,
-          silent: true,
         );
       }
     } catch (e) {
@@ -199,8 +202,8 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF1C1E2B)
-          : const Color(0xFFF5F5F5), // Adaptive background
+          ? AppColors.darkBackground
+          : AppColors.background,
       appBar: _buildAppBar(context, isDark),
       body: BlocConsumer<ChatCubit, ChatState>(
         listener: (context, state) {
@@ -253,7 +256,7 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
   /// Build App Bar
   PreferredSizeWidget _buildAppBar(BuildContext context, bool isDark) {
     return AppBar(
-      backgroundColor: isDark ? const Color(0xFF1C1E2B) : AppColors.primary,
+      backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
       elevation: 0,
       title: Text(
         'Messages',
@@ -396,7 +399,7 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
   }) {
     return RefreshIndicator(
       color: AppColors.accent,
-      backgroundColor: isDark ? const Color(0xFF2A2D3E) : Colors.white,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.surface,
       onRefresh: () async {
         // Refresh both conversations and recent contacts
         _recentContactsKey.currentState?.refresh();
@@ -466,7 +469,12 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
                   _showSnackBar(context, '📦 Conversation archived', isDark);
                 },
                 onDelete: () {
-                  _showSnackBar(context, '🗑️ Conversation deleted', isDark);
+                  _showDeleteConfirmation(
+                    context,
+                    isDark,
+                    conversation,
+                    companyId,
+                  );
                 },
                 onPin: () {
                   _showSnackBar(context, '📌 Conversation pinned', isDark);
@@ -587,6 +595,61 @@ class _ChatListViewState extends State<_ChatListView> with WidgetsBindingObserve
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Show Delete Confirmation Dialog
+  void _showDeleteConfirmation(
+    BuildContext context,
+    bool isDark,
+    dynamic conversation,
+    int companyId,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkCard : AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Conversation?',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this conversation with "${conversation.participantName}"?\nThis action cannot be undone.',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // Delete the conversation
+              context.read<ChatCubit>().deleteConversation(
+                conversationId: conversation.id,
+                companyId: companyId,
+              );
+              _showSnackBar(context, 'Conversation deleted', isDark);
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -19,10 +19,12 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
@@ -45,30 +47,30 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
 
             // Employee Header
-            _buildEmployeeHeader(),
+            _buildEmployeeHeader(context),
 
             const SizedBox(height: 24),
 
             // Status Badge
-            _buildStatusBadge(),
+            _buildStatusBadge(context),
 
             const SizedBox(height: 24),
 
             // Attendance Details
-            _buildDetailsSection(),
+            _buildDetailsSection(context),
 
             const SizedBox(height: 16),
 
             // Late Reason (if exists)
             if (employee.lateReason != null && employee.lateReason!.isNotEmpty)
-              _buildLateReasonSection(),
+              _buildLateReasonSection(context),
 
             const SizedBox(height: 16),
 
@@ -102,7 +104,9 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Employee Header
-  Widget _buildEmployeeHeader() {
+  Widget _buildEmployeeHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         // Avatar
@@ -120,7 +124,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.white,
+              color: isDark ? AppColors.darkCard : AppColors.white,
               width: 3,
             ),
             boxShadow: [
@@ -153,7 +157,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                 employee.employeeName,
                 style: AppTextStyles.titleLarge.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -161,14 +165,14 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                 Text(
                   employee.role!,
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   ),
                 ),
               if (employee.department != null)
                 Text(
                   employee.department!,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   ),
                 ),
             ],
@@ -180,7 +184,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withOpacity(isDark ? 0.2 : 0.1),
               shape: BoxShape.circle,
             ),
             child: Container(
@@ -197,7 +201,9 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Status Badge
-  Widget _buildStatusBadge() {
+  Widget _buildStatusBadge(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     Color statusColor;
     String statusText;
     IconData statusIcon;
@@ -231,13 +237,13 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            statusColor.withOpacity(0.15),
-            statusColor.withOpacity(0.05),
+            statusColor.withOpacity(isDark ? 0.25 : 0.15),
+            statusColor.withOpacity(isDark ? 0.1 : 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: statusColor.withOpacity(0.3),
+          color: statusColor.withOpacity(isDark ? 0.5 : 0.3),
           width: 1.5,
         ),
       ),
@@ -264,14 +270,16 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Details Section
-  Widget _buildDetailsSection() {
+  Widget _buildDetailsSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: isDark ? AppColors.darkBackground : AppColors.background,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: isDark ? AppColors.darkBorder : AppColors.border,
           width: 1,
         ),
       ),
@@ -291,7 +299,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                 'Attendance Details',
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
             ],
@@ -301,26 +309,29 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
 
           // Check In Time
           _buildDetailRow(
+            context: context,
             icon: Icons.login_rounded,
             label: 'Check In',
             value: employee.checkInTime ?? '--:--',
             color: AppColors.success,
           ),
 
-          const Divider(height: 24),
+          Divider(height: 24, color: isDark ? AppColors.darkBorder : null),
 
           // Check Out Time
           _buildDetailRow(
+            context: context,
             icon: Icons.logout_rounded,
             label: 'Check Out',
             value: employee.checkOutTime ?? '--:--',
             color: AppColors.error,
           ),
 
-          const Divider(height: 24),
+          Divider(height: 24, color: isDark ? AppColors.darkBorder : null),
 
           // Duration
           _buildDetailRow(
+            context: context,
             icon: Icons.timer_rounded,
             label: 'Duration',
             value: employee.duration ?? '--',
@@ -333,17 +344,20 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
 
   /// Build Detail Row
   Widget _buildDetailRow({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(isDark ? 0.2 : 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
@@ -360,7 +374,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
               Text(
                 label,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -369,7 +383,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                 value,
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
                   fontSize: 16,
                 ),
               ),
@@ -381,7 +395,9 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
   }
 
   /// Build Late Reason Section
-  Widget _buildLateReasonSection() {
+  Widget _buildLateReasonSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -389,13 +405,13 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.warning.withOpacity(0.08),
-            AppColors.warning.withOpacity(0.03),
+            AppColors.warning.withOpacity(isDark ? 0.15 : 0.08),
+            AppColors.warning.withOpacity(isDark ? 0.08 : 0.03),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.warning.withOpacity(isDark ? 0.5 : 0.3),
           width: 1.5,
         ),
       ),
@@ -408,7 +424,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.15),
+                  color: AppColors.warning.withOpacity(isDark ? 0.25 : 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -435,17 +451,17 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? AppColors.darkBackground : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.warning.withOpacity(0.2),
+                color: AppColors.warning.withOpacity(isDark ? 0.3 : 0.2),
                 width: 1,
               ),
             ),
             child: Text(
               employee.lateReason!,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
+                color: isDark ? Colors.white : AppColors.textPrimary,
                 height: 1.5,
               ),
             ),
@@ -457,6 +473,8 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
 
   /// Build Location Section
   Widget _buildLocationSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -464,13 +482,13 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.info.withOpacity(0.08),
-            AppColors.info.withOpacity(0.03),
+            AppColors.info.withOpacity(isDark ? 0.15 : 0.08),
+            AppColors.info.withOpacity(isDark ? 0.08 : 0.03),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.info.withOpacity(0.3),
+          color: AppColors.info.withOpacity(isDark ? 0.5 : 0.3),
           width: 1.5,
         ),
       ),
@@ -483,7 +501,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.15),
+                  color: AppColors.info.withOpacity(isDark ? 0.25 : 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -509,10 +527,10 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? AppColors.darkBackground : Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppColors.info.withOpacity(0.2),
+                color: AppColors.info.withOpacity(isDark ? 0.3 : 0.2),
                 width: 1,
               ),
             ),
@@ -528,7 +546,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                   child: Text(
                     employee.formattedLocation ?? 'N/A',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                       fontFamily: 'monospace',
                       fontSize: 11,
                     ),
@@ -552,7 +570,7 @@ class EmployeeAttendanceDetailsBottomSheet extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.1),
+                      color: AppColors.info.withOpacity(isDark ? 0.2 : 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Icon(

@@ -23,14 +23,18 @@ class ProfileCubit extends Cubit<ProfileState> {
   /// - [ProfileError] on failure
   Future<void> fetchProfile() async {
     try {
+      if (isClosed) return;
       emit(const ProfileLoading());
 
       final profile = await _profileRepo.getProfile();
 
+      if (isClosed) return;
       emit(ProfileLoaded(profile: profile));
     } on DioException catch (e) {
+      if (isClosed) return;
       _handleDioException(e);
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileError(
         message: 'An unexpected error occurred: ${e.toString()}',
       ));
@@ -46,17 +50,21 @@ class ProfileCubit extends Cubit<ProfileState> {
   /// - [ProfileError] on failure
   Future<void> updateProfile(UpdateProfileRequestModel request) async {
     try {
+      if (isClosed) return;
       emit(const ProfileLoading());
 
       final profile = await _profileRepo.updateProfile(request);
 
+      if (isClosed) return;
       emit(ProfileUpdated(profile: profile));
 
       // Refresh profile to get latest data
       await fetchProfile();
     } on DioException catch (e) {
+      if (isClosed) return;
       _handleDioException(e);
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileError(
         message: 'An unexpected error occurred: ${e.toString()}',
       ));
@@ -72,14 +80,18 @@ class ProfileCubit extends Cubit<ProfileState> {
   /// - [ProfileError] on failure
   Future<void> changePassword(ChangePasswordRequestModel request) async {
     try {
+      if (isClosed) return;
       emit(const ProfileLoading());
 
       final message = await _profileRepo.changePassword(request);
 
+      if (isClosed) return;
       emit(PasswordChanged(message: message));
     } on DioException catch (e) {
+      if (isClosed) return;
       _handleDioException(e);
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileError(
         message: 'An unexpected error occurred: ${e.toString()}',
       ));
@@ -95,14 +107,18 @@ class ProfileCubit extends Cubit<ProfileState> {
   /// - [ProfileError] on failure
   Future<void> deleteAccount() async {
     try {
+      if (isClosed) return;
       emit(const ProfileLoading());
 
       final message = await _profileRepo.deleteAccount();
 
+      if (isClosed) return;
       emit(AccountDeleted(message: message));
     } on DioException catch (e) {
+      if (isClosed) return;
       _handleDioException(e);
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileError(
         message: 'An unexpected error occurred: ${e.toString()}',
       ));
@@ -118,17 +134,21 @@ class ProfileCubit extends Cubit<ProfileState> {
   /// - [ProfileError] on failure
   Future<void> uploadProfileImage(File imageFile) async {
     try {
+      if (isClosed) return;
       emit(const ProfileLoading());
 
       final profile = await _profileRepo.uploadProfileImage(imageFile);
 
+      if (isClosed) return;
       emit(ProfileImageUploaded(profile: profile));
 
       // Refresh profile to get latest data
       await fetchProfile();
     } on DioException catch (e) {
+      if (isClosed) return;
       _handleDioException(e);
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileError(
         message: 'An unexpected error occurred: ${e.toString()}',
       ));
@@ -137,6 +157,8 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   /// Handle Dio Exception
   void _handleDioException(DioException e) {
+    if (isClosed) return;
+
     if (e.response != null) {
       // Server responded with error
       final statusCode = e.response?.statusCode;

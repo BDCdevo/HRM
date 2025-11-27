@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
@@ -19,6 +20,8 @@ class ChatMessagesListWidget extends StatelessWidget {
   final int companyId;
   final bool isGroupChat;
   final VoidCallback onRefresh;
+  final Function(MessageModel)? onReply;
+  final Function(MessageModel)? onDelete;
 
   const ChatMessagesListWidget({
     super.key,
@@ -29,6 +32,8 @@ class ChatMessagesListWidget extends StatelessWidget {
     required this.companyId,
     this.isGroupChat = false,
     required this.onRefresh,
+    this.onReply,
+    this.onDelete,
   });
 
   @override
@@ -94,10 +99,13 @@ class ChatMessagesListWidget extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    child: MessageBubble(
+                    child: _SwipeableMessageBubble(
                       message: message,
                       isSentByMe: message.isMine,
                       isGroupChat: isGroupChat,
+                      isDark: isDark,
+                      onReply: onReply,
+                      onDelete: onDelete,
                     ),
                   ),
                   // Add divider between messages (except last one)
@@ -331,5 +339,286 @@ class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_DateHeaderDelegate oldDelegate) {
     return date != oldDelegate.date || isDark != oldDelegate.isDark;
+  }
+}
+
+/// Swipeable Message Bubble with reply gesture
+class _SwipeableMessageBubble extends StatefulWidget {
+  final MessageModel message;
+  final bool isSentByMe;
+  final bool isGroupChat;
+  final bool isDark;
+  final Function(MessageModel)? onReply;
+  final Function(MessageModel)? onDelete;
+
+  const _SwipeableMessageBubble({
+    required this.message,
+    required this.isSentByMe,
+    required this.isGroupChat,
+    required this.isDark,
+    this.onReply,
+    this.onDelete,
+  });
+
+  @override
+  State<_SwipeableMessageBubble> createState() => _SwipeableMessageBubbleState();
+}
+
+class _SwipeableMessageBubbleState extends State<_SwipeableMessageBubble>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+
+  double _dragOffset = 0;
+  bool _hasTriggeredReply = false;
+  static const double _replyThreshold = 60.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    if (widget.onReply == null) return;
+
+    setState(() {
+      // Allow swipe from left to right (for all messages)
+      _dragOffset += details.delta.dx;
+      _dragOffset = _dragOffset.clamp(0.0, _replyThreshold * 1.5);
+
+      // Check if reached threshold
+      if (_dragOffset >= _replyThreshold && !_hasTriggeredReply) {
+        _hasTriggeredReply = true;
+        // Haptic feedback
+        HapticFeedback.mediumImpact();
+      } else if (_dragOffset < _replyThreshold) {
+        _hasTriggeredReply = false;
+      }
+    });
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (widget.onReply == null) return;
+
+    if (_hasTriggeredReply) {
+      widget.onReply?.call(widget.message);
+    }
+
+    // Animate back to original position
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(_dragOffset / MediaQuery.of(context).size.width, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+
+    _controller.forward(from: 0).then((_) {
+      setState(() {
+        _dragOffset = 0;
+        _hasTriggeredReply = false;
+      });
+    });
+  }
+
+  void _showMessageOptions(BuildContext context) {
+    final isDark = widget.isDark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1F2C34) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Reply option
+            ListTile(
+              leading: Icon(
+                Icons.reply,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+              title: Text(
+                'Reply',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                widget.onReply?.call(widget.message);
+              },
+            ),
+
+            // Delete option (only for own messages)
+            if (widget.isSentByMe)
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                ),
+                title: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeleteConfirmation(context);
+                },
+              ),
+
+            // Cancel
+            ListTile(
+              leading: Icon(
+                Icons.close,
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
+              title: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
+              ),
+              onTap: () => Navigator.pop(context),
+            ),
+
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    final isDark = widget.isDark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1F2C34) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'حذف الرسالة؟',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'هل أنت متأكد من حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء.',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onDelete?.call(widget.message);
+            },
+            child: const Text(
+              'حذف',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (_dragOffset / _replyThreshold).clamp(0.0, 1.0);
+
+    return GestureDetector(
+      onHorizontalDragUpdate: _handleDragUpdate,
+      onHorizontalDragEnd: _handleDragEnd,
+      onLongPress: () => _showMessageOptions(context),
+      child: Stack(
+        children: [
+          // Reply icon (appears as you swipe)
+          if (_dragOffset > 0)
+            Positioned(
+              left: 8,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: Transform.scale(
+                  scale: progress,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _hasTriggeredReply
+                          ? (widget.isDark
+                              ? AppColors.darkAccent
+                              : AppColors.accent)
+                          : (widget.isDark
+                              ? Colors.grey[700]
+                              : Colors.grey[300]),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.reply,
+                      color: _hasTriggeredReply
+                          ? Colors.white
+                          : (widget.isDark ? Colors.grey[400] : Colors.grey[600]),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Message bubble
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: _controller.isAnimating
+                    ? Offset(_slideAnimation.value.dx * MediaQuery.of(context).size.width, 0)
+                    : Offset(_dragOffset, 0),
+                child: MessageBubble(
+                  message: widget.message,
+                  isSentByMe: widget.isSentByMe,
+                  isGroupChat: widget.isGroupChat,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

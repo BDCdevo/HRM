@@ -280,6 +280,22 @@ class AppColors {
   static const Color darkWhatsappGray = Color(0xFF8696A0);
   static const Color darkWhatsappText = Color(0xFFE9EDEF);
 
+  /// Dark mode - Chat background
+  static const Color darkChatBackground = Color(0xFF0B141A);
+
+  // ============================================
+  // LIGHT MODE - Chat Colors
+  // ============================================
+
+  /// Light mode - Chat background (WhatsApp style)
+  static const Color chatBackground = Color(0xFFECE5DD);
+
+  /// Light mode - Chat input background
+  static const Color chatInputBackground = Color(0xFFF0F0F0);
+
+  /// Dark mode - Chat input background
+  static const Color darkChatInputBackground = Color(0xFF1F2C34);
+
   // ============================================
   // Chart Colors (Blue Theme)
   // ============================================

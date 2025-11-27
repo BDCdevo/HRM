@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HRM (Human Resource Management) Flutter app with Laravel (Filament) PHP backend. Clean Architecture with BLoC/Cubit state management.
 
-**Version**: 1.1.3+13 | **SDK**: Dart ^3.9.2
+**Version**: 1.1.5+15 | **SDK**: Dart ^3.9.2
 
 ## Quick Start
 
@@ -74,11 +74,16 @@ lib/features/{feature_name}/
 
 **Separate Features**: `leave` (logic) and `leaves` (UI) are intentionally separate to allow reusing business logic.
 
-**Chat Models Exception**: Chat models use `fromApiJson()` instead of standard `fromJson()` due to nested API response structure.
+**Chat Models Exception**: Chat models use `fromApiJson()` instead of standard `fromJson()` due to nested API response structure. `ConversationModel.fromApiJson()` requires `currentUserId` to extract the correct participant info:
+```dart
+ConversationModel.fromApiJson(json, currentUserId: currentUserId)
+```
 
 **Location/Geofencing**: Attendance check-in uses `geolocator` for branch geofencing validation. Location permission required.
 
 **Firebase**: Crashlytics and Analytics enabled. Initialize in `main.dart` before `runApp()`.
+
+**Google Fonts**: Arabic fonts loaded via `google_fonts` package. Use `GoogleFonts.cairo()` for Arabic text styling.
 
 ## Development Commands
 
@@ -131,6 +136,11 @@ Future<Model> fetchData() async {
 - Token stored in `flutter_secure_storage` (key: `auth_token`)
 - ApiInterceptor auto-adds `Authorization: Bearer {token}`
 - 401 responses trigger logout via NavigationHelper
+
+### Timeouts
+- Connection: 30s
+- Receive: 60s (extended for file downloads)
+- Send: 120s (extended for file/image/voice uploads)
 
 ## Theme System
 
@@ -205,6 +215,7 @@ AppRouter.navigateAndRemoveUntil(context, AppRouter.login);
 - `assets/images/logo/` - App logos
 - `assets/svgs/` - SVG icons (use `flutter_svg`)
 - `assets/animations/` - Lottie JSON animations (use `lottie` package)
+- `assets/whatsapp_icons/` - WhatsApp-style chat icons
 
 ## Error Handling
 
@@ -226,7 +237,11 @@ For UI display, use `ErrorHandler.handle()` from `lib/core/errors/error_handler.
 Uses `pusher_channels_flutter` with Laravel Reverb backend:
 - Service: `lib/core/services/websocket_service.dart`
 - Channel pattern: `private-chat.{companyId}.conversation.{conversationId}`
-- Reverb host: `ws://31.97.46.103:8081`
+- User notifications: `private-user.{companyId}.{userId}`
+- Reverb host: `ws://31.97.46.103:8081` (no SSL)
+- Auth endpoint: `https://erp1.bdcbiz.com/api/broadcasting/auth`
+
+**Note**: WebSocket uses unencrypted `ws://` on port 8081 because Reverb is configured without SSL. Authorization uses HTTPS.
 
 ## Online Status Indicator
 

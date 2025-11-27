@@ -45,22 +45,22 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
   DateTime? _neededDate;
 
   final List<Map<String, String>> _certificateTypes = [
-    {'value': 'salary', 'label': 'شهادة راتب'},
-    {'value': 'experience', 'label': 'شهادة خبرة'},
-    {'value': 'employment', 'label': 'شهادة عمل'},
-    {'value': 'to_whom_it_may_concern', 'label': 'إلى من يهمه الأمر'},
+    {'value': 'salary', 'label': 'Salary Certificate'},
+    {'value': 'experience', 'label': 'Experience Certificate'},
+    {'value': 'employment', 'label': 'Employment Certificate'},
+    {'value': 'to_whom_it_may_concern', 'label': 'To Whom It May Concern'},
   ];
 
   final List<Map<String, String>> _languages = [
-    {'value': 'arabic', 'label': 'عربي'},
-    {'value': 'english', 'label': 'إنجليزي'},
-    {'value': 'both', 'label': 'عربي وإنجليزي'},
+    {'value': 'arabic', 'label': 'Arabic'},
+    {'value': 'english', 'label': 'English'},
+    {'value': 'both', 'label': 'Arabic & English'},
   ];
 
   final List<Map<String, String>> _deliveryMethods = [
-    {'value': 'pickup', 'label': 'استلام من المكتب'},
-    {'value': 'email', 'label': 'إرسال عبر البريد الإلكتروني'},
-    {'value': 'mail', 'label': 'إرسال بالبريد'},
+    {'value': 'pickup', 'label': 'Pickup from Office'},
+    {'value': 'email', 'label': 'Send via Email'},
+    {'value': 'mail', 'label': 'Send by Mail'},
   ];
 
   @override
@@ -75,7 +75,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
       if (_selectedType == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('الرجاء اختيار نوع الشهادة'),
+            content: Text('Please select the certificate type'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -137,7 +137,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
         backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
         elevation: 0,
         title: Text(
-          'طلب شهادة',
+          'Certificate Request',
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
@@ -154,7 +154,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
           if (state is CertificateRequestSubmitted) {
             showSuccessDialog(
               context,
-              title: 'تم تقديم الطلب!',
+              title: 'Request Submitted!',
               message: state.message,
               onComplete: () {
                 Navigator.of(context).pop();
@@ -183,22 +183,22 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
                   const SizedBox(height: 24),
 
                   // Certificate Type
-                  _buildSectionTitle('نوع الشهادة', textColor),
+                  _buildSectionTitle('Certificate Type', textColor),
                   const SizedBox(height: 12),
                   _buildCertificateTypeSelector(cardColor, textColor, isDark),
                   const SizedBox(height: 24),
 
                   // Purpose
-                  _buildSectionTitle('الغرض من الشهادة', textColor),
+                  _buildSectionTitle('Purpose of Certificate', textColor),
                   const SizedBox(height: 12),
                   CustomTextField(
                     controller: _purposeController,
-                    label: 'الغرض',
-                    hint: 'مثال: للتقديم على قرض، للسفر، إلخ',
+                    label: 'Purpose',
+                    hint: 'e.g., For loan application, travel, etc.',
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'الرجاء إدخال الغرض';
+                        return 'Please enter the purpose';
                       }
                       return null;
                     },
@@ -206,40 +206,40 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
                   const SizedBox(height: 24),
 
                   // Language
-                  _buildSectionTitle('اللغة', textColor),
+                  _buildSectionTitle('Language', textColor),
                   const SizedBox(height: 12),
                   _buildLanguageSelector(cardColor, textColor, isDark),
                   const SizedBox(height: 24),
 
                   // Copies
-                  _buildSectionTitle('عدد النسخ', textColor),
+                  _buildSectionTitle('Number of Copies', textColor),
                   const SizedBox(height: 12),
                   _buildCopiesSelector(cardColor, textColor, isDark),
                   const SizedBox(height: 24),
 
                   // Delivery Method
-                  _buildSectionTitle('طريقة الاستلام', textColor),
+                  _buildSectionTitle('Delivery Method', textColor),
                   const SizedBox(height: 12),
                   _buildDeliveryMethodSelector(cardColor, textColor, isDark),
                   const SizedBox(height: 24),
 
                   // Needed Date
-                  _buildSectionTitle('التاريخ المطلوب (اختياري)', textColor),
+                  _buildSectionTitle('Required Date (Optional)', textColor),
                   const SizedBox(height: 12),
                   _buildDatePicker(cardColor, textColor, isDark),
                   const SizedBox(height: 24),
 
                   // Additional Notes
-                  _buildSectionTitle('ملاحظات إضافية', textColor),
+                  _buildSectionTitle('Additional Notes', textColor),
                   const SizedBox(height: 12),
                   CustomTextField(
                     controller: _reasonController,
-                    label: 'ملاحظات',
-                    hint: 'أي تفاصيل إضافية...',
+                    label: 'Notes',
+                    hint: 'Any additional details...',
                     maxLines: 4,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'الرجاء إضافة ملاحظات';
+                        return 'Please add notes';
                       }
                       return null;
                     },
@@ -248,7 +248,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
 
                   // Submit Button
                   CustomButton(
-                    text: isLoading ? 'جاري التقديم...' : 'تقديم الطلب',
+                    text: isLoading ? 'Submitting...' : 'Submit Request',
                     onPressed: isLoading ? null : _submitRequest,
                     type: ButtonType.primary,
                     isLoading: isLoading,
@@ -297,7 +297,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'طلب شهادة',
+                  'Certificate Request',
                   style: AppTextStyles.headlineSmall.copyWith(
                     color: AppColors.white,
                     fontWeight: FontWeight.bold,
@@ -305,7 +305,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'املأ النموذج لتقديم طلب شهادة',
+                  'Fill out the form to submit a certificate request',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.white.withValues(alpha: 0.9),
                   ),
@@ -425,7 +425,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'عدد النسخ المطلوبة',
+            'Number of copies required',
             style: AppTextStyles.bodyMedium.copyWith(color: textColor),
           ),
           Row(
@@ -551,7 +551,7 @@ class _CertificateRequestViewState extends State<_CertificateRequestView> {
               child: Text(
                 _neededDate != null
                     ? DateFormat('yyyy-MM-dd').format(_neededDate!)
-                    : 'اختر التاريخ المطلوب',
+                    : 'Select required date',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: _neededDate != null ? textColor : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
                 ),

@@ -127,7 +127,7 @@ class ErrorDialog extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'إغلاق',
+                    'Close',
                     style: TextStyle(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
                       fontSize: 16,
@@ -153,7 +153,7 @@ class ErrorDialog extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'إعادة المحاولة',
+                      'Retry',
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -373,7 +373,7 @@ class ErrorScreen extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('إعادة المحاولة'),
+                  label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -531,7 +531,7 @@ class EmptyStateWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onAction,
                 icon: const Icon(Icons.add),
-                label: Text(actionLabel ?? 'إضافة'),
+                label: Text(actionLabel ?? 'Add'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -583,7 +583,7 @@ class CompactErrorWidget extends StatelessWidget {
               TextButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('إعادة المحاولة'),
+                label: const Text('Retry'),
                 style: TextButton.styleFrom(foregroundColor: AppColors.primary),
               ),
             ],
@@ -632,7 +632,7 @@ class ErrorSnackBar {
         duration: duration,
         action: onRetry != null
             ? SnackBarAction(
-                label: 'إعادة المحاولة',
+                label: 'Retry',
                 textColor: Colors.white,
                 onPressed: onRetry,
               )
@@ -641,18 +641,18 @@ class ErrorSnackBar {
     );
   }
 
-  /// Convert common error messages to Arabic user-friendly messages
+  /// Convert common error messages to user-friendly messages
   static String getArabicMessage(String error) {
     if (error.contains('401') || error.contains('Unauthenticated')) {
-      return 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى';
+      return 'Session expired. Please login again';
     } else if (error.contains('500')) {
-      return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+      return 'Server error. Please try again later';
     } else if (error.contains('Network') || error.contains('connection') || error.contains('SocketException')) {
-      return 'لا يوجد اتصال بالإنترنت';
+      return 'No internet connection';
     } else if (error.contains('timeout')) {
-      return 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى';
+      return 'Connection timeout. Please try again';
     } else if (error.contains('404')) {
-      return 'البيانات غير موجودة';
+      return 'Data not found';
     }
     return error;
   }

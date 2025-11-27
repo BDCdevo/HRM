@@ -106,6 +106,8 @@ class ApiConfig {
   static const String users = '/users'; // Get users for starting new chat
   static String conversationMessages(int conversationId) => '/conversations/$conversationId/messages';
   static String sendMessage(int conversationId) => '/conversations/$conversationId/messages';
+  static String sendTypingIndicator(int conversationId) => '/conversations/$conversationId/typing';
+  static String deleteMessage(int conversationId, int messageId) => '/conversations/$conversationId/messages/$messageId';
   static String createConversation = '/conversations';
 
   // HTTP Headers

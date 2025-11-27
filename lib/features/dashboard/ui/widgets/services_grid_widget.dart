@@ -5,6 +5,7 @@ import '../../../attendance/ui/screens/attendance_main_screen.dart';
 import '../../../leaves/ui/screens/leaves_main_screen.dart';
 import '../../../holidays/ui/screens/holidays_screen.dart';
 import '../../../requests/ui/screens/requests_main_screen.dart';
+import '../../../reports/ui/screens/reports_screen.dart';
 
 /// Services Grid Widget
 ///
@@ -121,21 +122,9 @@ class ServicesGridWidget extends StatelessWidget {
               icon: Icons.bar_chart,
               label: 'Reports',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.rocket_launch, color: Colors.white, size: 20),
-                        SizedBox(width: 12),
-                        Text('Reports feature coming soon!'),
-                      ],
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    backgroundColor: AppColors.primary,
-                    duration: const Duration(seconds: 2),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ReportsScreen(),
                   ),
                 );
               },

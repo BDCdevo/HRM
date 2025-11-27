@@ -128,6 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
             child: BlocConsumer<DashboardCubit, DashboardState>(
               listener: (context, dashboardState) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
                 // Show error as SnackBar instead of full screen
                 if (dashboardState.hasError && dashboardState.displayError != null) {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -151,7 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       margin: const EdgeInsets.all(16),
                       duration: const Duration(seconds: 4),
                       action: SnackBarAction(
-                        label: 'إعادة المحاولة',
+                        label: 'Retry',
                         textColor: Colors.white,
                         onPressed: () {
                           context.read<DashboardCubit>().fetchDashboardStats();
@@ -162,13 +163,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 }
               },
               builder: (context, dashboardState) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
               // Show skeleton ONLY on first load (no cached data)
               if (dashboardState.isLoading && !dashboardState.hasData) {
                 return Scaffold(
                   appBar: PreferredSize(
                     preferredSize: const Size.fromHeight(56),
                     child: AppBar(
-                      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                      backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
                       elevation: 0,
                     ),
                   ),
@@ -178,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               return Scaffold(
                 appBar: AppBar(
-                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                  backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
                   elevation: 0,
                   leading: Builder(
                     builder: (context) => IconButton(
@@ -301,7 +303,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Theme.of(context).appBarTheme.backgroundColor,
+                                color: isDark ? AppColors.darkAppBar : AppColors.primary,
                               ),
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                               child: Row(

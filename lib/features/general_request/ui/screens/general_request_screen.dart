@@ -41,23 +41,23 @@ class _GeneralRequestScreenContentState
   String _selectedPriority = 'medium';
 
   final List<Map<String, dynamic>> _categories = [
-    {'value': 'hr', 'label': 'الموارد البشرية', 'icon': Icons.people},
-    {'value': 'it', 'label': 'تقنية المعلومات', 'icon': Icons.computer},
-    {'value': 'finance', 'label': 'الشؤون المالية', 'icon': Icons.payments},
+    {'value': 'hr', 'label': 'Human Resources', 'icon': Icons.people},
+    {'value': 'it', 'label': 'IT Department', 'icon': Icons.computer},
+    {'value': 'finance', 'label': 'Finance', 'icon': Icons.payments},
     {
       'value': 'admin',
-      'label': 'الشؤون الإدارية',
+      'label': 'Administration',
       'icon': Icons.admin_panel_settings,
     },
-    {'value': 'facilities', 'label': 'المرافق والصيانة', 'icon': Icons.build},
-    {'value': 'other', 'label': 'أخرى', 'icon': Icons.more_horiz},
+    {'value': 'facilities', 'label': 'Facilities', 'icon': Icons.build},
+    {'value': 'other', 'label': 'Other', 'icon': Icons.more_horiz},
   ];
 
   final List<Map<String, dynamic>> _priorities = [
-    {'value': 'low', 'label': 'منخفضة', 'color': AppColors.info},
-    {'value': 'medium', 'label': 'متوسطة', 'color': AppColors.warning},
-    {'value': 'high', 'label': 'عالية', 'color': Colors.orange},
-    {'value': 'urgent', 'label': 'عاجلة', 'color': AppColors.error},
+    {'value': 'low', 'label': 'Low', 'color': AppColors.info},
+    {'value': 'medium', 'label': 'Medium', 'color': AppColors.warning},
+    {'value': 'high', 'label': 'High', 'color': Colors.orange},
+    {'value': 'urgent', 'label': 'Urgent', 'color': AppColors.error},
   ];
 
   @override
@@ -94,7 +94,7 @@ class _GeneralRequestScreenContentState
         backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
         elevation: 0,
         title: Text(
-          'طلب عام',
+          'General Request',
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
@@ -144,7 +144,7 @@ class _GeneralRequestScreenContentState
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'تم إرسال الطلب بنجاح',
+                        'Request Submitted Successfully',
                         style: AppTextStyles.headlineSmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextPrimary
@@ -155,7 +155,7 @@ class _GeneralRequestScreenContentState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'سيتم مراجعة طلبك والرد عليك قريباً',
+                        'Your request will be reviewed and you will be notified soon',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -165,7 +165,7 @@ class _GeneralRequestScreenContentState
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: 'حسناً',
+                        text: 'OK',
                         type: ButtonType.primary,
                         onPressed: () {
                           Navigator.of(context).pop(); // Close dialog
@@ -229,7 +229,7 @@ class _GeneralRequestScreenContentState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'طلب عام',
+                                'General Request',
                                 style: AppTextStyles.headlineSmall.copyWith(
                                   color: AppColors.white,
                                   fontWeight: FontWeight.bold,
@@ -237,7 +237,7 @@ class _GeneralRequestScreenContentState
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'قدم طلباً لأي قسم في الشركة',
+                                'Submit a request to any department',
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: AppColors.white.withValues(alpha: 0.9),
                                 ),
@@ -252,7 +252,7 @@ class _GeneralRequestScreenContentState
 
                   // Category Section
                   Text(
-                    'القسم المعني *',
+                    'Department *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -339,7 +339,7 @@ class _GeneralRequestScreenContentState
 
                   // Subject
                   Text(
-                    'الموضوع *',
+                    'Subject *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -350,10 +350,10 @@ class _GeneralRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _subjectController,
-                    hint: 'مثال: طلب تحديث بيانات الموظف',
+                    hint: 'e.g., Request to update employee data',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'يرجى إدخال الموضوع';
+                        return 'Please enter the subject';
                       }
                       return null;
                     },
@@ -362,7 +362,7 @@ class _GeneralRequestScreenContentState
 
                   // Description
                   Text(
-                    'الوصف التفصيلي *',
+                    'Detailed Description *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -373,11 +373,11 @@ class _GeneralRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _descriptionController,
-                    hint: 'اشرح طلبك بالتفصيل...',
+                    hint: 'Explain your request in detail...',
                     maxLines: 5,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'يرجى إدخال وصف الطلب';
+                        return 'Please enter the description';
                       }
                       return null;
                     },
@@ -386,7 +386,7 @@ class _GeneralRequestScreenContentState
 
                   // Priority
                   Text(
-                    'الأولوية *',
+                    'Priority *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -462,7 +462,7 @@ class _GeneralRequestScreenContentState
 
                   // Additional Notes
                   Text(
-                    'ملاحظات إضافية *',
+                    'Additional Notes *',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -473,11 +473,11 @@ class _GeneralRequestScreenContentState
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _reasonController,
-                    hint: 'أي معلومات إضافية تود إضافتها...',
+                    hint: 'Any additional information you want to add...',
                     maxLines: 3,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'يرجى إضافة ملاحظات';
+                        return 'Please add notes';
                       }
                       return null;
                     },
@@ -486,7 +486,7 @@ class _GeneralRequestScreenContentState
 
                   // Submit Button
                   CustomButton(
-                    text: 'إرسال الطلب',
+                    text: 'Submit Request',
                     type: ButtonType.primary,
                     onPressed: isSubmitting ? null : _submitRequest,
                     isLoading: isSubmitting,

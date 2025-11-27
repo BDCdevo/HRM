@@ -152,6 +152,7 @@ class ChatRepository {
     String? message,
     File? attachment,
     String? attachmentType, // 'image', 'file', 'voice'
+    int? replyToMessageId, // Optional: ID of message being replied to
   }) async {
     try {
       // Prepare form data for multipart request (if attachment exists)
@@ -162,6 +163,7 @@ class ChatRepository {
         final formData = FormData.fromMap({
           if (message != null && message.isNotEmpty) 'message': message,
           if (attachmentType != null) 'attachment_type': attachmentType,
+          if (replyToMessageId != null) 'reply_to_message_id': replyToMessageId,
           'attachment': await MultipartFile.fromFile(
             attachment.path,
             filename: attachment.path.split('/').last,
@@ -172,6 +174,7 @@ class ChatRepository {
         // Simple JSON request for text-only message
         requestData = {
           if (message != null && message.isNotEmpty) 'message': message,
+          if (replyToMessageId != null) 'reply_to_message_id': replyToMessageId,
         };
       }
 
@@ -191,6 +194,87 @@ class ChatRepository {
     } on DioException catch (e) {
       print('❌ Send Message Error: ${e.message}');
       print('⚠️ Error Response: ${e.response?.data}');
+      rethrow;
+    }
+  }
+
+  /// Send Typing Indicator
+  ///
+  /// Notifies other participants that user is typing
+  Future<void> sendTypingIndicator({
+    required int conversationId,
+    required int companyId,
+    bool isTyping = true,
+  }) async {
+    try {
+      await _dioClient.post(
+        ApiConfig.sendTypingIndicator(conversationId),
+        data: {
+          'company_id': companyId,
+          'is_typing': isTyping,
+        },
+      );
+    } on DioException catch (e) {
+      // Silently fail - typing indicator is not critical
+      print('❌ Typing Indicator Error: ${e.message}');
+    }
+  }
+
+  /// Delete Message
+  ///
+  /// Deletes a message (soft delete - marks as deleted)
+  /// Only the sender can delete their own messages
+  Future<bool> deleteMessage({
+    required int conversationId,
+    required int messageId,
+    required int companyId,
+  }) async {
+    try {
+      final response = await _dioClient.delete(
+        '${ApiConfig.deleteMessage(conversationId, messageId)}?company_id=$companyId',
+      );
+
+      print('✅ Delete Message Response Status: ${response.statusCode}');
+      print('📦 Delete Message Response: ${response.data}');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return true;
+      }
+
+      throw Exception(response.data['message'] ?? 'Failed to delete message');
+    } on DioException catch (e) {
+      print('❌ Delete Message Error: ${e.message}');
+      print('⚠️ Error Response: ${e.response?.data}');
+      rethrow;
+    }
+  }
+
+  /// Delete Conversation
+  ///
+  /// Deletes entire conversation (for current user only)
+  Future<bool> deleteConversation({
+    required int conversationId,
+    required int companyId,
+  }) async {
+    try {
+      print('🗑️ Deleting conversation: $conversationId, company: $companyId');
+
+      final response = await _dioClient.delete(
+        '/conversations/$conversationId?company_id=$companyId',
+      );
+
+      print('✅ Delete Conversation Response Status: ${response.statusCode}');
+      print('✅ Delete Conversation Response Data: ${response.data}');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        print('✅ Conversation $conversationId deleted successfully from server');
+        return true;
+      }
+
+      throw Exception(response.data['message'] ?? 'Failed to delete conversation');
+    } on DioException catch (e) {
+      print('❌ Delete Conversation Error: ${e.message}');
+      print('❌ Delete Conversation Error Response: ${e.response?.data}');
       rethrow;
     }
   }

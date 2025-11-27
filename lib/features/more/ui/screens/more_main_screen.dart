@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +14,7 @@ import '../../../profile/ui/screens/change_password_screen.dart';
 import '../../../profile/ui/screens/edit_profile_screen.dart';
 import '../../../profile/logic/cubit/profile_cubit.dart';
 import '../../../profile/logic/cubit/profile_state.dart';
+import '../../../profile/data/models/profile_model.dart';
 import '../../../holidays/ui/screens/holidays_screen.dart';
 import '../../../work_schedule/ui/screens/work_schedule_screen.dart';
 import '../../../requests/ui/screens/requests_main_screen.dart';
@@ -130,193 +132,29 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       children: [
-                        // Header with Profile Image
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDarkMode
-                                  ? [
-                                      AppColors.darkAppBar,
-                                      AppColors.darkCard,
-                                    ]
-                                  : [
-                                      AppColors.primary,
-                                      AppColors.primaryLight,
-                                    ],
-                            ),
-                          ),
-                          child: SafeArea(
-                            child: Column(
-                              children: [
-                                // Profile Avatar with Upload Button
-                                Stack(
-                                  children: [
-                                    Container(
-                                      width: 100,
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.white.withOpacity(0.2),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: AppColors.white.withOpacity(0.3),
-                                          width: 3,
-                                        ),
-                                      ),
-                                      child: ClipOval(
-                                        child: user.image != null && user.image!.url.isNotEmpty
-                                            ? Image.network(
-                                                // Add timestamp to bypass cache
-                                                '${user.image!.url}?v=${DateTime.now().millisecondsSinceEpoch}',
-                                                fit: BoxFit.cover,
-                                                loadingBuilder: (context, child, loadingProgress) {
-                                                  if (loadingProgress == null) return child;
-                                                  return Center(
-                                                    child: CircularProgressIndicator(
-                                                      value: loadingProgress.expectedTotalBytes != null
-                                                          ? loadingProgress.cumulativeBytesLoaded /
-                                                              loadingProgress.expectedTotalBytes!
-                                                          : null,
-                                                      color: AppColors.white,
-                                                    ),
-                                                  );
-                                                },
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  print('❌ Image load error: $error');
-                                                  return Center(
-                                                    child: Text(
-                                                      user.firstName.isNotEmpty
-                                                          ? user.firstName[0].toUpperCase()
-                                                          : 'U',
-                                                      style: AppTextStyles.displayLarge.copyWith(
-                                                        color: AppColors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              )
-                                            : Center(
-                                                child: Text(
-                                                  user.firstName.isNotEmpty
-                                                      ? user.firstName[0].toUpperCase()
-                                                      : 'U',
-                                                  style: AppTextStyles.displayLarge.copyWith(
-                                                    color: AppColors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                    // Upload Button
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: GestureDetector(
-                                        onTap: () => _showImageSourceDialog(context),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.accent,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: AppColors.white,
-                                              width: 2,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.2),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Icon(
-                                            Icons.camera_alt,
-                                            size: 20,
-                                            color: AppColors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                        // Header with Profile Image & Completion Ring
+                        _buildProfileHeader(
+                          context: context,
+                          user: user,
+                          profile: profile,
+                          isDarkMode: isDarkMode,
+                          onImageTap: () => _showImageSourceDialog(context),
+                          onEditTap: _navigateToEditProfile,
+                        ),
 
-                                const SizedBox(height: 16),
-
-                                // Name
-                                Text(
-                                  user.fullName,
-                                  style: AppTextStyles.headlineMedium.copyWith(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                // Email
-                                Text(
-                                  user.email,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.white.withOpacity(0.9),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                // User Type Badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    user.isAdmin ? 'Administrator' : 'Employee',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      color: AppColors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-
-                                // Bio if available
-                                if (profile?.bio != null && profile!.bio!.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      profile.bio!,
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.white.withOpacity(0.9),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
+                        // Quick Stats Cards (outside header)
+                        Transform.translate(
+                          offset: const Offset(0, -20),
+                          child: _buildQuickStats(
+                            profile,
+                            isDarkMode,
+                            _calculateProfileCompletion(profile, user),
                           ),
                         ),
 
                         // Menu Items
                         Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                           child: Column(
                             children: [
                               // Account Section
@@ -636,6 +474,628 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
     }
   }
 
+  /// Calculate Profile Completion Percentage
+  double _calculateProfileCompletion(ProfileModel? profile, dynamic user) {
+    int completedFields = 0;
+    int totalFields = 8;
+
+    // Check each field
+    if (user.firstName.isNotEmpty) completedFields++;
+    if (user.lastName.isNotEmpty) completedFields++;
+    if (user.email.isNotEmpty) completedFields++;
+    if (user.image != null && user.image!.url.isNotEmpty) completedFields++;
+    if (profile?.phone != null && profile!.phone!.isNotEmpty) completedFields++;
+    if (profile?.bio != null && profile!.bio!.isNotEmpty) completedFields++;
+    if (profile?.dateOfBirth != null && profile!.dateOfBirth!.isNotEmpty) completedFields++;
+    if (profile?.address != null && profile!.address!.isNotEmpty) completedFields++;
+
+    return completedFields / totalFields;
+  }
+
+  /// Build Profile Header with Completion Ring
+  Widget _buildProfileHeader({
+    required BuildContext context,
+    required dynamic user,
+    required ProfileModel? profile,
+    required bool isDarkMode,
+    required VoidCallback onImageTap,
+    required VoidCallback onEditTap,
+  }) {
+    final completionPercentage = _calculateProfileCompletion(profile, user);
+    final completionPercent = (completionPercentage * 100).toInt();
+
+    return Stack(
+      children: [
+        // Main Header Container
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode
+                  ? [
+                      const Color(0xFF1A1A2E),
+                      const Color(0xFF16213E),
+                      const Color(0xFF0F3460),
+                    ]
+                  : [
+                      AppColors.primary,
+                      AppColors.primary.withBlue(160),
+                      AppColors.primary.withBlue(200),
+                    ],
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Column(
+                    children: [
+                      // Top Row - Edit Button
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _buildGlassButton(
+                          icon: Icons.edit_outlined,
+                          onTap: onEditTap,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Profile Image with Animated Ring
+                      _buildProfileAvatar(
+                        user: user,
+                        completionPercentage: completionPercentage,
+                        completionPercent: completionPercent,
+                        onTap: onImageTap,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Name with Verified Badge
+                      _buildNameSection(user, completionPercentage),
+
+                      const SizedBox(height: 6),
+
+                      // Email with icon
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            size: 14,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            user.email,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.white.withOpacity(0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Role & Department Chips
+                      _buildRoleChips(user, profile, isDarkMode),
+
+                      const SizedBox(height: 40), // Space for overlapping stats card
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Decorative circles
+        Positioned(
+          top: -50,
+          right: -50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.05),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 100,
+          left: -30,
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.03),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build Glass Button
+  Widget _buildGlassButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  /// Build Profile Avatar with Ring
+  Widget _buildProfileAvatar({
+    required dynamic user,
+    required double completionPercentage,
+    required int completionPercent,
+    required VoidCallback onTap,
+  }) {
+    final bool isComplete = completionPercentage == 1.0;
+    final Color ringColor = isComplete ? AppColors.success : AppColors.accent;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 150,
+        height: 150,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Animated Gradient Ring
+            Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    ringColor.withOpacity(0.1),
+                    ringColor,
+                    ringColor.withOpacity(0.1),
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ringColor.withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+
+            // Inner dark circle
+            Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF16213E),
+              ),
+            ),
+
+            // Progress Ring
+            SizedBox(
+              width: 135,
+              height: 135,
+              child: CustomPaint(
+                painter: _ProfileCompletionPainter(
+                  progress: completionPercentage,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  progressColor: ringColor,
+                  strokeWidth: 5,
+                ),
+              ),
+            ),
+
+            // Profile Image
+            Container(
+              width: 115,
+              height: 115,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: user.image != null && user.image!.url.isNotEmpty
+                    ? Image.network(
+                        '${user.image!.url}?v=${DateTime.now().millisecondsSinceEpoch}',
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.05),
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: ringColor,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildAvatarPlaceholder(user.firstName);
+                        },
+                      )
+                    : _buildAvatarPlaceholder(user.firstName),
+              ),
+            ),
+
+            // Camera Button
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+
+            // Completion Badge
+            if (!isComplete)
+              Positioned(
+                top: 5,
+                right: 15,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.warning.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '$completionPercent%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build Name Section
+  Widget _buildNameSection(dynamic user, double completionPercentage) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: Text(
+            user.fullName,
+            style: AppTextStyles.headlineMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (completionPercentage == 1.0) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.success, AppColors.success.withGreen(200)],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.success.withOpacity(0.4),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.check,
+              color: Colors.white,
+              size: 14,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Build Role Chips
+  Widget _buildRoleChips(dynamic user, ProfileModel? profile, bool isDarkMode) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildChip(
+          icon: Icons.person_outline,
+          text: user.isAdmin ? 'Administrator' : 'Employee',
+          color: AppColors.accent,
+        ),
+        if (profile?.department != null)
+          _buildChip(
+            icon: Icons.business_outlined,
+            text: profile!.department!,
+            color: AppColors.info,
+          ),
+        if (profile?.position != null)
+          _buildChip(
+            icon: Icons.work_outline,
+            text: profile!.position!,
+            color: AppColors.success,
+          ),
+      ],
+    );
+  }
+
+  /// Build Chip
+  Widget _buildChip({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: color.withOpacity(0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Quick Stats
+  Widget _buildQuickStats(ProfileModel? profile, bool isDarkMode, double completionPercentage) {
+    final completionPercent = (completionPercentage * 100).toInt();
+    final hasPhone = profile?.phone != null && profile!.phone!.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? AppColors.darkCard
+            : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDarkMode
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Row(
+        children: [
+          // Profile Completion
+          Expanded(
+            child: _buildStatItem(
+              icon: Icons.pie_chart_rounded,
+              value: '$completionPercent%',
+              label: 'Profile',
+              color: completionPercentage == 1.0
+                  ? AppColors.success
+                  : AppColors.warning,
+              isDarkMode: isDarkMode,
+            ),
+          ),
+          _buildStatDivider(isDarkMode),
+          // Phone Status
+          Expanded(
+            child: _buildStatItem(
+              icon: hasPhone ? Icons.verified_rounded : Icons.phone_android,
+              value: hasPhone ? 'Verified' : 'Not Set',
+              label: 'Phone',
+              color: hasPhone ? AppColors.success : AppColors.textSecondary,
+              isDarkMode: isDarkMode,
+            ),
+          ),
+          _buildStatDivider(isDarkMode),
+          // Position
+          Expanded(
+            child: _buildStatItem(
+              icon: Icons.work_outline_rounded,
+              value: profile?.position ?? 'N/A',
+              label: 'Position',
+              color: AppColors.primary,
+              isDarkMode: isDarkMode,
+              isLongText: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Stat Divider
+  Widget _buildStatDivider(bool isDarkMode) {
+    return Container(
+      width: 1,
+      height: 45,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      color: isDarkMode
+          ? Colors.white.withOpacity(0.1)
+          : Colors.grey.withOpacity(0.2),
+    );
+  }
+
+  /// Build Stat Item
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+    required bool isDarkMode,
+    bool isLongText = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(isDarkMode ? 0.2 : 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          isLongText && value.length > 10 ? '${value.substring(0, 8)}...' : value,
+          style: AppTextStyles.labelMedium.copyWith(
+            color: isDarkMode ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.5)
+                : AppColors.textSecondary,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build Avatar Placeholder
+  Widget _buildAvatarPlaceholder(String firstName) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF0F3460),
+            const Color(0xFF16213E),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
+          style: AppTextStyles.displayLarge.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 42,
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Show Logout Dialog
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -691,6 +1151,60 @@ class _SectionHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Profile Completion Ring Painter
+class _ProfileCompletionPainter extends CustomPainter {
+  final double progress;
+  final Color backgroundColor;
+  final Color progressColor;
+  final double strokeWidth;
+
+  _ProfileCompletionPainter({
+    required this.progress,
+    required this.backgroundColor,
+    required this.progressColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // Background circle
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Progress arc
+    final progressPaint = Paint()
+      ..color = progressColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final sweepAngle = 2 * math.pi * progress;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2, // Start from top
+      sweepAngle,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProfileCompletionPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.progressColor != progressColor ||
+        oldDelegate.backgroundColor != backgroundColor;
   }
 }
 

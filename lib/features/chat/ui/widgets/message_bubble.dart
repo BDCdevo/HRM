@@ -115,6 +115,9 @@ class MessageBubble extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Reply preview (if this is a reply to another message)
+                        if (message.replyTo != null) _buildReplyPreview(isDark),
+
                         // Message content
                         _buildMessageContent(isDark),
 
@@ -239,6 +242,69 @@ class MessageBubble extends StatelessWidget {
 
     final hash = name.hashCode.abs();
     return colors[hash % colors.length];
+  }
+
+  /// Build Reply Preview (WhatsApp Style)
+  Widget _buildReplyPreview(bool isDark) {
+    final replyTo = message.replyTo!;
+    final isMyReply = isSentByMe;
+
+    // Colors based on theme and sender
+    final borderColor = isMyReply
+        ? (isDark ? const Color(0xFF00A884) : const Color(0xFF25D366))
+        : (isDark ? const Color(0xFF53BDEB) : const Color(0xFF0088CC));
+
+    final backgroundColor = isDark
+        ? Colors.black.withOpacity(0.15)
+        : Colors.black.withOpacity(0.05);
+
+    final nameColor = borderColor;
+    final textColor = isDark
+        ? Colors.white.withOpacity(0.7)
+        : const Color(0xFF667781);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border(
+          left: BorderSide(
+            color: borderColor,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Sender name
+          Text(
+            replyTo.userName,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: nameColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          // Message preview
+          Text(
+            replyTo.body,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: textColor,
+              fontSize: 13,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
   }
 
   /// Build Message Content
@@ -551,12 +617,10 @@ class MessageBubble extends StatelessWidget {
   Widget _buildMessageStatus(bool isDark) {
     // ✓✓ Blue = Read (رسالة مقروءة)
     if (message.isRead) {
-      return Icon(
+      return const Icon(
         Icons.done_all,
         size: 16,
-        color: isDark
-            ? Colors.white // White in dark mode
-            : const Color(0xFF53BDEB), // WhatsApp blue in light mode
+        color: Color(0xFF53BDEB), // WhatsApp blue for both modes
       );
     }
 
@@ -567,7 +631,7 @@ class MessageBubble extends StatelessWidget {
       Icons.done_all,
       size: 16,
       color: isDark
-          ? Colors.white.withOpacity(0.8)
+          ? Colors.grey[500]
           : const Color(0xFF667781), // WhatsApp grey
     );
 

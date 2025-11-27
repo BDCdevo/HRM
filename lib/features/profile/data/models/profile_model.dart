@@ -79,25 +79,33 @@ class ProfileModel extends Equatable {
   /// Display name (username or full name)
   String get displayName => username?.isNotEmpty == true ? username! : fullName;
 
+  /// Helper to safely parse string fields (handles List<dynamic> from API)
+  static String? _parseString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is List) return value.isNotEmpty ? value.first?.toString() : null;
+    return value.toString();
+  }
+
   /// From JSON
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'] as int,
-      firstName: json['first_name'] as String? ?? '',
-      lastName: json['last_name'] as String? ?? '',
-      username: json['username'] as String?,
-      bio: json['bio'] as String?,
-      email: json['email'] as String,
+      firstName: _parseString(json['first_name']) ?? '',
+      lastName: _parseString(json['last_name']) ?? '',
+      username: _parseString(json['username']),
+      bio: _parseString(json['bio']),
+      email: _parseString(json['email']) ?? '',
       isFavorite: json['is_favorite'] as bool? ?? false,
       isVerified: json['is_verified'] as bool? ?? false,
       completeProfileStep: json['complete_profile_step'] as int?,
       isCompletedProfile: json['is_completed_profile'] as bool? ?? false,
-      birthdate: json['birthdate'] as String?,
-      userType: json['user_type'] as String?,
-      languages: json['languages'] != null
-          ? (json['languages'] as List).map((e) => e as int).toList()
+      birthdate: _parseString(json['birthdate']),
+      userType: _parseString(json['user_type']),
+      languages: json['languages'] != null && json['languages'] is List
+          ? (json['languages'] as List).whereType<int>().toList()
           : null,
-      accessToken: json['access_token'] as String?,
+      accessToken: _parseString(json['access_token']),
       image: json['image'] != null && json['image'] is Map
           ? MediaModel.fromJson(json['image'] as Map<String, dynamic>)
           : null,
@@ -106,15 +114,15 @@ class ProfileModel extends Equatable {
       sessionCount: json['session_count'] as int? ?? 0,
       earnings: (json['earnings'] as num?)?.toDouble() ?? 0.0,
       availableBalance: (json['available_balance'] as num?)?.toDouble() ?? 0.0,
-      phone: json['phone'] as String?,
-      address: json['address'] as String?,
-      gender: json['gender'] as String?,
-      dateOfBirth: json['date_of_birth'] as String?,
-      position: json['position'] as String?,
-      department: json['department'] as String?,
+      phone: _parseString(json['phone']),
+      address: _parseString(json['address']),
+      gender: _parseString(json['gender']),
+      dateOfBirth: _parseString(json['date_of_birth']),
+      position: _parseString(json['position']),
+      department: _parseString(json['department']),
       departmentId: json['department_id'] as int?,
       positionId: json['position_id'] as int?,
-      nationalId: json['national_id'] as String?,
+      nationalId: _parseString(json['national_id']),
     );
   }
 

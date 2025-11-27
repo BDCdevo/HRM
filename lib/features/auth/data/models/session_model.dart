@@ -114,25 +114,25 @@ class SessionModel {
     final minutes = (sessionDuration! % 3600) ~/ 60;
 
     if (hours > 0) {
-      return '$hours ساعة و $minutes دقيقة';
+      return '$hours hours and $minutes minutes';
     } else if (minutes > 0) {
-      return '$minutes دقيقة';
+      return '$minutes minutes';
     } else {
-      return 'أقل من دقيقة';
+      return 'Less than a minute';
     }
   }
 
-  /// Get status in Arabic
+  /// Get status label
   String get statusArabic {
     switch (status) {
       case 'active':
-        return 'نشط';
+        return 'Active';
       case 'logged_out':
-        return 'تم الخروج';
+        return 'Logged Out';
       case 'expired':
-        return 'منتهي';
+        return 'Expired';
       case 'forced_logout':
-        return 'خروج إجباري';
+        return 'Forced Logout';
       default:
         return status;
     }

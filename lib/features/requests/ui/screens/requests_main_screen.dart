@@ -27,7 +27,7 @@ class RequestsMainScreen extends StatelessWidget {
         backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
         elevation: 0,
         title: Text(
-          'الطلبات',
+          'Requests',
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
@@ -90,7 +90,7 @@ class RequestsMainScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'الطلبات',
+                      'Requests',
                       style: AppTextStyles.headlineMedium.copyWith(
                         color: AppColors.white,
                         fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class RequestsMainScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'اختر نوع الطلب الذي تريد تقديمه',
+                      'Choose the type of request you want to submit',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.white.withValues(alpha: 0.9),
                       ),
@@ -122,8 +122,8 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.event_busy,
                     iconColor: AppColors.accent,
-                    label: 'طلب إجازة',
-                    description: 'تقديم طلب إجازة',
+                    label: 'Leave Request',
+                    description: 'Submit a leave request',
                     isActive: true,
                     onTap: () {
                       Navigator.of(context).push(
@@ -138,8 +138,8 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.access_time,
                     iconColor: AppColors.info,
-                    label: 'طلب حضور',
-                    description: 'تعديل أو تبرير الحضور',
+                    label: 'Attendance',
+                    description: 'Modify or justify attendance',
                     isActive: true,
                     onTap: () {
                       Navigator.of(context).push(
@@ -154,8 +154,8 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.description,
                     iconColor: AppColors.success,
-                    label: 'طلب شهادة',
-                    description: 'شهادة راتب، خبرة، إلخ',
+                    label: 'Certificate',
+                    description: 'Salary, experience certificate, etc.',
                     isActive: true,
                     onTap: () {
                       Navigator.of(context).push(
@@ -171,8 +171,8 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.school,
                     iconColor: AppColors.warning,
-                    label: 'طلب تدريب',
-                    description: 'التقديم على دورة تدريبية',
+                    label: 'Training',
+                    description: 'Apply for a training course',
                     isActive: true,
                     onTap: () {
                       Navigator.of(context).push(
@@ -187,8 +187,8 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.article,
                     iconColor: AppColors.primary,
-                    label: 'طلب عام',
-                    description: 'طلبات أخرى متنوعة',
+                    label: 'General',
+                    description: 'Other miscellaneous requests',
                     isActive: true,
                     onTap: () {
                       Navigator.of(context).push(
@@ -203,11 +203,11 @@ class RequestsMainScreen extends StatelessWidget {
                   _RequestTypeCard(
                     icon: Icons.more_horiz,
                     iconColor: AppColors.textSecondary,
-                    label: 'المزيد قريباً',
-                    description: 'مزايا قادمة',
+                    label: 'Coming Soon',
+                    description: 'New features',
                     isActive: false,
                     onTap: () {
-                      _showComingSoonDialog(context, 'مزايا جديدة');
+                      _showComingSoonDialog(context, 'New Features');
                     },
                   ),
                 ],
@@ -229,17 +229,17 @@ class RequestsMainScreen extends StatelessWidget {
           children: [
             Icon(Icons.schedule, color: AppColors.warning, size: 28),
             const SizedBox(width: 12),
-            const Text('قريباً'),
+            const Text('Coming Soon'),
           ],
         ),
         content: Text(
-          'ميزة "$featureName" ستكون متاحة قريباً.',
+          '"$featureName" will be available soon.',
           style: AppTextStyles.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('حسناً', style: TextStyle(color: AppColors.primary)),
+            child: Text('OK', style: TextStyle(color: AppColors.primary)),
           ),
         ],
       ),
@@ -415,7 +415,7 @@ class _RequestTypeCardState extends State<_RequestTypeCard>
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'قريباً',
+                            'Soon',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.warning,
                               fontSize: 10,

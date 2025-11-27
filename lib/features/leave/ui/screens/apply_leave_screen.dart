@@ -68,7 +68,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
             if (state is LeaveApplied) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('تم تقديم طلب الإجازة بنجاح'),
+                  content: const Text('Leave request submitted successfully'),
                   backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -188,7 +188,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
           child: DropdownButton<VacationTypeModel>(
             value: _selectedVacationType,
             isExpanded: true,
-            hint: Text('اختر نوع الإجازة', style: AppTextStyles.bodyMedium),
+            hint: Text('Select vacation type', style: AppTextStyles.bodyMedium),
             icon: Icon(
               Icons.keyboard_arrow_down,
               color: _selectedVacationType != null ? AppColors.primary : AppColors.textSecondary,
@@ -282,9 +282,9 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'يجب تقديم الطلب قبل ${_selectedVacationType!.requiredDaysBefore} أيام\n'
-                    'اليوم: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}\n'
-                    'أقرب تاريخ بدء: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
+                    'Request must be submitted ${_selectedVacationType!.requiredDaysBefore} days in advance\n'
+                    'Today: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}\n'
+                    'Earliest start date: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.info,
                       fontWeight: FontWeight.w500,
@@ -330,7 +330,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'تاريخ البداية',
+                        'Start Date',
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -339,7 +339,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                       Text(
                         _startDate != null
                             ? DateFormat('yyyy/MM/dd - EEEE', 'en').format(_startDate!)
-                            : 'اختر نوع الإجازة أولاً',
+                            : 'Select vacation type first',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: _startDate != null
                               ? FontWeight.w600
@@ -354,7 +354,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            'تم التحديد تلقائياً (اضغط للتغيير)',
+                            'Auto-selected (tap to change)',
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.info,
                               fontSize: 10,
@@ -411,7 +411,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'تاريخ النهاية',
+                        'End Date',
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -421,8 +421,8 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
                         _endDate != null
                             ? DateFormat('yyyy/MM/dd - EEEE', 'en').format(_endDate!)
                             : _startDate != null
-                                ? 'اختر تاريخ النهاية'
-                                : 'اختر تاريخ البداية أولاً',
+                                ? 'Select end date'
+                                : 'Select start date first',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: _endDate != null
                               ? FontWeight.w600
@@ -576,7 +576,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     if (_selectedVacationType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('الرجاء اختيار نوع الإجازة أولاً'),
+          content: const Text('Please select vacation type first'),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -609,8 +609,8 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
       firstDate: minStartDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
       helpText: requiredDays > 0
-          ? 'أقرب تاريخ: ${DateFormat('yyyy/MM/dd').format(minStartDate)}'
-          : 'اختر تاريخ البداية',
+          ? 'Earliest date: ${DateFormat('yyyy/MM/dd').format(minStartDate)}'
+          : 'Select start date',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -681,7 +681,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     if (_selectedVacationType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('الرجاء اختيار نوع الإجازة'),
+          content: const Text('Please select vacation type'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -694,7 +694,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('الرجاء اختيار تاريخ البداية والنهاية'),
+          content: const Text('Please select start and end date'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -718,9 +718,9 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'تاريخ البداية غير صالح!\n'
-            'يجب تقديم الطلب قبل $requiredDays ${requiredDays == 1 ? 'يوم' : 'أيام'} من تاريخ البدء\n'
-            'أقرب تاريخ متاح: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
+            'Invalid start date!\n'
+            'Request must be submitted $requiredDays ${requiredDays == 1 ? 'day' : 'days'} in advance\n'
+            'Earliest available date: ${DateFormat('yyyy/MM/dd').format(minStartDate)}',
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -736,7 +736,7 @@ class _ApplyLeaveScreenState extends State<ApplyLeaveScreen> {
     if (startDateOnly.isBefore(today)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('لا يمكن اختيار تاريخ في الماضي'),
+          content: const Text('Cannot select a date in the past'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -27,18 +27,18 @@ abstract class DashboardState extends Equatable {
   /// Check if has error
   bool get hasError => errorMessage != null;
 
-  /// Get user-friendly error message (Arabic)
+  /// Get user-friendly error message
   String? get displayError {
     if (errorMessage == null) return null;
 
     if (errorMessage!.contains('401') || errorMessage!.contains('Unauthenticated')) {
-      return 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى';
+      return 'Session expired. Please login again';
     } else if (errorMessage!.contains('500')) {
-      return 'خطأ في السيرفر. يرجى المحاولة لاحقاً';
+      return 'Server error. Please try again later';
     } else if (errorMessage!.contains('Network') || errorMessage!.contains('connection')) {
-      return 'لا يوجد اتصال بالإنترنت';
+      return 'No internet connection';
     } else if (errorMessage!.contains('timeout')) {
-      return 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى';
+      return 'Connection timeout. Please try again';
     }
     return errorMessage;
   }

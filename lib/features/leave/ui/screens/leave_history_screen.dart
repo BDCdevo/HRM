@@ -76,7 +76,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             if (state is LeaveCancelled) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('تم إلغاء طلب الإجازة بنجاح'),
+                  content: const Text('Leave request cancelled successfully'),
                   backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -125,8 +125,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             if (leaveRequests.isEmpty && !isRefreshing) {
               return const EmptyStateWidget(
                 icon: Icons.event_busy,
-                title: 'لا يوجد طلبات إجازة',
-                message: 'لم تقدم أي طلبات إجازة بعد',
+                title: 'No Leave Requests',
+                message: 'You have not submitted any leave requests yet',
               );
             }
 

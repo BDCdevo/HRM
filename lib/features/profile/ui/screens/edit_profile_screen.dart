@@ -262,7 +262,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             } else if (state is ProfileUpdated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('تم تحديث الملف الشخصي بنجاح'),
+                  content: const Text('Profile updated successfully'),
                   backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -528,7 +528,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     // Gender Dropdown
                     DropdownButtonFormField<String>(
-                      initialValue: _gender,
+                      value: _gender,
                       decoration: InputDecoration(
                         labelText: 'Gender',
                         hintText: 'Select your gender',

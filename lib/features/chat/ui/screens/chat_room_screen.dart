@@ -9,6 +9,7 @@ import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import '../../../../core/styles/app_colors.dart';
 import '../../../../core/styles/app_text_styles.dart';
 import '../../../../core/networking/dio_client.dart';
@@ -106,10 +107,23 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   final ImagePicker _imagePicker = ImagePicker();
   final WebSocketService _websocket = WebSocketService.instance;
   final AudioRecorder _audioRecorder = AudioRecorder();
+  final ChatRepository _chatRepository = ChatRepository();
   Timer? _pollingTimer;
   int _lastMessageId = 0;
   bool _isRecording = false;
   String? _recordedFilePath;
+
+  // Typing indicator state
+  Timer? _typingTimer;
+  bool _isTyping = false;
+  bool _otherUserIsTyping = false;
+  String? _typingUserName;
+
+  // Emoji picker state
+  bool _isEmojiPickerVisible = false;
+
+  // Reply to message state
+  MessageModel? _replyToMessage;
 
   @override
   void initState() {
@@ -117,6 +131,19 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     _setupWebSocket();
     // Start polling as fallback for real-time updates
     _startPolling();
+    // Listen to text changes for typing indicator
+    _messageController.addListener(_onTextChanged);
+    // Listen to focus changes to hide emoji picker when keyboard shows
+    _messageFocusNode.addListener(_onFocusChanged);
+  }
+
+  /// Handle focus changes - hide emoji picker when text field is focused
+  void _onFocusChanged() {
+    if (_messageFocusNode.hasFocus && _isEmojiPickerVisible) {
+      setState(() {
+        _isEmojiPickerVisible = false;
+      });
+    }
   }
 
   /// Setup WebSocket listener for real-time messages
@@ -135,11 +162,21 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
       await _websocket.subscribeToPrivateChannel(
         channelName: channelName,
         onEvent: (PusherEvent event) {
-          print('📨 Received real-time message: ${event.data}');
+          print('📨 Received event: ${event.eventName}');
 
           // Handle incoming message
           if (event.eventName == 'message.sent') {
             _handleIncomingMessage(event.data);
+          }
+
+          // Handle typing indicator
+          if (event.eventName == 'user.typing') {
+            _handleTypingEvent(event.data);
+          }
+
+          // Handle message deleted
+          if (event.eventName == 'message.deleted') {
+            _handleMessageDeleted(event.data);
           }
         },
       );
@@ -171,8 +208,11 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         updatedAt: messageData['created_at'] ?? DateTime.now().toIso8601String(),
       );
 
-      // Add message to cubit (which will update UI)
-      context.read<MessagesCubit>().addOptimisticMessage(message);
+      // Add message to cubit (which will update UI and cache)
+      context.read<MessagesCubit>().addOptimisticMessage(
+        message,
+        conversationId: widget.conversationId,
+      );
 
       // Scroll to bottom
       Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
@@ -204,7 +244,12 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    _typingTimer?.cancel();
     _audioRecorder.dispose();
+    // Send stop typing before leaving
+    if (_isTyping) {
+      _sendTypingIndicator(false);
+    }
     // Unsubscribe from channel
     final channelName = WebSocketService.getChatChannelName(
       widget.companyId,
@@ -212,10 +257,66 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     );
     _websocket.unsubscribe(channelName);
 
+    _messageController.removeListener(_onTextChanged);
+    _messageFocusNode.removeListener(_onFocusChanged);
     _messageController.dispose();
     _messageFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Handle text changes for typing indicator
+  void _onTextChanged() {
+    final hasText = _messageController.text.isNotEmpty;
+
+    if (hasText && !_isTyping) {
+      // Start typing
+      _isTyping = true;
+      _sendTypingIndicator(true);
+    }
+
+    // Reset the timer on each keystroke
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      // Stop typing after 2 seconds of inactivity
+      if (_isTyping) {
+        _isTyping = false;
+        _sendTypingIndicator(false);
+      }
+    });
+  }
+
+  /// Send typing indicator to server
+  void _sendTypingIndicator(bool isTyping) {
+    _chatRepository.sendTypingIndicator(
+      conversationId: widget.conversationId,
+      companyId: widget.companyId,
+      isTyping: isTyping,
+    );
+  }
+
+  /// Handle incoming typing event from WebSocket
+  void _handleTypingEvent(dynamic data) {
+    try {
+      final typingData = data is String ? {} : (data as Map<String, dynamic>);
+      final userId = typingData['user_id'];
+      final userName = typingData['user_name'] ?? 'Someone';
+      final isTyping = typingData['is_typing'] ?? false;
+
+      // Ignore own typing events
+      if (userId == widget.currentUserId) return;
+
+      if (mounted) {
+        setState(() {
+          _otherUserIsTyping = isTyping;
+          _typingUserName = isTyping ? userName : null;
+        });
+      }
+
+      print('⌨️ ${isTyping ? "$userName is typing..." : "$userName stopped typing"}');
+    } catch (e) {
+      print('❌ Error handling typing event: $e');
+    }
   }
 
   void _scrollToBottom() {
@@ -235,8 +336,8 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
     return Scaffold(
       backgroundColor: isDark
-          ? const Color(0xFF0B141A) // WhatsApp dark background
-          : const Color(0xFFECE5DD), // WhatsApp light background
+          ? AppColors.darkChatBackground
+          : AppColors.chatBackground,
       appBar: ChatAppBarWidget(
         participantName: widget.participantName,
         participantAvatar: widget.participantAvatar,
@@ -291,6 +392,8 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                         conversationId: widget.conversationId,
                         companyId: widget.companyId,
                       ),
+                      onReply: _setReplyToMessage,
+                      onDelete: _deleteMessage,
                     ),
 
                     // Top Gradient Overlay
@@ -307,11 +410,11 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                               end: Alignment.bottomCenter,
                               colors: [
                                 isDark
-                                    ? const Color(0xFF0B141A) // Dark background
-                                    : const Color(0xFFECE5DD), // Light background
+                                    ? AppColors.darkChatBackground
+                                    : AppColors.chatBackground,
                                 isDark
-                                    ? const Color(0xFF0B141A).withValues(alpha: 0.0)
-                                    : const Color(0xFFECE5DD).withValues(alpha: 0.0),
+                                    ? AppColors.darkChatBackground.withValues(alpha: 0.0)
+                                    : AppColors.chatBackground.withValues(alpha: 0.0),
                               ],
                             ),
                           ),
@@ -322,12 +425,17 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                 ),
               ),
 
+              // Typing Indicator
+              if (_otherUserIsTyping)
+                _buildTypingIndicator(isDark),
+
               // Message Input
               ChatInputBarWidget(
                 messageController: _messageController,
                 messageFocusNode: _messageFocusNode,
                 isSending: state is MessageSending,
                 isRecording: _isRecording,
+                isEmojiPickerVisible: _isEmojiPickerVisible,
                 isDark: isDark,
                 onSendMessage: _sendMessage,
                 onPickImage: _pickImageFromCamera,
@@ -336,11 +444,200 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                 onStopRecording: _stopRecording,
                 onSendRecording: _sendRecording,
                 onCancelRecording: _cancelRecording,
+                onEmojiToggle: _toggleEmojiPicker,
+                replyToMessage: _replyToMessage,
+                onCancelReply: _cancelReply,
               ),
+
+              // Emoji Picker - shows below input bar (replaces keyboard)
+              if (_isEmojiPickerVisible)
+                _buildEmojiPicker(isDark),
             ],
           );
         },
         ),
+      ),
+    );
+  }
+
+  /// Set reply to message (called from swipe gesture)
+  void _setReplyToMessage(MessageModel message) {
+    setState(() {
+      _replyToMessage = message;
+    });
+    // Focus on text field after selecting reply
+    _messageFocusNode.requestFocus();
+  }
+
+  /// Cancel reply
+  void _cancelReply() {
+    setState(() {
+      _replyToMessage = null;
+    });
+  }
+
+  /// Delete message
+  void _deleteMessage(MessageModel message) {
+    context.read<MessagesCubit>().deleteMessage(
+      conversationId: widget.conversationId,
+      companyId: widget.companyId,
+      messageId: message.id,
+    );
+  }
+
+  /// Handle message deleted event from WebSocket
+  void _handleMessageDeleted(dynamic data) {
+    try {
+      print('🗑️ Received message.deleted event: $data');
+
+      final messageData = data is Map ? data : {};
+      final messageId = messageData['message_id'] as int?;
+
+      if (messageId != null && mounted) {
+        // Remove message from cubit
+        context.read<MessagesCubit>().removeMessageById(messageId);
+        print('✅ Message $messageId removed from UI');
+      }
+    } catch (e) {
+      print('❌ Error handling message deleted: $e');
+    }
+  }
+
+  /// Toggle emoji picker visibility
+  void _toggleEmojiPicker() {
+    if (_isEmojiPickerVisible) {
+      // Hide emoji picker and show keyboard
+      setState(() {
+        _isEmojiPickerVisible = false;
+      });
+      _messageFocusNode.requestFocus();
+    } else {
+      // Hide keyboard and show emoji picker
+      _messageFocusNode.unfocus();
+      setState(() {
+        _isEmojiPickerVisible = true;
+      });
+    }
+  }
+
+  /// Build Emoji Picker Widget
+  Widget _buildEmojiPicker(bool isDark) {
+    return SizedBox(
+      height: 280,
+      child: EmojiPicker(
+        textEditingController: _messageController,
+        onEmojiSelected: (category, emoji) {
+          // Emoji is automatically added to text controller
+        },
+        onBackspacePressed: () {
+          // Handle backspace in emoji picker
+          final text = _messageController.text;
+          if (text.isNotEmpty) {
+            // Remove last character (handles emoji which may be multiple code units)
+            final characters = text.characters;
+            _messageController.text = characters.skipLast(1).string;
+            _messageController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _messageController.text.length),
+            );
+          }
+        },
+        config: Config(
+          height: 280,
+          // Disable platform check for faster loading
+          checkPlatformCompatibility: false,
+          emojiViewConfig: EmojiViewConfig(
+            columns: 8,
+            emojiSizeMax: 32.0 * (Platform.isIOS ? 1.30 : 1.0),
+            verticalSpacing: 0,
+            horizontalSpacing: 0,
+            gridPadding: EdgeInsets.zero,
+            backgroundColor: isDark ? AppColors.darkChatInputBackground : AppColors.surface,
+            loadingIndicator: const SizedBox.shrink(),
+            noRecents: Text(
+              'No recent emojis',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          skinToneConfig: const SkinToneConfig(enabled: false),
+          categoryViewConfig: CategoryViewConfig(
+            initCategory: Category.SMILEYS,
+            backgroundColor: isDark ? AppColors.darkChatInputBackground : AppColors.surface,
+            indicatorColor: isDark ? AppColors.darkAccent : AppColors.accent,
+            iconColor: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            iconColorSelected: isDark ? AppColors.darkAccent : AppColors.accent,
+            categoryIcons: const CategoryIcons(),
+          ),
+          bottomActionBarConfig: const BottomActionBarConfig(
+            enabled: false,
+          ),
+          searchViewConfig: SearchViewConfig(
+            backgroundColor: isDark ? AppColors.darkChatInputBackground : AppColors.surface,
+            buttonIconColor: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            hintText: 'Search for emoji...',
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build Typing Indicator Widget
+  Widget _buildTypingIndicator(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // Avatar placeholder
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.border,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person,
+              size: 18,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Typing bubble
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkChatInputBackground : AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Animated dots
+                _TypingDotsAnimation(isDark: isDark),
+                const SizedBox(width: 8),
+                Text(
+                  widget.isGroupChat
+                      ? '${_typingUserName ?? 'Someone'} is typing...'
+                      : 'typing...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -353,14 +650,30 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
     // Clear text immediately for better UX
     _messageController.clear();
 
+    // Get reply message ID if replying
+    final replyId = _replyToMessage?.id;
+
+    // Clear reply state
+    if (_replyToMessage != null) {
+      setState(() {
+        _replyToMessage = null;
+      });
+    }
+
+    // Send the message
     context.read<MessagesCubit>().sendMessage(
           conversationId: widget.conversationId,
           companyId: widget.companyId,
           message: message,
+          replyToMessageId: replyId,
         );
 
-    // Keep keyboard open by requesting focus
-    _messageFocusNode.requestFocus();
+    // Keep keyboard open - use WidgetsBinding to ensure focus after frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _messageFocusNode.requestFocus();
+      }
+    });
 
     // Scroll to bottom after sending
     _scrollToBottom();
@@ -694,7 +1007,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         decoration: BoxDecoration(
           color: isDark
               ? AppColors.darkCard.withOpacity(0.8)
-              : const Color(0xFFE1F5FE).withOpacity(0.8),
+              : AppColors.infoLight.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -709,7 +1022,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
           style: AppTextStyles.bodySmall.copyWith(
             color: isDark
                 ? AppColors.darkTextSecondary
-                : const Color(0xFF0277BD),
+                : AppColors.primaryDark,
             fontWeight: FontWeight.w600,
             fontSize: 12,
           ),
@@ -732,41 +1045,117 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
       );
 
       if (messageDay == today) {
-        return 'اليوم'; // Today
+        return 'Today';
       } else if (messageDay == yesterday) {
-        return 'أمس'; // Yesterday
+        return 'Yesterday';
       } else if (messageDate.isAfter(today.subtract(const Duration(days: 7)))) {
         // Show day name for messages within last week
         const days = [
-          'الإثنين',
-          'الثلاثاء',
-          'الأربعاء',
-          'الخميس',
-          'الجمعة',
-          'السبت',
-          'الأحد'
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday'
         ];
         return days[messageDate.weekday - 1];
       } else {
         // Show formatted date for older messages
         const months = [
-          'يناير',
-          'فبراير',
-          'مارس',
-          'أبريل',
-          'مايو',
-          'يونيو',
-          'يوليو',
-          'أغسطس',
-          'سبتمبر',
-          'أكتوبر',
-          'نوفمبر',
-          'ديسمبر'
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December'
         ];
-        return '${messageDate.day} ${months[messageDate.month - 1]} ${messageDate.year}';
+        return '${months[messageDate.month - 1]} ${messageDate.day}, ${messageDate.year}';
       }
     } catch (e) {
       return '';
     }
+  }
+}
+
+/// Animated typing dots widget
+class _TypingDotsAnimation extends StatefulWidget {
+  final bool isDark;
+
+  const _TypingDotsAnimation({required this.isDark});
+
+  @override
+  State<_TypingDotsAnimation> createState() => _TypingDotsAnimationState();
+}
+
+class _TypingDotsAnimationState extends State<_TypingDotsAnimation>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late List<Animation<double>> _animations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat();
+
+    _animations = List.generate(3, (index) {
+      return Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(
+            index * 0.2,
+            0.6 + index * 0.2,
+            curve: Curves.easeInOut,
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        return AnimatedBuilder(
+          animation: _animations[index],
+          builder: (context, child) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              child: Transform.translate(
+                offset: Offset(0, -4 * _animations[index].value),
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: widget.isDark
+                        ? AppColors.darkTextSecondary.withValues(
+                            alpha: 0.5 + 0.5 * _animations[index].value)
+                        : AppColors.textSecondary.withValues(
+                            alpha: 0.5 + 0.5 * _animations[index].value),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      }),
+    );
   }
 }

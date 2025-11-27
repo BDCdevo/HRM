@@ -44,6 +44,10 @@ class MessageModel {
   @JsonKey(name: 'updated_at')
   final String updatedAt;
 
+  // Reply to message
+  @JsonKey(name: 'reply_to')
+  final ReplyToModel? replyTo;
+
   const MessageModel({
     required this.id,
     required this.conversationId,
@@ -59,6 +63,7 @@ class MessageModel {
     required this.isMine,
     required this.createdAt,
     required this.updatedAt,
+    this.replyTo,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) =>
@@ -87,6 +92,9 @@ class MessageModel {
       isMine: json['is_mine'] as bool? ?? false,
       createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
       updatedAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
+      replyTo: json['reply_to'] != null
+          ? ReplyToModel.fromJson(json['reply_to'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -133,4 +141,32 @@ class MessageModel {
       return '';
     }
   }
+}
+
+/// Model for reply-to message info
+@JsonSerializable()
+class ReplyToModel {
+  final int id;
+  final String body;
+  @JsonKey(name: 'user_name')
+  final String userName;
+
+  const ReplyToModel({
+    required this.id,
+    required this.body,
+    required this.userName,
+  });
+
+  factory ReplyToModel.fromJson(Map<String, dynamic> json) =>
+      ReplyToModel(
+        id: json['id'] as int? ?? 0,
+        body: json['body'] as String? ?? '',
+        userName: json['user_name'] as String? ?? 'Unknown',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'body': body,
+        'user_name': userName,
+      };
 }

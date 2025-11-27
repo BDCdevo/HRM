@@ -76,21 +76,21 @@ class TrainingRequestModel {
 
   Map<String, dynamic> toJson() => _$TrainingRequestModelToJson(this);
 
-  // Helper getters for Arabic labels
+  // Helper getters for labels
   String get trainingTypeLabel {
     switch (trainingType) {
       case 'technical':
-        return 'تدريب تقني';
+        return 'Technical Training';
       case 'soft_skills':
-        return 'مهارات شخصية';
+        return 'Soft Skills';
       case 'management':
-        return 'إدارة وقيادة';
+        return 'Management & Leadership';
       case 'language':
-        return 'لغات';
+        return 'Languages';
       case 'certification':
-        return 'شهادة مهنية';
+        return 'Professional Certification';
       case 'other':
-        return 'أخرى';
+        return 'Other';
       default:
         return trainingType;
     }
@@ -99,11 +99,11 @@ class TrainingRequestModel {
   String get costCoverageLabel {
     switch (trainingCostCoverage) {
       case 'full':
-        return 'تغطية كاملة من الشركة';
+        return 'Full Company Coverage';
       case 'partial':
-        return 'تغطية جزئية من الشركة';
+        return 'Partial Company Coverage';
       case 'none':
-        return 'بدون تغطية (على حسابي)';
+        return 'No Coverage (Self-funded)';
       default:
         return trainingCostCoverage ?? '';
     }
@@ -112,13 +112,13 @@ class TrainingRequestModel {
   String get statusLabel {
     switch (status) {
       case 'pending':
-        return 'قيد المراجعة';
+        return 'Under Review';
       case 'approved':
-        return 'موافق عليه';
+        return 'Approved';
       case 'rejected':
-        return 'مرفوض';
+        return 'Rejected';
       default:
-        return status ?? 'غير معروف';
+        return status ?? 'Unknown';
     }
   }
 }

@@ -32,7 +32,7 @@ class _HolidaysScreenContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       appBar: AppBar(
-        title: const Text('الإجازات الرسمية'),
+        title: const Text('Official Holidays'),
         backgroundColor: isDark ? AppColors.darkAppBar : AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -57,7 +57,7 @@ class _HolidaysScreenContent extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'جميع الإجازات',
+                            'All Holidays',
                             style: TextStyle(
                               color: state.filter == 'all'
                                   ? AppColors.primary
@@ -82,7 +82,7 @@ class _HolidaysScreenContent extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'القادمة',
+                            'Upcoming',
                             style: TextStyle(
                               color: state.filter == 'upcoming'
                                   ? AppColors.primary
@@ -107,7 +107,7 @@ class _HolidaysScreenContent extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'الحالية',
+                            'Current',
                             style: TextStyle(
                               color: state.filter == 'current'
                                   ? AppColors.primary
@@ -132,7 +132,7 @@ class _HolidaysScreenContent extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'المنتهية',
+                            'Past',
                             style: TextStyle(
                               color: state.filter == 'past'
                                   ? AppColors.primary
@@ -179,12 +179,12 @@ class _HolidaysScreenContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'لا توجد إجازات',
+                      'No Holidays',
                       style: AppTextStyles.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'لا توجد إجازات رسمية ${_getFilterLabel(state.filter)}',
+                      'No official holidays ${_getFilterLabel(state.filter)}',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -215,11 +215,11 @@ class _HolidaysScreenContent extends StatelessWidget {
   String _getFilterLabel(String filter) {
     switch (filter) {
       case 'upcoming':
-        return 'قادمة';
+        return 'upcoming';
       case 'current':
-        return 'حالية';
+        return 'current';
       case 'past':
-        return 'منتهية';
+        return 'past';
       default:
         return '';
     }
@@ -315,17 +315,17 @@ class _HolidayCard extends StatelessWidget {
                         ),
                         if (holiday.duration > 1)
                           _buildTag(
-                            '${holiday.duration} أيام',
+                            '${holiday.duration} days',
                             AppColors.accent,
                           ),
                         if (holiday.isPaid)
                           _buildTag(
-                            'مدفوعة',
+                            'Paid',
                             AppColors.success,
                           ),
                         if (holiday.isCurrent)
                           _buildTag(
-                            'جارية',
+                            'Current',
                             AppColors.warning,
                           ),
                       ],
@@ -376,7 +376,7 @@ class _HolidayCard extends StatelessWidget {
       final start = DateTime.parse(holiday.startDate);
       final end = DateTime.parse(holiday.endDate);
 
-      final formatter = DateFormat('d MMMM yyyy', 'ar');
+      final formatter = DateFormat('MMMM d, yyyy', 'en');
 
       if (holiday.duration == 1) {
         return formatter.format(start);
@@ -432,7 +432,7 @@ class _HolidayCard extends StatelessWidget {
               if (holiday.description != null &&
                   holiday.description!.isNotEmpty) ...[
                 Text(
-                  'الوصف',
+                  'Description',
                   style: AppTextStyles.headlineSmall,
                 ),
                 const SizedBox(height: 8),
@@ -444,33 +444,33 @@ class _HolidayCard extends StatelessWidget {
               ],
               // Details
               _buildDetailRow(
-                'التاريخ',
+                'Date',
                 _formatDateRange(),
                 Icons.calendar_today,
               ),
               const SizedBox(height: 12),
               _buildDetailRow(
-                'المدة',
-                '${holiday.duration} ${holiday.duration == 1 ? "يوم" : "أيام"}',
+                'Duration',
+                '${holiday.duration} ${holiday.duration == 1 ? "day" : "days"}',
                 Icons.timelapse,
               ),
               const SizedBox(height: 12),
               _buildDetailRow(
-                'النوع',
+                'Type',
                 holiday.typeLabel,
                 Icons.category,
               ),
               const SizedBox(height: 12),
               _buildDetailRow(
-                'الحالة',
-                holiday.isPaid ? 'مدفوعة الأجر' : 'غير مدفوعة',
+                'Status',
+                holiday.isPaid ? 'Paid' : 'Unpaid',
                 Icons.payments,
               ),
               if (holiday.isRecurring) ...[
                 const SizedBox(height: 12),
                 _buildDetailRow(
-                  'التكرار',
-                  holiday.recurrenceType == 'yearly' ? 'سنوياً' : 'متكررة',
+                  'Recurrence',
+                  holiday.recurrenceType == 'yearly' ? 'Yearly' : 'Recurring',
                   Icons.repeat,
                 ),
               ],
@@ -488,7 +488,7 @@ class _HolidayCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('إغلاق'),
+                  child: const Text('Close'),
                 ),
               ),
             ],

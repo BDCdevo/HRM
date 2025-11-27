@@ -104,8 +104,8 @@ class _AttendanceHistoryWidgetState extends State<AttendanceHistoryWidget> {
                   if (state.records.isEmpty) {
                     return const EmptyStateWidget(
                       icon: Icons.history,
-                      title: 'لا يوجد سجلات حضور',
-                      message: 'لم يتم تسجيل أي حضور بعد',
+                      title: 'No Attendance Records',
+                      message: 'No attendance has been recorded yet',
                     );
                   }
 
