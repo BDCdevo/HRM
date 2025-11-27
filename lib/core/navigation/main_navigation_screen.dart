@@ -112,7 +112,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icons.event_available,
                 title: 'Leave Request',
                 subtitle: 'Apply for time off',
-                color: AppColors.success,
+                color: AppColors.accentOrange, // Orange
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -131,7 +131,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icons.description,
                 title: 'General Request',
                 subtitle: 'Submit a general request',
-                color: AppColors.primary,
+                color: AppColors.primary, // Navy
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -150,7 +150,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icons.card_membership,
                 title: 'Certificate Request',
                 subtitle: 'Request a certificate',
-                color: AppColors.accent,
+                color: AppColors.accent, // Blue
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -169,7 +169,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icons.school,
                 title: 'Training Request',
                 subtitle: 'Request training',
-                color: AppColors.warning,
+                color: AppColors.accentOrange, // Orange
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(

@@ -54,6 +54,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.event_available,
               label: 'Attendance',
+              color: AppColors.accent, // Blue
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -65,6 +66,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.event_busy,
               label: 'Leaves',
+              color: AppColors.accentOrange, // Orange
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -76,6 +78,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.assignment,
               label: 'Requests',
+              color: AppColors.primary, // Navy
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -87,6 +90,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.campaign,
               label: 'Notice Board',
+              color: AppColors.accentOrange, // Orange
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -101,7 +105,7 @@ class ServicesGridWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.accentOrange,
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -110,6 +114,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.flight_takeoff,
               label: 'Holidays',
+              color: AppColors.accent, // Blue
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -121,6 +126,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.bar_chart,
               label: 'Reports',
+              color: AppColors.primary, // Navy
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -138,16 +144,18 @@ class ServicesGridWidget extends StatelessWidget {
 
 /// Service Card - Minimal Design
 ///
-/// Simple card with subtle styling
+/// Simple card with subtle styling and custom color
 class _ServiceCard extends StatefulWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color? color;
 
   const _ServiceCard({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.color,
   });
 
   @override
@@ -232,16 +240,12 @@ class _ServiceCardState extends State<_ServiceCard>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkPrimary.withOpacity(0.2)
-                            : AppColors.primary.withOpacity(0.1),
+                        color: (widget.color ?? AppColors.primary).withOpacity(isDark ? 0.2 : 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         widget.icon,
-                        color: isDark
-                            ? AppColors.darkPrimary
-                            : AppColors.primary,
+                        color: widget.color ?? (isDark ? AppColors.darkPrimary : AppColors.primary),
                         size: 28,
                       ),
                     ),
