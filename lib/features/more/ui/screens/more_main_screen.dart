@@ -175,7 +175,7 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
                                 icon: Icons.notifications,
                                 title: 'Notifications',
                                 subtitle: 'Manage your notifications',
-                                color: AppColors.warning,
+                                color: AppColors.accentOrange,
                                 cardColor: cardColor,
                                 textColor: textColor,
                                 secondaryTextColor: secondaryTextColor,
@@ -246,7 +246,7 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
                                 icon: Icons.event_note,
                                 title: 'Official Holidays',
                                 subtitle: 'View official holidays and vacations',
-                                color: AppColors.accent,
+                                color: AppColors.accentOrange,
                                 cardColor: cardColor,
                                 textColor: textColor,
                                 secondaryTextColor: secondaryTextColor,
@@ -515,14 +515,14 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
               end: Alignment.bottomCenter,
               colors: isDarkMode
                   ? [
-                      const Color(0xFF1A1A2E),
-                      const Color(0xFF16213E),
-                      const Color(0xFF0F3460),
+                      AppColors.darkBackground,
+                      AppColors.darkCard,
+                      AppColors.darkCardElevated,
                     ]
                   : [
                       AppColors.primary,
-                      AppColors.primary.withBlue(160),
-                      AppColors.primary.withBlue(200),
+                      AppColors.primaryLight,
+                      AppColors.primaryLight.withOpacity(0.8),
                     ],
             ),
           ),
@@ -701,7 +701,7 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
               height: 140,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF16213E),
+                color: AppColors.primaryDark,
               ),
             ),
 
@@ -1078,8 +1078,8 @@ class _MoreMainScreenState extends State<MoreMainScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF0F3460),
-            const Color(0xFF16213E),
+            AppColors.primary,
+            AppColors.primaryDark,
           ],
         ),
       ),

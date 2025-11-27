@@ -78,7 +78,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.assignment,
               label: 'Requests',
-              color: AppColors.primary, // Navy
+              color: AppColors.primary, // Charcoal
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -126,7 +126,7 @@ class ServicesGridWidget extends StatelessWidget {
             _ServiceCard(
               icon: Icons.bar_chart,
               label: 'Reports',
-              color: AppColors.primary, // Navy
+              color: AppColors.primary, // Charcoal
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(

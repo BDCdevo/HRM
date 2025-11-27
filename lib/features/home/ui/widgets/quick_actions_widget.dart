@@ -64,12 +64,12 @@ class QuickActionsWidget extends StatelessWidget {
           _SectionCard(
             title: 'Leaves',
             icon: Icons.event_busy,
-            color: AppColors.warning,
+            color: AppColors.accentOrange,
             actions: [
               _QuickActionButton(
                 icon: Icons.add_circle_outline,
                 label: 'Apply Leave',
-                color: AppColors.warning,
+                color: AppColors.accentOrange,
                 onTap: () {
                   // TODO: Navigate to apply leave
                 },

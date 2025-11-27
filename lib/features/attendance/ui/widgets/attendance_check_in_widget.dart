@@ -472,7 +472,7 @@ class _AttendanceCheckInWidgetState extends State<AttendanceCheckInWidget>
                       label: 'Late Minutes',
                       value: '$lateMinutes min',
                       color: lateMinutes > 0
-                          ? AppColors.warning
+                          ? AppColors.accentOrange
                           : AppColors.success,
                       isDark: isDark,
                       cardColor: cardColor,

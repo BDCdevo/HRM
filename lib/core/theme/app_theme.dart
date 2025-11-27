@@ -4,7 +4,7 @@ import '../styles/app_colors.dart';
 
 /// App Theme System - Professional Theme
 ///
-/// Navy + Blue + Golden Orange
+/// Black + Blue + Golden Orange
 /// Perfect harmony between Light & Dark modes
 /// Uses Cairo font for Arabic support
 class AppTheme {

@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 
-/// App Colors - Professional Navy, Blue & Yellow Theme
+/// App Colors - Professional Black, Blue & Orange Theme
 ///
 /// Balanced professional design with:
-/// - Navy: AppBar, headers, primary elements
+/// - Black: AppBar, headers, primary elements
 /// - Blue: Buttons, links, actions
-/// - Yellow: Accents, badges, highlights
+/// - Orange: Accents, badges, highlights
 /// - White/Gray: Clean backgrounds
 class AppColors {
   // ============================================
   // LIGHT MODE - Professional Theme
   // ============================================
 
-  /// Primary - Navy Blue (كحلي)
+  /// Primary - Charcoal (أسود فاتح)
   /// Used for: AppBar, headers, important text
-  static const Color primary = Color(0xFF1E3A5F); // Navy Blue
+  static const Color primary = Color(0xFF2D3436); // Charcoal
 
-  /// Primary Light
-  static const Color primaryLight = Color(0xFF2E5077);
+  /// Primary Light - Slate Gray
+  static const Color primaryLight = Color(0xFF636E72);
 
-  /// Primary Dark
-  static const Color primaryDark = Color(0xFF0F1E33);
+  /// Primary Dark - Dark Charcoal
+  static const Color primaryDark = Color(0xFF1E272E);
 
   // ============================================
   // Secondary - Blue (أزرق)
@@ -43,7 +43,7 @@ class AppColors {
   // ============================================
 
   /// Golden Orange - For FAB, special buttons, highlights
-  /// Harmonizes perfectly with Navy
+  /// Harmonizes perfectly with Charcoal
   static const Color accentOrange = Color(0xFFF5A623); // Golden Orange
 
   /// Orange Light
@@ -109,8 +109,8 @@ class AppColors {
   // Text Colors
   // ============================================
 
-  /// Primary text - Dark Navy
-  static const Color textPrimary = Color(0xFF1E3A5F);
+  /// Primary text - Charcoal
+  static const Color textPrimary = Color(0xFF2D3436);
 
   /// Secondary text - Gray
   static const Color textSecondary = Color(0xFF546E7A);
@@ -140,8 +140,8 @@ class AppColors {
   /// Alternate background - Light blue-gray
   static const Color backgroundAlt = Color(0xFFF5F7FA);
 
-  /// Dark background - Navy
-  static const Color backgroundDark = Color(0xFF1E3A5F);
+  /// Dark background - Charcoal
+  static const Color backgroundDark = Color(0xFF2D3436);
 
   /// Surface
   static const Color surface = Color(0xFFFFFFFF);
@@ -178,9 +178,9 @@ class AppColors {
   // Shadow & Overlay
   // ============================================
 
-  static const Color shadow = Color(0x1A1E3A5F);
-  static const Color shadowLight = Color(0x0D1E3A5F);
-  static const Color shadowMedium = Color(0x261E3A5F);
+  static const Color shadow = Color(0x1A000000);
+  static const Color shadowLight = Color(0x0D000000);
+  static const Color shadowMedium = Color(0x26000000);
 
   static const Color overlay = Color(0x80000000);
   static const Color overlayLight = Color(0x40000000);
@@ -189,8 +189,8 @@ class AppColors {
   // Icon Colors
   // ============================================
 
-  /// Primary icon - Navy
-  static const Color iconPrimary = Color(0xFF1E3A5F);
+  /// Primary icon - Charcoal
+  static const Color iconPrimary = Color(0xFF2D3436);
 
   /// Secondary icon - Gray
   static const Color iconSecondary = Color(0xFF546E7A);
@@ -214,7 +214,7 @@ class AppColors {
 
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color dark = Color(0xFF1E3A5F);
+  static const Color dark = Color(0xFF2D3436);
   static const Color transparent = Colors.transparent;
 
   // ============================================
@@ -268,7 +268,7 @@ class AppColors {
   // ============================================
 
   static const List<Color> chartColors = [
-    Color(0xFF1E3A5F), // Navy
+    Color(0xFF2D3436), // Charcoal
     Color(0xFF2196F3), // Blue
     Color(0xFFF5A623), // Golden Orange
     Color(0xFF4CAF50), // Green
@@ -279,9 +279,9 @@ class AppColors {
   // Gradients
   // ============================================
 
-  /// Navy gradient
+  /// Charcoal gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF1E3A5F), Color(0xFF2E5077)],
+    colors: [Color(0xFF2D3436), Color(0xFF636E72)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

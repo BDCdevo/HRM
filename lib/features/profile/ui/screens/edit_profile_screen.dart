@@ -362,7 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkAccent : AppColors.accent,
+                                  color: AppColors.accentOrange,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: isDark ? AppColors.darkCard : AppColors.white,

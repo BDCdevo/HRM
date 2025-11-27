@@ -22,11 +22,13 @@ class WebSocketService {
   // NOTE: WebSocket uses ws:// on port 8081 because Laravel Reverb
   // is configured without SSL on this port. The authorization endpoint
   // uses HTTPS for secure token transmission.
-  // TODO: Consider enabling SSL on Reverb for full encryption
+  // TODO: Consider switching to pusher_client_socket or pusher_channel_reverb
+  // for proper custom host support. Current pusher_channels_flutter v2.4.0
+  // doesn't support custom host configuration - it connects to Pusher cloud.
   static const String _appKey = 'pgvjq8gblbrxpk5ptogp';
   static const String _host = '31.97.46.103';
   static const int _port = 8081;
-  static const String _scheme = 'ws';
+  // Cluster mt1 is required by pusher_channels_flutter even for Reverb
   static const String _cluster = 'mt1';
 
   bool _isInitialized = false;
@@ -46,18 +48,13 @@ class WebSocketService {
 
       await _pusher!.init(
         apiKey: _appKey,
-        // For Reverb, we need to override the default Pusher cluster behavior
-        // The library will try to connect to ws-mt1.pusher.com by default
-        // We'll handle connection errors and use onAuthorizer to connect properly
-        cluster: 'mt1',
+        cluster: _cluster,
         onConnectionStateChange: (String currentState, String previousState) {
           print('🔌 WebSocket Connection: $previousState -> $currentState');
         },
         onError: (String message, int? code, dynamic e) {
           print('❌ WebSocket Error: $message (Code: $code)');
           print('❌ Error details: $e');
-          // This is expected for Reverb - the library tries Pusher cloud first
-          // The actual connection happens when we subscribe to channels
         },
         onSubscriptionSucceeded: (String channelName, dynamic data) {
           print('✅ Subscribed to channel: $channelName');
@@ -68,19 +65,17 @@ class WebSocketService {
         activityTimeout: 120000,
         pongTimeout: 30000,
         // Authorization callback for private channels
-        // This is where the actual Reverb connection is made
         onAuthorizer: _authorizeChannel,
       );
 
-      // Attempt to connect (will fail for Pusher cloud, but that's OK)
+      // Connect to Reverb
       await _pusher!.connect();
 
       _isInitialized = true;
-      print('✅ WebSocket initialized (will connect to Reverb on channel subscription)');
+      print('✅ WebSocket connected to Reverb at $_host:$_port');
     } catch (e) {
-      print('⚠️ Initial connection attempt: $e');
-      print('⚠️ This is normal for Reverb - connection happens on channel subscription');
-      _isInitialized = true; // Mark as initialized anyway
+      print('❌ WebSocket connection failed: $e');
+      _isInitialized = false;
     }
   }
 

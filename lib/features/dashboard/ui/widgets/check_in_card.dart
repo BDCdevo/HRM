@@ -81,7 +81,7 @@ class CheckInCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: hasActiveSession
                     ? AppColors.accent
-                    : AppColors.primary,
+                    : AppColors.accentOrange,
                 foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 elevation: 0,

@@ -414,18 +414,18 @@ class _ReportsScreenState extends State<ReportsScreen>
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-                  const Color(0xFF1E3A5F),
-                  const Color(0xFF0D253F),
+                  AppColors.darkCard,
+                  AppColors.darkBackground,
                 ]
               : [
                   AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.85),
+                  AppColors.primaryDark,
                 ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? const Color(0xFF1E3A5F) : AppColors.primary)
+            color: (isDark ? AppColors.darkCard : AppColors.primary)
                 .withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),

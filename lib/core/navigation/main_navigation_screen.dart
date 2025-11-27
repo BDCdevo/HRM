@@ -131,7 +131,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icons.description,
                 title: 'General Request',
                 subtitle: 'Submit a general request',
-                color: AppColors.primary, // Navy
+                color: AppColors.primary, // Charcoal
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
