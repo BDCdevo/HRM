@@ -1,40 +1,40 @@
 import 'package:flutter/material.dart';
 
-/// App Colors - Blue Theme System
+/// App Colors - Yellow Theme System
 ///
-/// Modern blue color scheme with perfect harmony between Light & Dark modes
-/// Inspired by Material Design 3 Blue palette
+/// Modern yellow color scheme with perfect harmony between Light & Dark modes
+/// Inspired by Task Planning App Design - Fun & Energetic
 class AppColors {
   // ============================================
-  // LIGHT MODE - Blue Theme
+  // LIGHT MODE - Yellow Theme
   // ============================================
 
-  /// Primary - Warm Neutral Blue (محايد دافئ)
+  /// Primary - Vibrant Yellow (أصفر حيوي)
   /// Used for: Primary buttons, AppBar, important elements
-  static const Color primary = Color(0xFF6B7FA8); // Warm desaturated blue
+  static const Color primary = Color(0xFFF4CA1C); // Golden Yellow
 
-  /// Primary Light - Soft Warm Blue
-  static const Color primaryLight = Color(0xFF8FA3C4); // Light warm blue
+  /// Primary Light - Soft Yellow
+  static const Color primaryLight = Color(0xFFFBE555); // Light yellow
 
-  /// Primary Dark - Deep Warm Blue
-  static const Color primaryDark = Color(0xFF4A5D7E); // Dark warm blue
+  /// Primary Dark - Deep Golden
+  static const Color primaryDark = Color(0xFFD4A900); // Dark golden yellow
 
   // ============================================
   // Accent Colors (Light Mode)
   // ============================================
 
-  /// Accent/Secondary - Warm Teal (تيل دافئ محايد)
-  /// Used for: Secondary actions, highlights
-  static const Color accent = Color(0xFF7FA89A); // Warm desaturated teal
+  /// Accent/Secondary - Deep Purple (بنفسجي للتباين)
+  /// Used for: Secondary actions, highlights, dots
+  static const Color accent = Color(0xFF7C5CFF); // Vibrant purple
 
   /// Secondary (alias for accent)
-  static const Color secondary = Color(0xFF7FA89A);
+  static const Color secondary = Color(0xFF7C5CFF);
 
-  /// Accent Light - Soft Warm Teal
-  static const Color accentLight = Color(0xFFA3C4B7); // Light warm teal
+  /// Accent Light - Soft Purple
+  static const Color accentLight = Color(0xFFA18AFF); // Light purple
 
-  /// Accent Dark - Deep Warm Teal
-  static const Color accentDark = Color(0xFF5A7E70); // Dark warm teal
+  /// Accent Dark - Deep Purple
+  static const Color accentDark = Color(0xFF5A3FD4); // Dark purple
 
   /// Accent Purple - Warm Neutral Purple
   static const Color accentPurple = Color(0xFF9B8AA4); // Warm desaturated purple
@@ -56,10 +56,10 @@ class AppColors {
   static const Color errorLight = Color(0xFFC99999);
   static const Color errorDark = Color(0xFF8F5757);
 
-  /// Warning - Warm Amber
-  static const Color warning = Color(0xFFBF9B6F);
-  static const Color warningLight = Color(0xFFD4B594);
-  static const Color warningDark = Color(0xFF9A7A54);
+  /// Warning - Orange (برتقالي للتحذيرات)
+  static const Color warning = Color(0xFFFF9500);
+  static const Color warningLight = Color(0xFFFFB84D);
+  static const Color warningDark = Color(0xFFCC7700);
 
   /// Info - Warm Neutral Blue
   static const Color info = Color(0xFF8FA3C4);
@@ -102,8 +102,8 @@ class AppColors {
   /// Disabled text - Light gray
   static const Color textDisabled = Color(0xFF9CA3AF);
 
-  /// Text on primary color - White
-  static const Color textOnPrimary = Color(0xFFFFFFFF);
+  /// Text on primary color - Dark (للقراءة على الأصفر)
+  static const Color textOnPrimary = Color(0xFF1F2937);
 
   /// Text on dark backgrounds - White
   static const Color textOnDark = Color(0xFFFFFFFF);
@@ -122,7 +122,7 @@ class AppColors {
   static const Color backgroundAlt = Color(0xFFEDF2F7);
 
   /// Dark background (for dark sections in light mode)
-  static const Color backgroundDark = Color(0xFF6B7FA8);
+  static const Color backgroundDark = Color(0xFF1F2937);
 
   /// Surface - Pure white
   static const Color surface = Color(0xFFFFFFFF);
@@ -205,7 +205,7 @@ class AppColors {
   static const Color black = Color(0xFF000000);
 
   /// Dark - Primary dark (alias)
-  static const Color dark = Color(0xFF4A5D7E);
+  static const Color dark = Color(0xFF1F2937);
 
   /// Transparent
   static const Color transparent = Colors.transparent;
@@ -256,11 +256,11 @@ class AppColors {
   /// Dark mode - Unselected navigation items
   static const Color darkNavUnselected = Color(0xFF808080);
 
-  /// Dark mode - Primary color (Keep existing blue for buttons)
-  static const Color darkPrimary = Color(0xFF8FA3C4);
+  /// Dark mode - Primary color (Yellow for buttons)
+  static const Color darkPrimary = Color(0xFFF4CA1C);
 
-  /// Dark mode - Accent color (Green for badges and success states)
-  static const Color darkAccent = Color(0xFF4CAF50);
+  /// Dark mode - Accent color (Purple for badges and highlights)
+  static const Color darkAccent = Color(0xFF7C5CFF);
 
   /// Dark mode - Success/Badge color (Green for promo badges)
   static const Color darkSuccess = Color(0xFF4CAF50);
@@ -297,32 +297,32 @@ class AppColors {
   static const Color darkChatInputBackground = Color(0xFF1F2C34);
 
   // ============================================
-  // Chart Colors (Blue Theme)
+  // Chart Colors (Yellow Theme)
   // ============================================
 
-  /// Chart color palette - Warm Neutral harmony
+  /// Chart color palette - Yellow Theme harmony
   static const List<Color> chartColors = [
-    Color(0xFF6B7FA8), // Warm neutral blue
-    Color(0xFF7FA89A), // Warm teal
-    Color(0xFF9B8AA4), // Warm purple
-    Color(0xFFBF9B6F), // Warm amber
+    Color(0xFFF4CA1C), // Golden yellow
+    Color(0xFF7C5CFF), // Purple accent
+    Color(0xFF1F2937), // Dark charcoal
+    Color(0xFFFF9500), // Orange
     Color(0xFFA8ADB3), // Warm gray
   ];
 
   // ============================================
-  // Gradient Colors (Blue Theme)
+  // Gradient Colors (Yellow Theme)
   // ============================================
 
-  /// Primary gradient - Warm Neutral Blue gradient
+  /// Primary gradient - Yellow gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF6B7FA8), Color(0xFF8FA3C4)],
+    colors: [Color(0xFFF4CA1C), Color(0xFFFBE555)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Accent gradient - Warm Teal gradient
+  /// Accent gradient - Purple gradient
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFF7FA89A), Color(0xFFA3C4B7)],
+    colors: [Color(0xFF7C5CFF), Color(0xFFA18AFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -334,9 +334,9 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Dark mode gradient - Dark blue to lighter blue
+  /// Dark mode gradient - Dark charcoal
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [Color(0xFF0A1929), Color(0xFF1E293B)],
+    colors: [Color(0xFF1F2937), Color(0xFF374151)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

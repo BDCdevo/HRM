@@ -25,7 +25,12 @@
       "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && flutter devices 2>&1\")",
       "Bash(powershell -Command \"cd C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm; flutter devices\")",
       "Bash(powershell -Command:*)",
-      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && flutter analyze lib\\features\\profile\\logic\\cubit\\profile_cubit.dart 2>&1\")"
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && flutter analyze lib\\features\\profile\\logic\\cubit\\profile_cubit.dart 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && flutter analyze lib\\core\\styles\\app_colors.dart lib\\core\\styles\\app_colors_extension.dart 2>&1\")",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && git branch\")",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && git branch 2>&1\")",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

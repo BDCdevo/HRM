@@ -219,7 +219,7 @@ class AppThemeColors {
       textSecondary: AppColors.textSecondary,
       textTertiary: AppColors.textTertiary,
       textDisabled: AppColors.textDisabled,
-      textOnPrimary: AppColors.white,
+      textOnPrimary: AppColors.textPrimary, // Dark text on yellow background
       textOnDark: AppColors.white,
       // Icons
       iconPrimary: AppColors.iconPrimary,
