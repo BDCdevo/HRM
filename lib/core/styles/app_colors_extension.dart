@@ -255,11 +255,11 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation
-      appBarBackground: AppColors.primary,
+      // Navigation - Clean white AppBar
+      appBarBackground: AppColors.white,
       navBarBackground: AppColors.white,
       navBarSelected: AppColors.primary,
-      navBarUnselected: AppColors.textSecondary,
+      navBarUnselected: AppColors.textTertiary,
       // Shadows & Overlays
       shadow: AppColors.shadow,
       shadowLight: AppColors.shadowLight,

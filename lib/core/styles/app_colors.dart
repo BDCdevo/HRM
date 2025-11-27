@@ -9,15 +9,15 @@ class AppColors {
   // LIGHT MODE - Yellow Theme
   // ============================================
 
-  /// Primary - Vibrant Yellow (أصفر حيوي)
-  /// Used for: Primary buttons, AppBar, important elements
-  static const Color primary = Color(0xFFF4CA1C); // Golden Yellow
+  /// Primary - Deep Golden Yellow (أصفر ذهبي غامق)
+  /// Used for: Buttons, icons, highlights ONLY - NOT backgrounds
+  static const Color primary = Color(0xFFE5B800); // Darker Golden Yellow
 
-  /// Primary Light - Soft Yellow
-  static const Color primaryLight = Color(0xFFFBE555); // Light yellow
+  /// Primary Light - Medium Yellow
+  static const Color primaryLight = Color(0xFFF4CA1C); // Medium yellow
 
-  /// Primary Dark - Deep Golden
-  static const Color primaryDark = Color(0xFFD4A900); // Dark golden yellow
+  /// Primary Dark - Deep Gold
+  static const Color primaryDark = Color(0xFFCC9900); // Deep gold
 
   // ============================================
   // Accent Colors (Light Mode)
@@ -109,17 +109,17 @@ class AppColors {
   static const Color textOnDark = Color(0xFFFFFFFF);
 
   // ============================================
-  // Background Colors (Light Mode)
+  // Background Colors (Light Mode) - Clean White/Gray
   // ============================================
 
-  /// Main background - Very light blue-gray
-  static const Color background = Color(0xFFF5F7FA);
+  /// Main background - Pure white (نظيف)
+  static const Color background = Color(0xFFFFFFFF);
 
-  /// Light background - Almost white with blue tint
-  static const Color backgroundLight = Color(0xFFF8FAFC);
+  /// Light background - Very light gray
+  static const Color backgroundLight = Color(0xFFFAFAFA);
 
-  /// Alternate background - Light blue-gray
-  static const Color backgroundAlt = Color(0xFFEDF2F7);
+  /// Alternate background - Light gray
+  static const Color backgroundAlt = Color(0xFFF5F5F5);
 
   /// Dark background (for dark sections in light mode)
   static const Color backgroundDark = Color(0xFF1F2937);
@@ -128,10 +128,10 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
 
   /// Surface variant - Very light gray
-  static const Color surfaceVariant = Color(0xFFF7FAFC);
+  static const Color surfaceVariant = Color(0xFFFAFAFA);
 
-  /// Input/Field Background - Very light warm gray
-  static const Color fieldBackground = Color(0xFFF8F9FA);
+  /// Input/Field Background - Light gray
+  static const Color fieldBackground = Color(0xFFF5F5F5);
 
   // ============================================
   // Border Colors (Light Mode)
@@ -256,8 +256,8 @@ class AppColors {
   /// Dark mode - Unselected navigation items
   static const Color darkNavUnselected = Color(0xFF808080);
 
-  /// Dark mode - Primary color (Yellow for buttons)
-  static const Color darkPrimary = Color(0xFFF4CA1C);
+  /// Dark mode - Primary color (Darker Yellow for buttons)
+  static const Color darkPrimary = Color(0xFFE5B800);
 
   /// Dark mode - Accent color (Purple for badges and highlights)
   static const Color darkAccent = Color(0xFF7C5CFF);
@@ -302,7 +302,7 @@ class AppColors {
 
   /// Chart color palette - Yellow Theme harmony
   static const List<Color> chartColors = [
-    Color(0xFFF4CA1C), // Golden yellow
+    Color(0xFFE5B800), // Darker golden yellow
     Color(0xFF7C5CFF), // Purple accent
     Color(0xFF1F2937), // Dark charcoal
     Color(0xFFFF9500), // Orange
@@ -313,9 +313,9 @@ class AppColors {
   // Gradient Colors (Yellow Theme)
   // ============================================
 
-  /// Primary gradient - Yellow gradient
+  /// Primary gradient - Darker Yellow gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFF4CA1C), Color(0xFFFBE555)],
+    colors: [Color(0xFFE5B800), Color(0xFFF4CA1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
