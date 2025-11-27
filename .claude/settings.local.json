@@ -34,7 +34,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "WebSearch",
-      "WebFetch(domain:www.noon.com)"
+      "WebFetch(domain:www.noon.com)",
+      "Bash(cmd /c \"cd /d C:\\Users\\B-SMART\\AndroidStudioProjects\\hrm && flutter analyze lib\\core\\styles\\app_colors.dart lib\\core\\theme\\app_theme.dart 2>&1\")"
     ],
     "deny": [],
     "ask": []

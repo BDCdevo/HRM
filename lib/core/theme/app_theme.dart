@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../styles/app_colors.dart';
 
-/// App Theme System - Blue Theme
+/// App Theme System - Professional Theme
 ///
+/// Navy + Blue + Golden Orange
 /// Perfect harmony between Light & Dark modes
-/// Based on Material Design 3 with blue color scheme
 /// Uses Cairo font for Arabic support
 class AppTheme {
   /// Get Cairo text theme for Arabic support
@@ -229,9 +229,9 @@ class AppTheme {
         ),
       ),
 
-      // Floating Action Button Theme
+      // Floating Action Button Theme - Golden Orange
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.accentOrange,
         foregroundColor: AppColors.white,
         elevation: 4,
       ),
@@ -495,9 +495,9 @@ class AppTheme {
         ),
       ),
 
-      // Floating Action Button Theme
+      // Floating Action Button Theme - Golden Orange
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.darkAccent,
+        backgroundColor: AppColors.accentOrange,
         foregroundColor: AppColors.white,
         elevation: 4,
       ),

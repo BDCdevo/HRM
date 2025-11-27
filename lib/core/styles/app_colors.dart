@@ -39,17 +39,21 @@ class AppColors {
   static const Color accentDark = Color(0xFF1976D2);
 
   // ============================================
-  // Tertiary - Yellow (أصفر للتمييز)
+  // Tertiary - Golden Orange (برتقالي ذهبي)
   // ============================================
 
-  /// Yellow - For highlights, badges, special elements
-  static const Color accentYellow = Color(0xFFFFC107); // Amber Yellow
+  /// Golden Orange - For FAB, special buttons, highlights
+  /// Harmonizes perfectly with Navy
+  static const Color accentOrange = Color(0xFFF5A623); // Golden Orange
 
-  /// Yellow Light
-  static const Color accentYellowLight = Color(0xFFFFD54F);
+  /// Orange Light
+  static const Color accentOrangeLight = Color(0xFFFFBB54);
 
-  /// Yellow Dark
-  static const Color accentYellowDark = Color(0xFFFFA000);
+  /// Orange Dark
+  static const Color accentOrangeDark = Color(0xFFE8940F);
+
+  /// Yellow - For badges, highlights
+  static const Color accentYellow = Color(0xFFFFC107);
 
   /// Accent Purple - For special offers
   static const Color accentPurple = Color(0xFF7C4DFF);
@@ -237,8 +241,8 @@ class AppColors {
   /// Dark mode primary - Light Blue
   static const Color darkPrimary = Color(0xFF64B5F6);
 
-  /// Dark mode accent - Yellow
-  static const Color darkAccent = Color(0xFFFFC107);
+  /// Dark mode accent - Golden Orange
+  static const Color darkAccent = Color(0xFFF5A623);
 
   /// Dark mode success
   static const Color darkSuccess = Color(0xFF81C784);
@@ -266,7 +270,7 @@ class AppColors {
   static const List<Color> chartColors = [
     Color(0xFF1E3A5F), // Navy
     Color(0xFF2196F3), // Blue
-    Color(0xFFFFC107), // Yellow
+    Color(0xFFF5A623), // Golden Orange
     Color(0xFF4CAF50), // Green
     Color(0xFF78909C), // Gray
   ];
@@ -289,9 +293,9 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Yellow gradient
-  static const LinearGradient yellowGradient = LinearGradient(
-    colors: [Color(0xFFFFC107), Color(0xFFFFD54F)],
+  /// Orange gradient - For FAB and special buttons
+  static const LinearGradient orangeGradient = LinearGradient(
+    colors: [Color(0xFFF5A623), Color(0xFFFFBB54)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
