@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// Theme-Aware Color Extension - Noon Style (Blue & Black)
+/// Theme-Aware Color Extension - Professional Theme
 ///
 /// Unified color system that automatically switches between Light & Dark mode
-/// Inspired by Noon app 2024 design - Blue, Black, White
+/// Navy + Blue + Yellow - Professional & Balanced
 /// Usage: context.colors.background, context.colors.cardColor, etc.
 extension AppColorsExtension on BuildContext {
   /// Get theme-aware colors based on current brightness
@@ -226,10 +226,10 @@ class AppThemeColors {
       borderMedium: AppColors.borderMedium,
       divider: AppColors.divider,
       dividerLight: AppColors.dividerLight,
-      // Fields - Noon style (gray background, blue focus)
+      // Fields - Professional style (blue focus)
       fieldBackground: AppColors.fieldBackground,
       fieldBorder: AppColors.border,
-      fieldBorderFocused: AppColors.primary,
+      fieldBorderFocused: AppColors.accent, // Blue focus
       // Brand
       primary: AppColors.primary,
       primaryLight: AppColors.primaryLight,
@@ -249,10 +249,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation - Noon style (white bg, blue selected)
-      appBarBackground: AppColors.white,
+      // Navigation - Navy AppBar, blue selected nav
+      appBarBackground: AppColors.primary, // Navy AppBar
       navBarBackground: AppColors.white,
-      navBarSelected: AppColors.primary,
+      navBarSelected: AppColors.accent, // Blue for selected
       navBarUnselected: AppColors.textTertiary,
       // Shadows & Overlays
       shadow: AppColors.shadow,
@@ -301,10 +301,10 @@ class AppThemeColors {
       borderMedium: AppColors.darkBorder,
       divider: AppColors.darkDivider,
       dividerLight: AppColors.darkDivider,
-      // Fields - Noon dark style (blue focus)
+      // Fields - Dark style (light blue focus)
       fieldBackground: AppColors.darkInput,
       fieldBorder: AppColors.darkBorder,
-      fieldBorderFocused: AppColors.darkPrimary,
+      fieldBorderFocused: AppColors.darkPrimary, // Light blue
       // Brand
       primary: AppColors.darkPrimary,
       primaryLight: AppColors.primary,
@@ -324,10 +324,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation - Noon dark style (blue selected)
+      // Navigation - Dark style
       appBarBackground: AppColors.darkAppBar,
       navBarBackground: AppColors.darkAppBar,
-      navBarSelected: AppColors.darkPrimary,
+      navBarSelected: AppColors.darkPrimary, // Light blue
       navBarUnselected: AppColors.darkNavUnselected,
       // Shadows & Overlays
       shadow: AppColors.shadow,
