@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// Theme-Aware Color Extension - Noon Style
+/// Theme-Aware Color Extension - Noon Style (Blue & Black)
 ///
 /// Unified color system that automatically switches between Light & Dark mode
-/// Inspired by Noon app design - clean, minimal, professional
+/// Inspired by Noon app 2024 design - Blue, Black, White
 /// Usage: context.colors.background, context.colors.cardColor, etc.
 extension AppColorsExtension on BuildContext {
   /// Get theme-aware colors based on current brightness
@@ -213,7 +213,7 @@ class AppThemeColors {
       textSecondary: AppColors.textSecondary,
       textTertiary: AppColors.textTertiary,
       textDisabled: AppColors.textDisabled,
-      textOnPrimary: AppColors.black, // Black text on Noon yellow
+      textOnPrimary: AppColors.white, // White text on blue button
       textOnDark: AppColors.white,
       // Icons
       iconPrimary: AppColors.iconPrimary,
@@ -226,10 +226,10 @@ class AppThemeColors {
       borderMedium: AppColors.borderMedium,
       divider: AppColors.divider,
       dividerLight: AppColors.dividerLight,
-      // Fields - Noon style (gray background, black focus)
+      // Fields - Noon style (gray background, blue focus)
       fieldBackground: AppColors.fieldBackground,
       fieldBorder: AppColors.border,
-      fieldBorderFocused: AppColors.black,
+      fieldBorderFocused: AppColors.primary,
       // Brand
       primary: AppColors.primary,
       primaryLight: AppColors.primaryLight,
@@ -249,10 +249,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation - Noon style (white bg, black selected)
+      // Navigation - Noon style (white bg, blue selected)
       appBarBackground: AppColors.white,
       navBarBackground: AppColors.white,
-      navBarSelected: AppColors.black,
+      navBarSelected: AppColors.primary,
       navBarUnselected: AppColors.textTertiary,
       // Shadows & Overlays
       shadow: AppColors.shadow,
@@ -288,7 +288,7 @@ class AppThemeColors {
       textSecondary: AppColors.darkTextSecondary,
       textTertiary: AppColors.darkTextTertiary,
       textDisabled: AppColors.darkTextHint,
-      textOnPrimary: AppColors.black, // Black text on Noon yellow
+      textOnPrimary: AppColors.white, // White text on blue button
       textOnDark: AppColors.white,
       // Icons
       iconPrimary: AppColors.darkIcon,
@@ -301,10 +301,10 @@ class AppThemeColors {
       borderMedium: AppColors.darkBorder,
       divider: AppColors.darkDivider,
       dividerLight: AppColors.darkDivider,
-      // Fields - Noon dark style
+      // Fields - Noon dark style (blue focus)
       fieldBackground: AppColors.darkInput,
       fieldBorder: AppColors.darkBorder,
-      fieldBorderFocused: AppColors.white,
+      fieldBorderFocused: AppColors.darkPrimary,
       // Brand
       primary: AppColors.darkPrimary,
       primaryLight: AppColors.primary,
@@ -324,10 +324,10 @@ class AppThemeColors {
       warningDark: AppColors.warningDark,
       info: AppColors.info,
       infoLight: AppColors.infoLight,
-      // Navigation - Noon dark style
+      // Navigation - Noon dark style (blue selected)
       appBarBackground: AppColors.darkAppBar,
       navBarBackground: AppColors.darkAppBar,
-      navBarSelected: AppColors.white,
+      navBarSelected: AppColors.darkPrimary,
       navBarUnselected: AppColors.darkNavUnselected,
       // Shadows & Overlays
       shadow: AppColors.shadow,

@@ -1,272 +1,236 @@
 import 'package:flutter/material.dart';
 
-/// App Colors - Noon Style Theme
+/// App Colors - Noon Style Theme (2024)
 ///
 /// Clean, professional design inspired by Noon app
-/// Yellow for primary actions only, white backgrounds, dark text
+/// Blue & Black theme - minimal and modern
 class AppColors {
   // ============================================
-  // LIGHT MODE - Noon Style
+  // LIGHT MODE - Noon Style (Blue & Black)
   // ============================================
 
-  /// Primary - Noon Yellow (أصفر نون)
-  /// Used for: Primary buttons, FAB, selected states ONLY
-  static const Color primary = Color(0xFFFEED00); // Noon Yellow
+  /// Primary - Noon Blue
+  /// Used for: Primary buttons, links, CTAs
+  static const Color primary = Color(0xFF2962FF); // Noon Blue
 
-  /// Primary Light - Lighter Yellow
-  static const Color primaryLight = Color(0xFFFFF44F); // Light yellow
+  /// Primary Light
+  static const Color primaryLight = Color(0xFF5B8BFF);
 
-  /// Primary Dark - Darker Yellow (for pressed states)
-  static const Color primaryDark = Color(0xFFE5D600); // Pressed yellow
+  /// Primary Dark
+  static const Color primaryDark = Color(0xFF0039CB);
 
   // ============================================
-  // Accent Colors - Noon Blue
+  // Accent Colors
   // ============================================
 
-  /// Accent/Secondary - Noon Blue (للروابط والعروض)
-  static const Color accent = Color(0xFF3866DF); // Noon Blue
+  /// Accent/Secondary - Dark Blue
+  static const Color accent = Color(0xFF1A237E);
 
-  /// Secondary (alias for accent)
-  static const Color secondary = Color(0xFF3866DF);
+  /// Secondary (alias)
+  static const Color secondary = Color(0xFF1A237E);
 
-  /// Accent Light - Soft Blue
-  static const Color accentLight = Color(0xFF5A8AFF); // Light blue
+  /// Accent Light
+  static const Color accentLight = Color(0xFF534BAE);
 
-  /// Accent Dark - Deep Blue
-  static const Color accentDark = Color(0xFF2850B8); // Dark blue
+  /// Accent Dark
+  static const Color accentDark = Color(0xFF000051);
 
   /// Accent Purple - For special offers
-  static const Color accentPurple = Color(0xFF8B5CF6); // Purple
+  static const Color accentPurple = Color(0xFF7C4DFF);
 
   /// Accent Gray
-  static const Color accentGray = Color(0xFF6B7280);
+  static const Color accentGray = Color(0xFF757575);
 
   // ============================================
-  // Semantic Colors - Noon Style
+  // Semantic Colors
   // ============================================
 
   /// Success - Green
-  static const Color success = Color(0xFF22C55E);
-  static const Color successLight = Color(0xFF4ADE80);
-  static const Color successDark = Color(0xFF16A34A);
+  static const Color success = Color(0xFF4CAF50);
+  static const Color successLight = Color(0xFF81C784);
+  static const Color successDark = Color(0xFF388E3C);
 
   /// Error - Red
-  static const Color error = Color(0xFFEF4444);
-  static const Color errorLight = Color(0xFFF87171);
-  static const Color errorDark = Color(0xFFDC2626);
+  static const Color error = Color(0xFFE53935);
+  static const Color errorLight = Color(0xFFEF5350);
+  static const Color errorDark = Color(0xFFC62828);
 
-  /// Warning - Orange
-  static const Color warning = Color(0xFFF97316);
-  static const Color warningLight = Color(0xFFFB923C);
-  static const Color warningDark = Color(0xFFEA580C);
+  /// Warning - Amber
+  static const Color warning = Color(0xFFFFB300);
+  static const Color warningLight = Color(0xFFFFCA28);
+  static const Color warningDark = Color(0xFFFF8F00);
 
-  /// Info - Blue
-  static const Color info = Color(0xFF3B82F6);
-  static const Color infoLight = Color(0xFF60A5FA);
+  /// Info - Light Blue
+  static const Color info = Color(0xFF03A9F4);
+  static const Color infoLight = Color(0xFF4FC3F7);
 
   // ============================================
   // Special Purpose Colors
   // ============================================
 
-  /// WhatsApp Green - For chat/messaging
+  /// WhatsApp Green
   static const Color whatsappGreen = Color(0xFF25D366);
 
-  /// WhatsApp Gray Colors - For chat UI (Light mode)
+  /// WhatsApp Gray Colors
   static const Color whatsappGrayDark = Color(0xFF667781);
   static const Color whatsappGrayMedium = Color(0xFF54656F);
   static const Color whatsappGrayLight = Color(0xFF8696A0);
   static const Color whatsappBlack = Color(0xFF111B21);
 
-  /// WhatsApp Message Bubble Colors
+  /// WhatsApp Bubbles
   static const Color whatsappSentBubble = Color(0xFFD9FDD3);
   static const Color whatsappReceivedBubble = Color(0xFFFFFFFF);
 
   /// Services Colors
-  static const Color servicesGray = Color(0xFF6B7280);
-  static const Color servicesLightGray = Color(0xFF9CA3AF);
+  static const Color servicesGray = Color(0xFF757575);
+  static const Color servicesLightGray = Color(0xFFBDBDBD);
 
   // ============================================
-  // Text Colors - Noon Style (Dark & Clear)
+  // Text Colors - Noon Style (Black & Gray)
   // ============================================
 
-  /// Primary text - Pure Black
-  static const Color textPrimary = Color(0xFF000000);
+  /// Primary text - Black
+  static const Color textPrimary = Color(0xFF212121);
 
   /// Secondary text - Dark gray
-  static const Color textSecondary = Color(0xFF404040);
+  static const Color textSecondary = Color(0xFF424242);
 
   /// Tertiary text - Medium gray
-  static const Color textTertiary = Color(0xFF737373);
+  static const Color textTertiary = Color(0xFF757575);
 
-  /// Disabled text - Light gray
-  static const Color textDisabled = Color(0xFFA3A3A3);
+  /// Disabled text
+  static const Color textDisabled = Color(0xFFBDBDBD);
 
-  /// Text on primary (yellow) - Black
-  static const Color textOnPrimary = Color(0xFF000000);
+  /// Text on primary (blue button) - White
+  static const Color textOnPrimary = Color(0xFFFFFFFF);
 
-  /// Text on dark backgrounds - White
+  /// Text on dark - White
   static const Color textOnDark = Color(0xFFFFFFFF);
 
   // ============================================
-  // Background Colors - Pure White (Noon Style)
+  // Background Colors - Pure White
   // ============================================
 
-  /// Main background - Pure white
+  /// Main background
   static const Color background = Color(0xFFFFFFFF);
 
-  /// Light background - Very light gray (for sections)
-  static const Color backgroundLight = Color(0xFFF5F5F5);
+  /// Light background
+  static const Color backgroundLight = Color(0xFFFAFAFA);
 
-  /// Alternate background - Light gray
-  static const Color backgroundAlt = Color(0xFFF0F0F0);
+  /// Alternate background
+  static const Color backgroundAlt = Color(0xFFF5F5F5);
 
   /// Dark background
-  static const Color backgroundDark = Color(0xFF1A1A1A);
+  static const Color backgroundDark = Color(0xFF212121);
 
-  /// Surface - Pure white
+  /// Surface
   static const Color surface = Color(0xFFFFFFFF);
 
-  /// Surface variant - Very light gray
+  /// Surface variant
   static const Color surfaceVariant = Color(0xFFF5F5F5);
 
-  /// Input/Field Background
+  /// Field background
   static const Color fieldBackground = Color(0xFFF5F5F5);
 
   // ============================================
-  // Border Colors - Noon Style (Subtle)
+  // Border Colors
   // ============================================
 
-  /// Default border - Light gray
-  static const Color border = Color(0xFFE5E5E5);
+  /// Default border
+  static const Color border = Color(0xFFE0E0E0);
 
   /// Light border
-  static const Color borderLight = Color(0xFFF0F0F0);
+  static const Color borderLight = Color(0xFFEEEEEE);
 
   /// Medium border
-  static const Color borderMedium = Color(0xFFD4D4D4);
+  static const Color borderMedium = Color(0xFFBDBDBD);
 
   /// Soft border
-  static const Color borderSoft = Color(0xFFE5E5E5);
+  static const Color borderSoft = Color(0xFFE0E0E0);
 
   /// Neutral border
-  static const Color borderNeutral = Color(0xFFD4D4D4);
+  static const Color borderNeutral = Color(0xFFBDBDBD);
 
   /// Dark border
-  static const Color borderDark = Color(0xFF737373);
+  static const Color borderDark = Color(0xFF757575);
 
   // ============================================
-  // Shadow & Overlay Colors
+  // Shadow & Overlay
   // ============================================
 
-  /// Shadows - Subtle
-  static const Color shadow = Color(0x14000000);
-  static const Color shadowLight = Color(0x0A000000);
-  static const Color shadowMedium = Color(0x1F000000);
+  static const Color shadow = Color(0x1A000000);
+  static const Color shadowLight = Color(0x0D000000);
+  static const Color shadowMedium = Color(0x26000000);
 
-  /// Overlays
   static const Color overlay = Color(0x80000000);
   static const Color overlayLight = Color(0x40000000);
 
   // ============================================
-  // Icon Colors - Dark (Noon Style)
+  // Icon Colors
   // ============================================
 
-  /// Primary icon - Black
-  static const Color iconPrimary = Color(0xFF000000);
+  /// Primary icon - Dark
+  static const Color iconPrimary = Color(0xFF212121);
 
-  /// Secondary icon - Dark gray
-  static const Color iconSecondary = Color(0xFF404040);
+  /// Secondary icon
+  static const Color iconSecondary = Color(0xFF424242);
 
-  /// Tertiary icon - Medium gray
-  static const Color iconTertiary = Color(0xFF737373);
+  /// Tertiary icon
+  static const Color iconTertiary = Color(0xFF757575);
 
-  /// Icon on dark backgrounds
+  /// Icon on dark
   static const Color iconOnDark = Color(0xFFFFFFFF);
 
   // ============================================
   // Divider Colors
   // ============================================
 
-  /// Default divider
-  static const Color divider = Color(0xFFE5E5E5);
-
-  /// Light divider
-  static const Color dividerLight = Color(0xFFF0F0F0);
+  static const Color divider = Color(0xFFE0E0E0);
+  static const Color dividerLight = Color(0xFFEEEEEE);
 
   // ============================================
   // Base Colors
   // ============================================
 
-  /// Pure white
   static const Color white = Color(0xFFFFFFFF);
-
-  /// Pure black
   static const Color black = Color(0xFF000000);
-
-  /// Dark
-  static const Color dark = Color(0xFF1A1A1A);
-
-  /// Transparent
+  static const Color dark = Color(0xFF212121);
   static const Color transparent = Colors.transparent;
 
   // ============================================
-  // DARK MODE - Noon Dark Style
+  // DARK MODE
   // ============================================
 
-  /// Dark mode - Main background
   static const Color darkBackground = Color(0xFF121212);
-
-  /// Dark mode - Card/Surface
   static const Color darkCard = Color(0xFF1E1E1E);
-
-  /// Dark mode - AppBar
   static const Color darkAppBar = Color(0xFF1E1E1E);
+  static const Color darkInput = Color(0xFF2C2C2C);
+  static const Color darkBorder = Color(0xFF424242);
+  static const Color darkDivider = Color(0xFF424242);
 
-  /// Dark mode - Input fields
-  static const Color darkInput = Color(0xFF2A2A2A);
-
-  /// Dark mode - Borders
-  static const Color darkBorder = Color(0xFF333333);
-
-  /// Dark mode - Dividers
-  static const Color darkDivider = Color(0xFF333333);
-
-  /// Dark mode - Primary text
   static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextSecondary = Color(0xFFE0E0E0);
+  static const Color darkTextTertiary = Color(0xFFBDBDBD);
+  static const Color darkTextHint = Color(0xFF757575);
 
-  /// Dark mode - Secondary text
-  static const Color darkTextSecondary = Color(0xFFE5E5E5);
-
-  /// Dark mode - Tertiary text
-  static const Color darkTextTertiary = Color(0xFFA3A3A3);
-
-  /// Dark mode - Hint text
-  static const Color darkTextHint = Color(0xFF737373);
-
-  /// Dark mode - Icons
   static const Color darkIcon = Color(0xFFFFFFFF);
+  static const Color darkSkeleton = Color(0xFF2C2C2C);
+  static const Color darkSkeletonHighlight = Color(0xFF424242);
+  static const Color darkNavUnselected = Color(0xFF757575);
 
-  /// Dark mode - Skeleton
-  static const Color darkSkeleton = Color(0xFF2A2A2A);
-  static const Color darkSkeletonHighlight = Color(0xFF333333);
+  /// Dark mode primary - Same blue
+  static const Color darkPrimary = Color(0xFF448AFF);
 
-  /// Dark mode - Nav unselected
-  static const Color darkNavUnselected = Color(0xFF737373);
+  /// Dark mode accent
+  static const Color darkAccent = Color(0xFF536DFE);
 
-  /// Dark mode - Primary (Noon Yellow)
-  static const Color darkPrimary = Color(0xFFFEED00);
+  /// Dark mode success
+  static const Color darkSuccess = Color(0xFF69F0AE);
 
-  /// Dark mode - Accent
-  static const Color darkAccent = Color(0xFF3866DF);
-
-  /// Dark mode - Success
-  static const Color darkSuccess = Color(0xFF22C55E);
-
-  /// Dark mode - Card elevated
-  static const Color darkCardElevated = Color(0xFF2A2A2A);
+  static const Color darkCardElevated = Color(0xFF2C2C2C);
 
   // ============================================
-  // DARK MODE - Chat Colors
+  // Chat Colors
   // ============================================
 
   static const Color darkWhatsappSentBubble = Color(0xFF005C4B);
@@ -275,54 +239,46 @@ class AppColors {
   static const Color darkWhatsappText = Color(0xFFE9EDEF);
   static const Color darkChatBackground = Color(0xFF121212);
 
-  // ============================================
-  // LIGHT MODE - Chat Colors
-  // ============================================
-
   static const Color chatBackground = Color(0xFFF5F5F5);
   static const Color chatInputBackground = Color(0xFFFFFFFF);
-  static const Color darkChatInputBackground = Color(0xFF2A2A2A);
+  static const Color darkChatInputBackground = Color(0xFF2C2C2C);
 
   // ============================================
-  // Chart Colors - Noon Style
+  // Chart Colors
   // ============================================
 
   static const List<Color> chartColors = [
-    Color(0xFFFEED00), // Noon Yellow
-    Color(0xFF3866DF), // Noon Blue
-    Color(0xFF22C55E), // Green
-    Color(0xFFF97316), // Orange
-    Color(0xFF737373), // Gray
+    Color(0xFF2962FF), // Blue
+    Color(0xFF1A237E), // Dark Blue
+    Color(0xFF4CAF50), // Green
+    Color(0xFFFFB300), // Amber
+    Color(0xFF757575), // Gray
   ];
 
   // ============================================
-  // Gradient Colors
+  // Gradients
   // ============================================
 
-  /// Primary gradient - Yellow
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFFEED00), Color(0xFFFFF44F)],
+    colors: [Color(0xFF2962FF), Color(0xFF448AFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Accent gradient - Blue
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFF3866DF), Color(0xFF5A8AFF)],
+    colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Purple gradient
   static const LinearGradient purpleGradient = LinearGradient(
-    colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+    colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Dark gradient
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [Color(0xFF1A1A1A), Color(0xFF2A2A2A)],
+    colors: [Color(0xFF212121), Color(0xFF424242)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
