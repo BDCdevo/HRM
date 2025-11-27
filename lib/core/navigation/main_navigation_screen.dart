@@ -288,29 +288,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const NavBarItem(
         svgIcon: 'assets/svgs/home_icon.svg',
         label: 'Home',
-        color: AppColors.primary,
+        color: AppColors.accent, // Blue for selected
       ),
       NavBarItem(
         icon: Icons.chat_bubble_outline,
         activeIcon: Icons.chat_bubble,
         label: 'Chat',
-        color: AppColors.primary,
+        color: AppColors.accent, // Blue for selected
         badgeCount: unreadCount > 0 ? unreadCount : null,
       ),
       const NavBarItem(
         svgIcon: 'assets/svgs/leaves_icon.svg',
         label: 'Requests',
-        color: AppColors.primary,
+        color: AppColors.accent, // Blue for selected
       ),
       const NavBarItem(
         svgIcon: 'assets/svgs/profile_icon.svg',
         label: 'More',
-        color: AppColors.primary,
+        color: AppColors.accent, // Blue for selected
       ),
       const NavBarItem(
         icon: Icons.add,
         label: 'New',
-        color: AppColors.primary,
+        color: AppColors.accentOrange, // Golden Orange for FAB
       ),
     ];
   }

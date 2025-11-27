@@ -187,16 +187,16 @@ class _NavBarButton extends StatelessWidget {
     final fabBorderWidth = isSmallScreen ? 2.0 : 2.5;
     final labelFontSize = isSmallScreen ? 9.5 : (isMediumScreen ? 10.5 : 11.0);
 
-    // FAB Style
+    // FAB Style - Golden Orange
     if (isFab) {
       return GestureDetector(
         onTap: onTap,
         child: Container(
           width: fabSize,
           height: fabSize,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: color,
+            color: AppColors.accentOrange, // Golden Orange FAB
           ),
           child: item.svgIcon != null
               ? Padding(
