@@ -90,6 +90,8 @@ class ApiConfig {
 
   /// Reports Endpoints
   static const String monthlyReport = '/reports/monthly';
+  static const String monthlyReportAllEmployees = '/reports/monthly/all-employees';
+  static const String weeklyStats = '/employee/attendance/weekly-stats';
 
   /// Request Management Endpoints
   static const String requests = '/requests';
